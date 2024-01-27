@@ -7,7 +7,7 @@ import (
 	"github.com/brianvoe/gofakeit/v6"
 )
 
-func (r *repository) GetEvents(ctx context.Context, userID string) ([]*model.Event, error) {
+func (r *repository) GetEvents(ctx context.Context, userID int64) ([]*model.Event, error) {
 
 	return []*model.Event{
 		{UUID: gofakeit.UUID(),
