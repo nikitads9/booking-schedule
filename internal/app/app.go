@@ -89,13 +89,10 @@ func (a *App) setupRouter(impl *api.Implementation) {
 
 	// RESTy routes for "events" resource
 	a.router.Route("/events/{userID}", func(r chi.Router) {
-		r.Post("/add", impl.AddEvent(a.serviceProvider.log))                   // POST /events/u123
-		r.Get("/get-day", impl.GetDayEvents(a.serviceProvider.log))            // GET /events/u123/get-day
-		r.Get("/get-week", impl.GetWeekEvents(a.serviceProvider.log))          // GET /events/u123/get-week
-		r.Get("/get-month", impl.GetMonthEvents(a.serviceProvider.log))        // GET /events/u123/get-month
-		r.Get("/get-all-events", impl.GetAllEvents(a.serviceProvider.log))     // GET /events/u123/get-all-events
-		r.Get("/get-vacant-rooms", impl.GetVacantRooms(a.serviceProvider.log)) // GET /events/u123/get-vacant-rooms
-		r.Get("get-vacant-dates", impl.GetVacantDates(a.serviceProvider.log))  // GET /events/u123/get-vacant-dates
+		r.Post("/add", impl.AddEvent(a.serviceProvider.log))                              // POST /events/u123
+		r.Get("/get/{interval}", impl.GetEvents(a.serviceProvider.log))                   // GET /events/u123/get/{interval}
+		r.Get("/{interval}/get-vacant-rooms", impl.GetVacantRooms(a.serviceProvider.log)) // GET /events/u123/get-vacant-rooms
+		r.Get("/suiteID}/get-vacant-dates", impl.GetVacantDates(a.serviceProvider.log))   // GET /events/u123/get-vacant-dates
 
 		r.Route("/{eventID}", func(r chi.Router) {
 			r.Use(impl.EventCtx(a.serviceProvider.log)) // Load the *Event on the request context

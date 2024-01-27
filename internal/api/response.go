@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -24,14 +25,26 @@ type Response struct {
 	ErrorText string `json:"error,omitempty"` // application-level error message, for debugging
 }
 
-var ErrNotFound = &Response{
-	HTTPStatusCode: 404,
-	Status:         "Resource not found.",
-}
+var ErrNoUserID = errors.New(" received no user id")
+var ErrNoEventID = errors.New("received no event id")
+var ErrNoInterval = errors.New(" received no time period")
+var ErrNoSuiteID = errors.New(" received no suite id")
+var ErrUserNotFound = errors.New("no user with this id")
+var ErrEventNotFound = errors.New("no event with this id")
+var ErrInvalidDateFormat = errors.New("received invalid date")
 
 func (e *Response) Render(w http.ResponseWriter, r *http.Request) error {
 	render.Status(r, e.HTTPStatusCode)
 	return nil
+}
+
+func ErrNotFound(err error) render.Renderer {
+	return &Response{
+		Err:            err,
+		HTTPStatusCode: 404,
+		Status:         "Resource not found.",
+		ErrorText:      err.Error(),
+	}
 }
 
 func ErrInvalidRequest(err error) render.Renderer {

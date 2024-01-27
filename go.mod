@@ -3,6 +3,7 @@ module event-schedule
 go 1.21.0
 
 require (
+	github.com/brianvoe/gofakeit/v6 v6.28.0
 	github.com/georgysavva/scany/v2 v2.1.0
 	github.com/go-chi/chi/v5 v5.0.11
 	github.com/go-chi/render v1.0.3

@@ -1,8 +1,6 @@
 package api
 
 import (
-	"encoding/json"
-	"errors"
 	"event-schedule/internal/lib/logger/sl"
 	"log/slog"
 
@@ -24,8 +22,6 @@ type AddEventRequest struct {
 	EndDate time.Time `json:"endDate" validate:"required"`
 	// Интервал времени для предварительного уведомления о бронировании
 	NotificationInterval time.Duration `json:"notificationInterval"`
-	// telegram ID покупателя
-	OwnerID string `json:"ownerID"`
 }
 
 type AddEventResponse struct {
@@ -67,11 +63,15 @@ func (i *Implementation) AddEvent(log *slog.Logger) http.HandlerFunc {
 
 		id, err := i.Service.AddEvent(r.Context())
 		if err != nil {
+			log.Error("internal error", sl.Err(err))
 			render.Render(w, r, ErrInternalError(err))
+			return
 		}
-		res, _ := json.Marshal(req)
+
+		log.Info("event added", slog.Any("id", id))
+
 		render.Status(r, http.StatusCreated)
-		render.Render(w, r, AddEventResponseAPI("received AddEvent with THIS body:"+string(res)+id))
+		render.Render(w, r, AddEventResponseAPI(id))
 	}
 
 }
@@ -88,9 +88,9 @@ func AddEventResponseAPI(eventID string) *AddEventResponse {
 func (e *AddEventRequest) Bind(r *http.Request) error {
 	// a.Article is nil if no Article fields are sent in the request. Return an
 	// error to avoid a nil pointer dereference.
-	if e.OwnerID == "" {
+	/* 	if e.OwnerID == "" {
 		return errors.New("missing required event fields")
-	}
+	} */
 
 	// a.User is nil if no Userpayload fields are sent in the request. In this app
 	// this won't cause a panic, but checks in this Bind method may be required if

@@ -1,7 +1,11 @@
 package schedule
 
-import "context"
+import (
+	"context"
+
+	gofakeit "github.com/brianvoe/gofakeit/v6"
+)
 
 func (r *repository) AddEvent(ctx context.Context) (string, error) {
-	return "with THIS ID", nil
+	return gofakeit.UUID(), nil
 }

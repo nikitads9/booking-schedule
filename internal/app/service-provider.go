@@ -22,10 +22,10 @@ type serviceProvider struct {
 	server *http.Server
 	log    *slog.Logger
 
-	scheduleRepository scheduleRepository.Repository
-	scheduleService    *scheduleService.Service
+	/* 	scheduleRepository scheduleRepository.Repository
+	   	scheduleService    *scheduleService.Service */
 
-	scheduleImpl *api.Implementation
+	impl *api.Implementation
 }
 
 func newServiceProvider(configPath string) *serviceProvider {
@@ -64,12 +64,12 @@ func (s *serviceProvider) GetConfig() *config.Config {
 }
 
 func (s *serviceProvider) GetScheduleRepository(ctx context.Context) scheduleRepository.Repository {
-	if s.scheduleRepository == nil {
-		s.scheduleRepository = scheduleRepository.NewScheduleRepository(s.GetDB(ctx))
-		return s.scheduleRepository
+	if s.impl.Service.scheduleRepository == nil {
+		s.impl.Service.scheduleRepository = scheduleRepository.NewScheduleRepository(s.GetDB(ctx))
+		return s.impl.Service.scheduleRepository
 	}
 
-	return s.scheduleRepository
+	return s.impl.Service.scheduleRepository
 }
 
 func (s *serviceProvider) GetScheduleService(ctx context.Context) *scheduleService.Service {
@@ -81,12 +81,12 @@ func (s *serviceProvider) GetScheduleService(ctx context.Context) *scheduleServi
 	return s.scheduleService
 }
 
-func (s *serviceProvider) GetScheduleImpl(ctx context.Context) *api.Implementation {
-	if s.scheduleImpl == nil {
-		s.scheduleImpl = api.NewImplementation(s.GetScheduleService(ctx))
+func (s *serviceProvider) Getimpl(ctx context.Context) *api.Implementation {
+	if s.impl == nil {
+		s.impl = api.NewImplementation(s.GetScheduleService(ctx))
 	}
 
-	return s.scheduleImpl
+	return s.impl
 }
 
 func (s *serviceProvider) getServer(router http.Handler) *http.Server {

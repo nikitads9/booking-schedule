@@ -5,11 +5,11 @@ import (
 )
 
 type Implementation struct {
-	*schedule.Service
+	Service *schedule.Service
 }
 
-func NewImplementation(scheduleService *schedule.Service) *Implementation {
+func NewImplementation(service *schedule.Service) *Implementation {
 	return &Implementation{
-		scheduleService,
+		Service: service,
 	}
 }
