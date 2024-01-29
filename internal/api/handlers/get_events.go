@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"event-schedule/internal/api"
 	"event-schedule/internal/lib/logger/sl"
 	"log/slog"
@@ -28,7 +29,7 @@ import (
 //	@Failure		422	{object}	api.GetEventsResponse
 //	@Failure		503	{object}	api.GetEventsResponse
 //	@Router			/events/{user_id}/{interval} [get]
-func (i *Implementation) GetEvents(log *slog.Logger) http.HandlerFunc {
+func (i *Implementation) GetEvents(log *slog.Logger, ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.events.api.GetEvents"
 		var userID, period string
@@ -37,7 +38,7 @@ func (i *Implementation) GetEvents(log *slog.Logger) http.HandlerFunc {
 
 		log = log.With(
 			slog.String("op", op),
-			slog.String("request_id", middleware.GetReqID(r.Context())),
+			slog.String("request_id", middleware.GetReqID(ctx)),
 		)
 
 		if userID = chi.URLParam(r, "userID"); userID == "" {
@@ -58,7 +59,7 @@ func (i *Implementation) GetEvents(log *slog.Logger) http.HandlerFunc {
 			return
 		}
 
-		events, err := i.Service.GetEvents(r.Context(), id, period) //TODO: filter
+		events, err := i.Service.GetEvents(ctx, id, period) //TODO: filter
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
 			render.Render(w, r, api.ErrInternalError(err))

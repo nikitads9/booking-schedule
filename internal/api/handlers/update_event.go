@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"event-schedule/internal/api"
 	"event-schedule/internal/convert"
 	"event-schedule/internal/lib/logger/sl"
@@ -29,13 +30,13 @@ import (
 //	@Failure		422	{object}	api.UpdateEventResponse
 //	@Failure		503	{object}	api.UpdateEventResponse
 //	@Router			/events/{user_id}/{event-id}/update [patch]
-func (i *Implementation) UpdateEvent(log *slog.Logger) http.HandlerFunc {
+func (i *Implementation) UpdateEvent(log *slog.Logger, ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.events.api.UpdateEvent"
 
 		log = log.With(
 			slog.String("op", op),
-			slog.String("request_id", middleware.GetReqID(r.Context())),
+			slog.String("request_id", middleware.GetReqID(ctx)),
 		)
 
 		//TODO: getters for EventInfo
@@ -50,7 +51,7 @@ func (i *Implementation) UpdateEvent(log *slog.Logger) http.HandlerFunc {
 
 		log.Info("request body decoded", slog.Any("req", req))
 
-		err := i.Service.UpdateEvent(r.Context(), convert.ToUpdateEventInfo(req, event.EventID))
+		err := i.Service.UpdateEvent(ctx, convert.ToUpdateEventInfo(req, event.EventID))
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
 			render.Render(w, r, api.ErrInternalError(err))

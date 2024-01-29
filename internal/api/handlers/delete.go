@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"event-schedule/internal/api"
 	"event-schedule/internal/lib/logger/sl"
 	"event-schedule/internal/model"
@@ -25,14 +26,14 @@ import (
 //	@Failure		422	{object}	api.DeleteEventResponse
 //	@Failure		503	{object}	api.DeleteEventResponse
 //	@Router			/events/{user_id}/{event_id}/delete [delete]
-func (i *Implementation) DeleteEvent(log *slog.Logger) http.HandlerFunc {
+func (i *Implementation) DeleteEvent(log *slog.Logger, ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.events.api.DeleteEvent"
 		var err error
 
 		log = log.With(
 			slog.String("op", op),
-			slog.String("request_id", middleware.GetReqID(r.Context())),
+			slog.String("request_id", middleware.GetReqID(ctx)),
 		)
 		//TODO: check panic
 		// Assume if we've reach this far, we can access the event
@@ -41,7 +42,7 @@ func (i *Implementation) DeleteEvent(log *slog.Logger) http.HandlerFunc {
 
 		event := r.Context().Value("event").(*model.EventInfo)
 
-		err = i.Service.DeleteEvent(r.Context(), event.EventID)
+		err = i.Service.DeleteEvent(ctx, event.EventID)
 		if err != nil {
 			log.Error("failed to remove event", sl.Err(err))
 			render.Render(w, r, api.ErrInternalError(err))

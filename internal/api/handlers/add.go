@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"event-schedule/internal/api"
 	"event-schedule/internal/convert"
 	"event-schedule/internal/lib/logger/sl"
@@ -30,7 +31,7 @@ import (
 //		@Failure		422	{object}	api.AddEventResponse
 //		@Failure		503	{object}	api.AddEventResponse
 //		@Router			/events/{user_id}/add [post]
-func (i *Implementation) AddEvent(log *slog.Logger) http.HandlerFunc {
+func (i *Implementation) AddEvent(log *slog.Logger, ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.events.api.AddEvent"
 
@@ -38,7 +39,7 @@ func (i *Implementation) AddEvent(log *slog.Logger) http.HandlerFunc {
 		// Они могут очень упростить нам жизнь в будущем
 		log = log.With(
 			slog.String("op", op),
-			slog.String("request_id", middleware.GetReqID(r.Context())),
+			slog.String("request_id", middleware.GetReqID(ctx)),
 		)
 
 		req := &api.AddEventRequest{}
@@ -62,7 +63,7 @@ func (i *Implementation) AddEvent(log *slog.Logger) http.HandlerFunc {
 			return
 		}
 
-		id, err := i.Service.AddEvent(r.Context(), convert.ToEventInfo(req))
+		id, err := i.Service.AddEvent(ctx, convert.ToEventInfo(req))
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
 			render.Render(w, r, api.ErrInternalError(err))

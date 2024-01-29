@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"event-schedule/internal/api"
 	"event-schedule/internal/lib/logger/sl"
 	"log/slog"
@@ -27,7 +28,7 @@ import (
 //	@Failure		422	{object}	api.GetVacantRoomsResponse
 //	@Failure		503	{object}	api.GetVacantRoomsResponse
 //	@Router			/events/{user_id}/get-vacant-rooms/{start}-{end} [get]
-func (i *Implementation) GetVacantRooms(log *slog.Logger) http.HandlerFunc {
+func (i *Implementation) GetVacantRooms(log *slog.Logger, ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.events.api.GetVacantRooms"
 		var start, end string
@@ -35,7 +36,7 @@ func (i *Implementation) GetVacantRooms(log *slog.Logger) http.HandlerFunc {
 
 		log = log.With(
 			slog.String("op", op),
-			slog.String("request_id", middleware.GetReqID(r.Context())),
+			slog.String("request_id", middleware.GetReqID(ctx)),
 		)
 
 		if start = chi.URLParam(r, "start"); start == "" {
@@ -62,7 +63,7 @@ func (i *Implementation) GetVacantRooms(log *slog.Logger) http.HandlerFunc {
 			return
 		}
 
-		rooms, err := i.Service.GetVacantRooms(r.Context(), startDate, endDate) //TODO:GetVacantRooms
+		rooms, err := i.Service.GetVacantRooms(ctx, startDate, endDate) //TODO:GetVacantRooms
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
 			render.Render(w, r, api.ErrInternalError(err))

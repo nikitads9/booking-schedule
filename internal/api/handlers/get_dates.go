@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"event-schedule/internal/api"
 	"event-schedule/internal/lib/logger/sl"
 	"log/slog"
@@ -26,7 +27,7 @@ import (
 //	@Failure		422	{object}	api.GetVacantDatesResponse
 //	@Failure		503	{object}	api.GetVacantDatesResponse
 //	@Router			/events/{user_id}/{suite_id}/get-vacant-dates [get]
-func (i *Implementation) GetVacantDates(log *slog.Logger) http.HandlerFunc {
+func (i *Implementation) GetVacantDates(log *slog.Logger, ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.events.api.GetVacantDates"
 		var suiteID string
@@ -35,7 +36,7 @@ func (i *Implementation) GetVacantDates(log *slog.Logger) http.HandlerFunc {
 
 		log = log.With(
 			slog.String("op", op),
-			slog.String("request_id", middleware.GetReqID(r.Context())),
+			slog.String("request_id", middleware.GetReqID(ctx)),
 		)
 
 		if suiteID = chi.URLParam(r, "suiteID"); suiteID == "" {
@@ -50,7 +51,7 @@ func (i *Implementation) GetVacantDates(log *slog.Logger) http.HandlerFunc {
 			return
 		}
 
-		intervals, err := i.Service.GetVacantDates(r.Context(), id) //TODO:GetVacantDates
+		intervals, err := i.Service.GetVacantDates(ctx, id) //TODO:GetVacantDates
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
 			render.Render(w, r, api.ErrInternalError(err))

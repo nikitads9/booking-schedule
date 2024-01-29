@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"event-schedule/internal/api"
 	"event-schedule/internal/lib/logger/sl"
 	"event-schedule/internal/model"
@@ -25,20 +26,20 @@ import (
 //	@Failure		422	{object}	api.GetEventResponse
 //	@Failure		503	{object}	api.GetEventResponse
 //	@Router			/events/{user_id}/{event_id}/get [get]
-func (i *Implementation) GetEvent(log *slog.Logger) http.HandlerFunc {
+func (i *Implementation) GetEvent(log *slog.Logger, ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.events.api.GetEvent"
 
 		log = log.With(
 			slog.String("op", op),
-			slog.String("request_id", middleware.GetReqID(r.Context())),
+			slog.String("request_id", middleware.GetReqID(ctx)),
 		)
 
 		//TODO: проверить
 		// Assume if we've reach this far, we can access the event
 		// context because this handler is a child of the EventCtx
 		// middleware. The worst case, the recoverer middleware will save us.
-		event := r.Context().Value("event").(*model.EventInfo)
+		event := ctx.Value("event").(*model.EventInfo)
 
 		if err := render.Render(w, r, api.GetEventResponseAPI(event)); err != nil {
 			log.Error("internal error", sl.Err(err))

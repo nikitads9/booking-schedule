@@ -67,7 +67,7 @@ func (a *App) initServer(ctx context.Context) error {
 	log.Info("initializing server", slog.String("address", address)) // Вывод параметра с адресом
 	log.Debug("logger debug mode enabled")
 
-	a.setupRouter(impl)
+	a.setupRouter(impl, ctx)
 
 	srv := a.serviceProvider.getServer(a.router)
 	err = a.startServer(srv)
@@ -79,7 +79,7 @@ func (a *App) initServer(ctx context.Context) error {
 	return nil
 }
 
-func (a *App) setupRouter(impl *handlers.Implementation) {
+func (a *App) setupRouter(impl *handlers.Implementation, ctx context.Context) {
 	a.router = chi.NewRouter()
 	a.router.Use(middleware.RequestID) // Добавляет request_id в каждый запрос, для трейсинга
 	a.router.Use(middleware.Logger)    // Логирование всех запросов
@@ -89,16 +89,16 @@ func (a *App) setupRouter(impl *handlers.Implementation) {
 
 	// RESTy routes for "events" resource
 	a.router.Route("/events/{user_id}", func(r chi.Router) {
-		r.Post("/add", impl.AddEvent(a.serviceProvider.log))                                 // POST /events/u123
-		r.Get("/{interval}", impl.GetEvents(a.serviceProvider.log))                          // GET /events/u123/get/{interval}
-		r.Get("/get-vacant-rooms/{start}-{end}", impl.GetVacantRooms(a.serviceProvider.log)) // GET /events/u123/get-vacant-rooms
-		r.Get("/{suite_id}/get-vacant-dates", impl.GetVacantDates(a.serviceProvider.log))    // GET /events/u123/get-vacant-dates
+		r.Post("/add", impl.AddEvent(a.serviceProvider.log, ctx))                                 // POST /events/u123
+		r.Get("/{interval}", impl.GetEvents(a.serviceProvider.log, ctx))                          // GET /events/u123/get/{interval}
+		r.Get("/get-vacant-rooms/{start}-{end}", impl.GetVacantRooms(a.serviceProvider.log, ctx)) // GET /events/u123/get-vacant-rooms
+		r.Get("/{suite_id}/get-vacant-dates", impl.GetVacantDates(a.serviceProvider.log, ctx))    // GET /events/u123/get-vacant-dates
 
 		r.Route("/{event_id}", func(r chi.Router) {
-			r.Use(impl.EventCtx(a.serviceProvider.log)) // Load the *Event on the request context
-			r.Get("/get", impl.GetEvent(a.serviceProvider.log))
-			r.Patch("/update", impl.UpdateEvent(a.serviceProvider.log))  // PATCH /event/123/update
-			r.Delete("/delete", impl.DeleteEvent(a.serviceProvider.log)) // DELETE /event/123/delete
+			r.Use(impl.EventCtx(a.serviceProvider.log, ctx)) // Load the *Event on the request context
+			r.Get("/get", impl.GetEvent(a.serviceProvider.log, ctx))
+			r.Patch("/update", impl.UpdateEvent(a.serviceProvider.log, ctx))  // PATCH /event/123/update
+			r.Delete("/delete", impl.DeleteEvent(a.serviceProvider.log, ctx)) // DELETE /event/123/delete
 		})
 
 		// GET /articles/whats-up
