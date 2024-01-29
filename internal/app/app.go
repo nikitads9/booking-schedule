@@ -2,7 +2,7 @@ package app
 
 import (
 	"context"
-	"event-schedule/internal/api"
+	"event-schedule/internal/api/handlers"
 	mwLogger "event-schedule/internal/app/middleware/logger"
 	"event-schedule/internal/lib/logger/sl"
 	"log/slog"
@@ -79,7 +79,7 @@ func (a *App) initServer(ctx context.Context) error {
 	return nil
 }
 
-func (a *App) setupRouter(impl *api.Implementation) {
+func (a *App) setupRouter(impl *handlers.Implementation) {
 	a.router = chi.NewRouter()
 	a.router.Use(middleware.RequestID) // Добавляет request_id в каждый запрос, для трейсинга
 	a.router.Use(middleware.Logger)    // Логирование всех запросов
@@ -88,13 +88,13 @@ func (a *App) setupRouter(impl *api.Implementation) {
 	//r.Use(middleware.URLFormat) // Парсер URLов поступающих запросов
 
 	// RESTy routes for "events" resource
-	a.router.Route("/events/{userID}", func(r chi.Router) {
-		r.Post("/add", impl.AddEvent(a.serviceProvider.log))                              // POST /events/u123
-		r.Get("/get/{interval}", impl.GetEvents(a.serviceProvider.log))                   // GET /events/u123/get/{interval}
-		r.Get("/{interval}/get-vacant-rooms", impl.GetVacantRooms(a.serviceProvider.log)) // GET /events/u123/get-vacant-rooms
-		r.Get("/suiteID}/get-vacant-dates", impl.GetVacantDates(a.serviceProvider.log))   // GET /events/u123/get-vacant-dates
+	a.router.Route("/events/{user_id}", func(r chi.Router) {
+		r.Post("/add", impl.AddEvent(a.serviceProvider.log))                                 // POST /events/u123
+		r.Get("/{interval}", impl.GetEvents(a.serviceProvider.log))                          // GET /events/u123/get/{interval}
+		r.Get("/get-vacant-rooms/{start}-{end}", impl.GetVacantRooms(a.serviceProvider.log)) // GET /events/u123/get-vacant-rooms
+		r.Get("/{suite_id}/get-vacant-dates", impl.GetVacantDates(a.serviceProvider.log))    // GET /events/u123/get-vacant-dates
 
-		r.Route("/{eventID}", func(r chi.Router) {
+		r.Route("/{event_id}", func(r chi.Router) {
 			r.Use(impl.EventCtx(a.serviceProvider.log)) // Load the *Event on the request context
 			r.Get("/get", impl.GetEvent(a.serviceProvider.log))
 			r.Patch("/update", impl.UpdateEvent(a.serviceProvider.log))  // PATCH /event/123/update

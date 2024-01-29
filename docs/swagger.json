@@ -1,0 +1,739 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is a service for writing and reading booking entries.",
+        "title": "event-schedule API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "Nikita Denisenok",
+            "url": "https://vk.com/ndenisenok"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "127.0.0.1:3000",
+    "basePath": "/events/",
+    "paths": {
+        "/events/{user_id}/add": {
+            "post": {
+                "description": "Adds an even with given parameters associated with user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "Adds event",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "int64",
+                        "default": 1234,
+                        "description": "user_id",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "AddEventRequest",
+                        "name": "event",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.AddEventRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.AddEventResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.AddEventResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.AddEventResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.AddEventResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.AddEventResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/events/{user_id}/get-vacant-rooms/{start}-{end}": {
+            "get": {
+                "description": "Responds with event info with given EventID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "Get list of vacant rooms",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "int64",
+                        "default": 1234,
+                        "description": "user_id",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "format": "time.Time",
+                        "default": "2006-01-02T15:04:05Z07:00",
+                        "description": "start",
+                        "name": "start",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "format": "time.Time",
+                        "default": "2006-01-02T15:04:05Z07:00",
+                        "description": "end",
+                        "name": "end",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetVacantRoomsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetVacantRoomsResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetVacantRoomsResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetVacantRoomsResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetVacantRoomsResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/events/{user_id}/{event-id}/update": {
+            "patch": {
+                "description": "Updates an existing Event with given EventID and several optional fields. At least one field should not be empty.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "Updates event info",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "int64",
+                        "default": 1234,
+                        "description": "user_id",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "default": "550e8400-e29b-41d4-a716-446655440000",
+                        "description": "event_id",
+                        "name": "event_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "UpdateEventRequest",
+                        "name": "event",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.UpdateEventRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.UpdateEventResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.UpdateEventResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.UpdateEventResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.UpdateEventResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.UpdateEventResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/events/{user_id}/{event_id}/delete": {
+            "delete": {
+                "description": "Deletes an event with given uuid.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "Deletes an event",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "int64",
+                        "default": 1234,
+                        "description": "user_id",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "default": "550e8400-e29b-41d4-a716-446655440000",
+                        "description": "event_id",
+                        "name": "event_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.DeleteEventResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.DeleteEventResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.DeleteEventResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.DeleteEventResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.DeleteEventResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/events/{user_id}/{event_id}/get": {
+            "get": {
+                "description": "Responds with event info with given EventID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "Get event info",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "int64",
+                        "default": 1234,
+                        "description": "user_id",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "default": "550e8400-e29b-41d4-a716-446655440000",
+                        "description": "event_id",
+                        "name": "event_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetEventResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetEventResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetEventResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetEventResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetEventResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/events/{user_id}/{interval}": {
+            "get": {
+                "description": "Responds with series of event info objects within given time period.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "Get several events info",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "int64",
+                        "default": 1234,
+                        "description": "user_id",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "default": "550e8400-e29b-41d4-a716-446655440000",
+                        "description": "event_id",
+                        "name": "event_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "all",
+                        "description": "interval",
+                        "name": "interval",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetEventsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetEventsResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetEventsResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetEventsResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetEventsResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/events/{user_id}/{suite_id}/get-vacant-dates": {
+            "get": {
+                "description": "Responds with free dates within month for selected suite.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "Get vacant intervals",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "int64",
+                        "default": 1234,
+                        "description": "user_id",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "format": "int64",
+                        "default": 1234,
+                        "description": "suite_id",
+                        "name": "suite_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetVacantDatesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetVacantDatesResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetVacantDatesResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetVacantDatesResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetVacantDatesResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "event-schedule_internal_api.AddEventRequest": {
+            "type": "object",
+            "required": [
+                "endDate",
+                "startDate",
+                "suiteID"
+            ],
+            "properties": {
+                "endDate": {
+                    "description": "Дата и время окончания бронировании",
+                    "type": "string",
+                    "example": "2024-01-29T17:43:00Z03:00"
+                },
+                "notificationPeriod": {
+                    "description": "Интервал времени для предварительного уведомления о бронировании",
+                    "type": "string",
+                    "example": "1h"
+                },
+                "startDate": {
+                    "description": "Дата и время начала бронировании",
+                    "type": "string",
+                    "example": "2024-01-28T17:43:00Z03:00"
+                },
+                "suiteID": {
+                    "description": "номер апаратаментов",
+                    "type": "integer",
+                    "example": 123
+                }
+            }
+        },
+        "event-schedule_internal_api.AddEventResponse": {
+            "type": "object",
+            "properties": {
+                "eventID": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "response": {
+                    "$ref": "#/definitions/event-schedule_internal_api.Response"
+                }
+            }
+        },
+        "event-schedule_internal_api.DeleteEventResponse": {
+            "type": "object",
+            "properties": {
+                "response": {
+                    "$ref": "#/definitions/event-schedule_internal_api.Response"
+                }
+            }
+        },
+        "event-schedule_internal_api.GetEventResponse": {
+            "type": "object",
+            "properties": {
+                "event": {
+                    "$ref": "#/definitions/event-schedule_internal_model.EventInfo"
+                },
+                "response": {
+                    "$ref": "#/definitions/event-schedule_internal_api.Response"
+                }
+            }
+        },
+        "event-schedule_internal_api.GetEventsResponse": {
+            "type": "object",
+            "properties": {
+                "events": {
+                    "description": "TODO: implement convert Event structs",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/event-schedule_internal_model.EventInfo"
+                    }
+                },
+                "response": {
+                    "$ref": "#/definitions/event-schedule_internal_api.Response"
+                }
+            }
+        },
+        "event-schedule_internal_api.GetVacantDatesResponse": {
+            "type": "object",
+            "properties": {
+                "intervals": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/event-schedule_internal_model.Interval"
+                    }
+                },
+                "response": {
+                    "$ref": "#/definitions/event-schedule_internal_api.Response"
+                }
+            }
+        },
+        "event-schedule_internal_api.GetVacantRoomsResponse": {
+            "type": "object",
+            "properties": {
+                "response": {
+                    "$ref": "#/definitions/event-schedule_internal_api.Response"
+                },
+                "rooms": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/event-schedule_internal_model.Suite"
+                    }
+                }
+            }
+        },
+        "event-schedule_internal_api.Response": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "application-specific error code",
+                    "type": "integer"
+                },
+                "error": {
+                    "description": "application-level error message, for debugging",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "user-level status message",
+                    "type": "string"
+                }
+            }
+        },
+        "event-schedule_internal_api.UpdateEventRequest": {
+            "type": "object",
+            "properties": {
+                "endDate": {
+                    "description": "Дата и время окончания бронирования",
+                    "type": "string",
+                    "example": "2006-01-02T15:04:05Z07:00"
+                },
+                "notificationPeriod": {
+                    "description": "Интервал времени для уведомления о бронировании",
+                    "type": "string",
+                    "example": "24h"
+                },
+                "startDate": {
+                    "description": "Дата и время начала бронировании",
+                    "type": "string",
+                    "example": "2006-01-02T15:04:05Z07:00"
+                },
+                "suiteID": {
+                    "description": "Номер апартаментов",
+                    "type": "integer",
+                    "format": "int64",
+                    "example": 123
+                }
+            }
+        },
+        "event-schedule_internal_api.UpdateEventResponse": {
+            "type": "object",
+            "properties": {
+                "response": {
+                    "$ref": "#/definitions/event-schedule_internal_api.Response"
+                }
+            }
+        },
+        "event-schedule_internal_model.EventInfo": {
+            "type": "object",
+            "properties": {
+                "EventID": {
+                    "description": "уникальный идентификатор бронирования",
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "createdAt": {
+                    "description": "датаи время создания",
+                    "type": "string"
+                },
+                "endDate": {
+                    "description": "Дата и время окончания бронировании",
+                    "type": "string"
+                },
+                "notificationPeriod": {
+                    "description": "Интервал времени для уведомления о бронировании",
+                    "type": "string"
+                },
+                "startDate": {
+                    "description": "Дата и время начала бронировании",
+                    "type": "string"
+                },
+                "suiteID": {
+                    "description": "номер апартаментов",
+                    "type": "integer"
+                },
+                "updatedAt": {
+                    "description": "дата и время обновления",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/sql.NullTime"
+                        }
+                    ]
+                }
+            }
+        },
+        "event-schedule_internal_model.Interval": {
+            "type": "object",
+            "properties": {
+                "endDate": {
+                    "type": "string"
+                },
+                "startDate": {
+                    "type": "string",
+                    "example": "2006-01-02T15:04:05Z07:00"
+                }
+            }
+        },
+        "event-schedule_internal_model.Suite": {
+            "type": "object",
+            "properties": {
+                "capacity": {
+                    "type": "integer",
+                    "example": 4
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Winston Churchill"
+                },
+                "suiteID": {
+                    "type": "integer",
+                    "example": 123
+                }
+            }
+        },
+        "sql.NullTime": {
+            "type": "object",
+            "properties": {
+                "time": {
+                    "type": "string"
+                },
+                "valid": {
+                    "description": "Valid is true if Time is not NULL",
+                    "type": "boolean"
+                }
+            }
+        }
+    }
+}

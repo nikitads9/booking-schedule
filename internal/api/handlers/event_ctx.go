@@ -1,7 +1,8 @@
-package api
+package handlers
 
 import (
 	"context"
+	"event-schedule/internal/api"
 	"event-schedule/internal/lib/logger/sl"
 	"event-schedule/internal/model"
 	"log/slog"
@@ -10,6 +11,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
+	"github.com/gofrs/uuid"
 )
 
 // EventCtx middleware is used to load an Event object from
@@ -20,7 +22,8 @@ func (i *Implementation) EventCtx(log *slog.Logger) func(http.Handler) http.Hand
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			const op = "handlers.events.api.EventCtx"
 			var eventID string
-			var event *model.Event
+			var eventUUID uuid.UUID
+			var event *model.EventInfo
 			var err error
 
 			log = log.With(
@@ -29,16 +32,24 @@ func (i *Implementation) EventCtx(log *slog.Logger) func(http.Handler) http.Hand
 			)
 
 			if eventID = chi.URLParam(r, "eventID"); eventID == "" {
-				log.Error("invalid request", sl.Err(ErrNoEventID))
-				render.Render(w, r, ErrInvalidRequest(ErrNoEventID))
+				log.Error("invalid request", sl.Err(api.ErrNoEventID))
+				render.Render(w, r, api.ErrInvalidRequest(api.ErrNoEventID))
 				return
 			}
+
+			eventUUID, err = uuid.FromString(eventID)
+			if err != nil {
+				log.Error("invalid request", sl.Err(err))
+				render.Render(w, r, api.ErrInvalidRequest(err))
+				return
+			}
+
 			log.Info("decoded URL param", slog.Any("eventID", eventID))
 
-			event, err = i.Service.GetEvent(r.Context(), eventID)
+			event, err = i.Service.GetEvent(r.Context(), eventUUID)
 			if err != nil {
 				log.Error("internal error", sl.Err(err))
-				render.Render(w, r, ErrInternalError(err))
+				render.Render(w, r, api.ErrInternalError(err))
 				return
 			}
 

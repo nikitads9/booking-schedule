@@ -2,7 +2,7 @@ package app
 
 import (
 	"context"
-	"event-schedule/internal/api"
+	"event-schedule/internal/api/handlers"
 	"event-schedule/internal/client/db"
 	"event-schedule/internal/config"
 	scheduleRepository "event-schedule/internal/repository/schedule"
@@ -22,10 +22,10 @@ type serviceProvider struct {
 	server *http.Server
 	log    *slog.Logger
 
-	/* 	scheduleRepository scheduleRepository.Repository
-	   	scheduleService    *scheduleService.Service */
+	scheduleRepository scheduleRepository.Repository
+	scheduleService    *scheduleService.Service
 
-	impl *api.Implementation
+	scheduleImpl *handlers.Implementation
 }
 
 func newServiceProvider(configPath string) *serviceProvider {
@@ -64,12 +64,12 @@ func (s *serviceProvider) GetConfig() *config.Config {
 }
 
 func (s *serviceProvider) GetScheduleRepository(ctx context.Context) scheduleRepository.Repository {
-	if s.impl.Service.scheduleRepository == nil {
-		s.impl.Service.scheduleRepository = scheduleRepository.NewScheduleRepository(s.GetDB(ctx))
-		return s.impl.Service.scheduleRepository
+	if s.scheduleRepository == nil {
+		s.scheduleRepository = scheduleRepository.NewScheduleRepository(s.GetDB(ctx))
+		return s.scheduleRepository
 	}
 
-	return s.impl.Service.scheduleRepository
+	return s.scheduleRepository
 }
 
 func (s *serviceProvider) GetScheduleService(ctx context.Context) *scheduleService.Service {
@@ -81,12 +81,12 @@ func (s *serviceProvider) GetScheduleService(ctx context.Context) *scheduleServi
 	return s.scheduleService
 }
 
-func (s *serviceProvider) Getimpl(ctx context.Context) *api.Implementation {
-	if s.impl == nil {
-		s.impl = api.NewImplementation(s.GetScheduleService(ctx))
+func (s *serviceProvider) GetScheduleImpl(ctx context.Context) *handlers.Implementation {
+	if s.scheduleImpl == nil {
+		s.scheduleImpl = handlers.NewImplementation(s.GetScheduleService(ctx))
 	}
 
-	return s.impl
+	return s.scheduleImpl
 }
 
 func (s *serviceProvider) getServer(router http.Handler) *http.Server {

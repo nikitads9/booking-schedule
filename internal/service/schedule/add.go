@@ -1,7 +1,12 @@
 package schedule
 
-import "context"
+import (
+	"context"
+	"event-schedule/internal/model"
 
-func (s *Service) AddEvent(ctx context.Context) (string, error) {
-	return s.scheduleRepository.AddEvent(ctx)
+	"github.com/gofrs/uuid"
+)
+
+func (s *Service) AddEvent(ctx context.Context, mod *model.Event) (uuid.UUID, error) {
+	return s.scheduleRepository.AddEvent(ctx, mod)
 }

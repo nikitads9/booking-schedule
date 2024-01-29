@@ -1,0 +1,511 @@
+basePath: /events/
+definitions:
+  event-schedule_internal_api.AddEventRequest:
+    properties:
+      endDate:
+        description: Дата и время окончания бронировании
+        example: 2024-01-29T17:43:00Z03:00
+        type: string
+      notificationPeriod:
+        description: Интервал времени для предварительного уведомления о бронировании
+        example: 1h
+        type: string
+      startDate:
+        description: Дата и время начала бронировании
+        example: 2024-01-28T17:43:00Z03:00
+        type: string
+      suiteID:
+        description: номер апаратаментов
+        example: 123
+        type: integer
+    required:
+    - endDate
+    - startDate
+    - suiteID
+    type: object
+  event-schedule_internal_api.AddEventResponse:
+    properties:
+      eventID:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        format: uuid
+        type: string
+      response:
+        $ref: '#/definitions/event-schedule_internal_api.Response'
+    type: object
+  event-schedule_internal_api.DeleteEventResponse:
+    properties:
+      response:
+        $ref: '#/definitions/event-schedule_internal_api.Response'
+    type: object
+  event-schedule_internal_api.GetEventResponse:
+    properties:
+      event:
+        $ref: '#/definitions/event-schedule_internal_model.EventInfo'
+      response:
+        $ref: '#/definitions/event-schedule_internal_api.Response'
+    type: object
+  event-schedule_internal_api.GetEventsResponse:
+    properties:
+      events:
+        description: 'TODO: implement convert Event structs'
+        items:
+          $ref: '#/definitions/event-schedule_internal_model.EventInfo'
+        type: array
+      response:
+        $ref: '#/definitions/event-schedule_internal_api.Response'
+    type: object
+  event-schedule_internal_api.GetVacantDatesResponse:
+    properties:
+      intervals:
+        items:
+          $ref: '#/definitions/event-schedule_internal_model.Interval'
+        type: array
+      response:
+        $ref: '#/definitions/event-schedule_internal_api.Response'
+    type: object
+  event-schedule_internal_api.GetVacantRoomsResponse:
+    properties:
+      response:
+        $ref: '#/definitions/event-schedule_internal_api.Response'
+      rooms:
+        items:
+          $ref: '#/definitions/event-schedule_internal_model.Suite'
+        type: array
+    type: object
+  event-schedule_internal_api.Response:
+    properties:
+      code:
+        description: application-specific error code
+        type: integer
+      error:
+        description: application-level error message, for debugging
+        type: string
+      status:
+        description: user-level status message
+        type: string
+    type: object
+  event-schedule_internal_api.UpdateEventRequest:
+    properties:
+      endDate:
+        description: Дата и время окончания бронирования
+        example: 2006-01-02T15:04:05Z07:00
+        type: string
+      notificationPeriod:
+        description: Интервал времени для уведомления о бронировании
+        example: 24h
+        type: string
+      startDate:
+        description: Дата и время начала бронировании
+        example: 2006-01-02T15:04:05Z07:00
+        type: string
+      suiteID:
+        description: Номер апартаментов
+        example: 123
+        format: int64
+        type: integer
+    type: object
+  event-schedule_internal_api.UpdateEventResponse:
+    properties:
+      response:
+        $ref: '#/definitions/event-schedule_internal_api.Response'
+    type: object
+  event-schedule_internal_model.EventInfo:
+    properties:
+      EventID:
+        description: уникальный идентификатор бронирования
+        example: 550e8400-e29b-41d4-a716-446655440000
+        format: uuid
+        type: string
+      createdAt:
+        description: датаи время создания
+        type: string
+      endDate:
+        description: Дата и время окончания бронировании
+        type: string
+      notificationPeriod:
+        description: Интервал времени для уведомления о бронировании
+        type: string
+      startDate:
+        description: Дата и время начала бронировании
+        type: string
+      suiteID:
+        description: номер апартаментов
+        type: integer
+      updatedAt:
+        allOf:
+        - $ref: '#/definitions/sql.NullTime'
+        description: дата и время обновления
+    type: object
+  event-schedule_internal_model.Interval:
+    properties:
+      endDate:
+        type: string
+      startDate:
+        example: 2006-01-02T15:04:05Z07:00
+        type: string
+    type: object
+  event-schedule_internal_model.Suite:
+    properties:
+      capacity:
+        example: 4
+        type: integer
+      name:
+        example: Winston Churchill
+        type: string
+      suiteID:
+        example: 123
+        type: integer
+    type: object
+  sql.NullTime:
+    properties:
+      time:
+        type: string
+      valid:
+        description: Valid is true if Time is not NULL
+        type: boolean
+    type: object
+host: 127.0.0.1:3000
+info:
+  contact:
+    name: Nikita Denisenok
+    url: https://vk.com/ndenisenok
+  description: This is a service for writing and reading booking entries.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: event-schedule API
+  version: "1.0"
+paths:
+  /events/{user_id}/{event-id}/update:
+    patch:
+      consumes:
+      - application/json
+      description: Updates an existing Event with given EventID and several optional
+        fields. At least one field should not be empty.
+      parameters:
+      - default: 1234
+        description: user_id
+        format: int64
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      - default: 550e8400-e29b-41d4-a716-446655440000
+        description: event_id
+        format: uuid
+        in: path
+        name: event_id
+        required: true
+        type: string
+      - description: UpdateEventRequest
+        in: body
+        name: event
+        required: true
+        schema:
+          $ref: '#/definitions/event-schedule_internal_api.UpdateEventRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.UpdateEventResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.UpdateEventResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.UpdateEventResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.UpdateEventResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.UpdateEventResponse'
+      summary: Updates event info
+      tags:
+      - events
+  /events/{user_id}/{event_id}/delete:
+    delete:
+      description: Deletes an event with given uuid.
+      parameters:
+      - default: 1234
+        description: user_id
+        format: int64
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      - default: 550e8400-e29b-41d4-a716-446655440000
+        description: event_id
+        format: uuid
+        in: path
+        name: event_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.DeleteEventResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.DeleteEventResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.DeleteEventResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.DeleteEventResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.DeleteEventResponse'
+      summary: Deletes an event
+      tags:
+      - events
+  /events/{user_id}/{event_id}/get:
+    get:
+      description: Responds with event info with given EventID
+      parameters:
+      - default: 1234
+        description: user_id
+        format: int64
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      - default: 550e8400-e29b-41d4-a716-446655440000
+        description: event_id
+        format: uuid
+        in: path
+        name: event_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.GetEventResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.GetEventResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.GetEventResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.GetEventResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.GetEventResponse'
+      summary: Get event info
+      tags:
+      - events
+  /events/{user_id}/{interval}:
+    get:
+      description: Responds with series of event info objects within given time period.
+      parameters:
+      - default: 1234
+        description: user_id
+        format: int64
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      - default: 550e8400-e29b-41d4-a716-446655440000
+        description: event_id
+        format: uuid
+        in: path
+        name: event_id
+        required: true
+        type: string
+      - default: all
+        description: interval
+        in: path
+        name: interval
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.GetEventsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.GetEventsResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.GetEventsResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.GetEventsResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.GetEventsResponse'
+      summary: Get several events info
+      tags:
+      - events
+  /events/{user_id}/{suite_id}/get-vacant-dates:
+    get:
+      description: Responds with free dates within month for selected suite.
+      parameters:
+      - default: 1234
+        description: user_id
+        format: int64
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      - default: 1234
+        description: suite_id
+        format: int64
+        in: path
+        name: suite_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.GetVacantDatesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.GetVacantDatesResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.GetVacantDatesResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.GetVacantDatesResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.GetVacantDatesResponse'
+      summary: Get vacant intervals
+      tags:
+      - events
+  /events/{user_id}/add:
+    post:
+      consumes:
+      - application/json
+      description: Adds an even with given parameters associated with user.
+      parameters:
+      - default: 1234
+        description: user_id
+        format: int64
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      - description: AddEventRequest
+        in: body
+        name: event
+        required: true
+        schema:
+          $ref: '#/definitions/event-schedule_internal_api.AddEventRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.AddEventResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.AddEventResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.AddEventResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.AddEventResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.AddEventResponse'
+      summary: Adds event
+      tags:
+      - events
+  /events/{user_id}/get-vacant-rooms/{start}-{end}:
+    get:
+      description: Responds with event info with given EventID
+      parameters:
+      - default: 1234
+        description: user_id
+        format: int64
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      - default: 2006-01-02T15:04:05Z07:00
+        description: start
+        format: time.Time
+        in: path
+        name: start
+        required: true
+        type: string
+      - default: 2006-01-02T15:04:05Z07:00
+        description: end
+        format: time.Time
+        in: path
+        name: end
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.GetVacantRoomsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.GetVacantRoomsResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.GetVacantRoomsResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.GetVacantRoomsResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.GetVacantRoomsResponse'
+      summary: Get list of vacant rooms
+      tags:
+      - events
+swagger: "2.0"

@@ -17,6 +17,8 @@ create table events (
     start_date timestamp not null,
     end_date timestamp not null,
     notification_period interval,
+    created_at timestamp not null,
+    updated_at timestamp,
     suite_id bigint,
     owner_id bigint,
     constraint fk_rooms
