@@ -1,39 +1,42 @@
 package handlers
 
 import (
-	"context"
 	"event-schedule/internal/api"
 	"event-schedule/internal/convert"
 	"event-schedule/internal/lib/logger/sl"
 	"log/slog"
+	"strconv"
 
 	"net/http"
 
 	validator "github.com/go-playground/validator/v10"
 
+	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
 )
 
 // AddEvent godoc
 //
-//		@Summary		Adds event
-//		@Description	Adds an even with given parameters associated with user.
-//	 	NotificationPeriod must look like {number}s,{number}m or {number}h.
-//		@Tags			events
-//		@Accept			json
-//		@Produce		json
-//		@Param			user_id	path	int	true	"user_id"	Format(int64) default(1234)
-//		@Param          event	body	api.AddEventRequest	true	"AddEventRequest"
-//		@Success		200	{object}	api.AddEventResponse
-//		@Failure		400	{object}	api.AddEventResponse
-//		@Failure		404	{object}	api.AddEventResponse
-//		@Failure		422	{object}	api.AddEventResponse
-//		@Failure		503	{object}	api.AddEventResponse
-//		@Router			/events/{user_id}/add [post]
-func (i *Implementation) AddEvent(log *slog.Logger, ctx context.Context) http.HandlerFunc {
+//	@Summary		Adds event
+//	@Description	Adds an even with given parameters associated with user. NotificationPeriod must look like {number}s,{number}m or {number}h.
+//	@ID				addByEventJSON
+//	@Tags			events
+//	@Accept			json
+//	@Produce		json
+//	@Param			user_id	path	int	true	"user_id"	Format(int64) default(1234)
+//	@Param          event	body	api.AddEventRequest	true	"AddEventRequest"
+//	@Success		200	{object}	api.AddEventResponse
+//	@Failure		400	{object}	api.AddEventResponse
+//	@Failure		404	{object}	api.AddEventResponse
+//	@Failure		422	{object}	api.AddEventResponse
+//	@Failure		503	{object}	api.AddEventResponse
+//	@Router			/{user_id}/add [post]
+func (i *Implementation) AddEvent(log *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.events.api.AddEvent"
+
+		ctx := r.Context()
 
 		// Добавляем к текущму объекту логгера поля op и request_id
 		// Они могут очень упростить нам жизнь в будущем
@@ -43,7 +46,8 @@ func (i *Implementation) AddEvent(log *slog.Logger, ctx context.Context) http.Ha
 		)
 
 		req := &api.AddEventRequest{}
-		if err := render.Bind(r, req); err != nil {
+		err := render.Bind(r, req)
+		if err != nil {
 			log.Error("failed to decode request body", sl.Err(err))
 			render.Render(w, r, api.ErrInvalidRequest(err))
 			return
@@ -52,7 +56,8 @@ func (i *Implementation) AddEvent(log *slog.Logger, ctx context.Context) http.Ha
 
 		// Создаем объект валидатора
 		// и передаем в него структуру, которую нужно провалидировать
-		if err := validator.New().Struct(req); err != nil {
+		err = validator.New().Struct(req)
+		if err != nil {
 			// Приводим ошибку к типу ошибки валидации
 			validateErr := err.(validator.ValidationErrors)
 
@@ -63,17 +68,30 @@ func (i *Implementation) AddEvent(log *slog.Logger, ctx context.Context) http.Ha
 			return
 		}
 
-		id, err := i.Service.AddEvent(ctx, convert.ToEventInfo(req))
+		userID := chi.URLParam(r, "user_id")
+		if userID == "" {
+			log.Error("invalid request", sl.Err(api.ErrNoUserID))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoUserID))
+			return
+		}
+
+		id, err := strconv.ParseInt(userID, 10, 64)
+		if err != nil {
+			log.Error("invalid request", sl.Err(err))
+			render.Render(w, r, api.ErrInvalidRequest(err))
+		}
+
+		eventID, err := i.Service.AddEvent(ctx, convert.ToEvent(req, id))
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
 			render.Render(w, r, api.ErrInternalError(err))
 			return
 		}
 
-		log.Info("event added", slog.Any("id", id))
+		log.Info("event added", slog.Any("id", eventID))
 
 		render.Status(r, http.StatusCreated)
-		render.Render(w, r, api.AddEventResponseAPI(id))
+		render.Render(w, r, api.AddEventResponseAPI(eventID))
 	}
 
 }

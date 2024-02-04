@@ -19,8 +19,8 @@ create table events (
     notification_period interval,
     created_at timestamp not null,
     updated_at timestamp,
-    suite_id bigint,
-    owner_id bigint,
+    suite_id bigint not null,
+    owner_id bigint not null,
     constraint fk_rooms
         foreign key(suite_id) 
             references rooms(id) 

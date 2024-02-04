@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"event-schedule/internal/api"
 	"event-schedule/internal/lib/logger/sl"
 	"event-schedule/internal/model"
@@ -15,7 +14,8 @@ import (
 // DeleteEvent godoc
 //
 //	@Summary		Deletes an event
-//	@Description	Deletes an event with given uuid.
+//	@Description	Deletes an event with given UUID.
+//	@ID				removeByEventID
 //	@Tags			events
 //	@Produce		json
 //	@Param			user_id	path	int	true	"user_id"	Format(int64) default(1234)
@@ -25,11 +25,12 @@ import (
 //	@Failure		404	{object}	api.DeleteEventResponse
 //	@Failure		422	{object}	api.DeleteEventResponse
 //	@Failure		503	{object}	api.DeleteEventResponse
-//	@Router			/events/{user_id}/{event_id}/delete [delete]
-func (i *Implementation) DeleteEvent(log *slog.Logger, ctx context.Context) http.HandlerFunc {
+//	@Router			/{user_id}/{event_id}/delete [delete]
+func (i *Implementation) DeleteEvent(log *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.events.api.DeleteEvent"
-		var err error
+
+		ctx := r.Context()
 
 		log = log.With(
 			slog.String("op", op),
@@ -41,8 +42,13 @@ func (i *Implementation) DeleteEvent(log *slog.Logger, ctx context.Context) http
 		// middleware. The worst case, the recoverer middleware will save us.
 
 		event := r.Context().Value("event").(*model.EventInfo)
+		if event == nil {
+			log.Error("failed to load event from context", sl.Err(api.ErrEventNotFound))
+			render.Render(w, r, api.ErrInternalError(api.ErrEventNotFound))
+			return
+		}
 
-		err = i.Service.DeleteEvent(ctx, event.EventID)
+		err := i.Service.DeleteEvent(ctx, event.EventID)
 		if err != nil {
 			log.Error("failed to remove event", sl.Err(err))
 			render.Render(w, r, api.ErrInternalError(err))

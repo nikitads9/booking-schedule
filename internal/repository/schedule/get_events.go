@@ -8,16 +8,16 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-func (r *repository) GetEvents(ctx context.Context, userID int64) ([]*model.EventInfo, error) {
-	uid := gofakeit.UUID()
-	res, _ := uuid.FromString(uid)
+func (r *repository) GetEvents(ctx context.Context, mod *model.GetEventsInfo) ([]*model.EventInfo, error) {
+
+	//builder := sq.Select("").PlaceholderFormat(sq.Dollar)
 	return []*model.EventInfo{
-		{EventID: res,
+		{EventID: uuid.Nil,
 			SuiteID:   gofakeit.Int64(),
 			StartDate: gofakeit.FutureDate(),
 			EndDate:   gofakeit.FutureDate(),
 			CreatedAt: gofakeit.PastDate()},
-		{EventID: res,
+		{EventID: uuid.Nil,
 			SuiteID:   gofakeit.Int64(),
 			StartDate: gofakeit.FutureDate(),
 			EndDate:   gofakeit.FutureDate(),

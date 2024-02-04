@@ -22,11 +22,13 @@ func init() {
 //	@contact.name	Nikita Denisenok
 //	@contact.url	https://vk.com/ndenisenok
 
-//	@license.name	Apache 2.0
-//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
+//	@license.name	GNU 3.0
+//	@license.url	https://www.gnu.org/licenses/gpl-3.0.ru.html
 
-//	@host		127.0.0.1:3000
-//	@BasePath	/events/
+//	@host			127.0.0.1:3000
+//	@BasePath		/events
+//  @Schemes 		http https
+//	@Tags			events
 
 func main() {
 	flag.Parse()
@@ -38,3 +40,4 @@ func main() {
 }
 
 //TODO: go install github.com/swaggo/swag/cmd/swag@latest и еще chi
+// swag init --generalInfo cmd/server/schedule.go --parseDependency --parseInternal

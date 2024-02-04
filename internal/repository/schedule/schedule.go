@@ -11,7 +11,7 @@ import (
 
 type Repository interface {
 	AddEvent(ctx context.Context, mod *model.Event) (uuid.UUID, error)
-	GetEvents(ctx context.Context, userID int64) ([]*model.EventInfo, error)
+	GetEvents(ctx context.Context, mod *model.GetEventsInfo) ([]*model.EventInfo, error)
 	GetEvent(ctx context.Context, eventID uuid.UUID) (*model.EventInfo, error)
 	UpdateEvent(ctx context.Context, mod *model.UpdateEventInfo) error
 	DeleteEvent(ctx context.Context, eventID uuid.UUID) error

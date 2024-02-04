@@ -17,7 +17,7 @@ import (
 // EventCtx middleware is used to load an Event object from
 // the URL parameters passed through as the request. In case
 // the Event could not be found, we stop here and return a 404.
-func (i *Implementation) EventCtx(log *slog.Logger, ctx context.Context) func(http.Handler) http.Handler {
+func (i *Implementation) EventCtx(log *slog.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			const op = "handlers.events.api.EventCtx"
@@ -26,12 +26,14 @@ func (i *Implementation) EventCtx(log *slog.Logger, ctx context.Context) func(ht
 			var event *model.EventInfo
 			var err error
 
+			ctx := r.Context()
+
 			log = log.With(
 				slog.String("op", op),
 				slog.String("request_id", middleware.GetReqID(ctx)),
 			)
 
-			if eventID = chi.URLParam(r, "eventID"); eventID == "" {
+			if eventID = chi.URLParam(r, "event_id"); eventID == "" {
 				log.Error("invalid request", sl.Err(api.ErrNoEventID))
 				render.Render(w, r, api.ErrInvalidRequest(api.ErrNoEventID))
 				return
@@ -55,7 +57,7 @@ func (i *Implementation) EventCtx(log *slog.Logger, ctx context.Context) func(ht
 
 			log.Info("event acquired", slog.Any("event", event))
 
-			ctx := context.WithValue(ctx, "event", event)
+			ctx = context.WithValue(ctx, "event", event)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

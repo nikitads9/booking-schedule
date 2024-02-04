@@ -1,10 +1,10 @@
-basePath: /events/
+basePath: /events
 definitions:
   event-schedule_internal_api.AddEventRequest:
     properties:
       endDate:
         description: Дата и время окончания бронировании
-        example: 2024-01-29T17:43:00Z03:00
+        example: "2024-01-29T17:43:00-03:00"
         type: string
       notificationPeriod:
         description: Интервал времени для предварительного уведомления о бронировании
@@ -12,7 +12,7 @@ definitions:
         type: string
       startDate:
         description: Дата и время начала бронировании
-        example: 2024-01-28T17:43:00Z03:00
+        example: "2024-01-28T17:43:00-03:00"
         type: string
       suiteID:
         description: номер апаратаментов
@@ -88,7 +88,7 @@ definitions:
     properties:
       endDate:
         description: Дата и время окончания бронирования
-        example: 2006-01-02T15:04:05Z07:00
+        example: "2006-01-02T15:04:05-07:00"
         type: string
       notificationPeriod:
         description: Интервал времени для уведомления о бронировании
@@ -96,7 +96,7 @@ definitions:
         type: string
       startDate:
         description: Дата и время начала бронировании
-        example: 2006-01-02T15:04:05Z07:00
+        example: "2006-01-02T15:04:05-07:00"
         type: string
       suiteID:
         description: Номер апартаментов
@@ -112,12 +112,12 @@ definitions:
   event-schedule_internal_model.EventInfo:
     properties:
       EventID:
-        description: уникальный идентификатор бронирования
+        description: Уникальный идентификатор бронирования
         example: 550e8400-e29b-41d4-a716-446655440000
         format: uuid
         type: string
       createdAt:
-        description: датаи время создания
+        description: Дата и время создания
         type: string
       endDate:
         description: Дата и время окончания бронировании
@@ -129,19 +129,19 @@ definitions:
         description: Дата и время начала бронировании
         type: string
       suiteID:
-        description: номер апартаментов
+        description: Номер апартаментов
         type: integer
       updatedAt:
         allOf:
         - $ref: '#/definitions/sql.NullTime'
-        description: дата и время обновления
+        description: Дата и время обновления
     type: object
   event-schedule_internal_model.Interval:
     properties:
       endDate:
         type: string
       startDate:
-        example: 2006-01-02T15:04:05Z07:00
+        example: "2006-01-02T15:04:05-07:00"
         type: string
     type: object
   event-schedule_internal_model.Suite:
@@ -171,18 +171,110 @@ info:
     url: https://vk.com/ndenisenok
   description: This is a service for writing and reading booking entries.
   license:
-    name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0.html
+    name: GNU 3.0
+    url: https://www.gnu.org/licenses/gpl-3.0.ru.html
   termsOfService: http://swagger.io/terms/
   title: event-schedule API
   version: "1.0"
 paths:
-  /events/{user_id}/{event-id}/update:
+  /{user_id}/{event_id}/delete:
+    delete:
+      description: Deletes an event with given UUID.
+      operationId: removeByEventID
+      parameters:
+      - default: 1234
+        description: user_id
+        format: int64
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      - default: 550e8400-e29b-41d4-a716-446655440000
+        description: event_id
+        format: uuid
+        in: path
+        name: event_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.DeleteEventResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.DeleteEventResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.DeleteEventResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.DeleteEventResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.DeleteEventResponse'
+      summary: Deletes an event
+      tags:
+      - events
+  /{user_id}/{event_id}/get:
+    get:
+      description: Responds with event info with given EventID.
+      operationId: getEventbyTag
+      parameters:
+      - default: 1234
+        description: user_id
+        format: int64
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      - default: 550e8400-e29b-41d4-a716-446655440000
+        description: event_id
+        format: uuid
+        in: path
+        name: event_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.GetEventResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.GetEventResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.GetEventResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.GetEventResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/event-schedule_internal_api.GetEventResponse'
+      summary: Get event info
+      tags:
+      - events
+  /{user_id}/{event_id}/update:
     patch:
       consumes:
       - application/json
       description: Updates an existing Event with given EventID and several optional
-        fields. At least one field should not be empty.
+        fields. At least one field should not be empty. NotificationPeriod must look
+        like {number}s,{number}m or {number}h.
+      operationId: modifyEventByJSON
       parameters:
       - default: 1234
         description: user_id
@@ -230,97 +322,11 @@ paths:
       summary: Updates event info
       tags:
       - events
-  /events/{user_id}/{event_id}/delete:
-    delete:
-      description: Deletes an event with given uuid.
-      parameters:
-      - default: 1234
-        description: user_id
-        format: int64
-        in: path
-        name: user_id
-        required: true
-        type: integer
-      - default: 550e8400-e29b-41d4-a716-446655440000
-        description: event_id
-        format: uuid
-        in: path
-        name: event_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/event-schedule_internal_api.DeleteEventResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/event-schedule_internal_api.DeleteEventResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/event-schedule_internal_api.DeleteEventResponse'
-        "422":
-          description: Unprocessable Entity
-          schema:
-            $ref: '#/definitions/event-schedule_internal_api.DeleteEventResponse'
-        "503":
-          description: Service Unavailable
-          schema:
-            $ref: '#/definitions/event-schedule_internal_api.DeleteEventResponse'
-      summary: Deletes an event
-      tags:
-      - events
-  /events/{user_id}/{event_id}/get:
-    get:
-      description: Responds with event info with given EventID
-      parameters:
-      - default: 1234
-        description: user_id
-        format: int64
-        in: path
-        name: user_id
-        required: true
-        type: integer
-      - default: 550e8400-e29b-41d4-a716-446655440000
-        description: event_id
-        format: uuid
-        in: path
-        name: event_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/event-schedule_internal_api.GetEventResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/event-schedule_internal_api.GetEventResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/event-schedule_internal_api.GetEventResponse'
-        "422":
-          description: Unprocessable Entity
-          schema:
-            $ref: '#/definitions/event-schedule_internal_api.GetEventResponse'
-        "503":
-          description: Service Unavailable
-          schema:
-            $ref: '#/definitions/event-schedule_internal_api.GetEventResponse'
-      summary: Get event info
-      tags:
-      - events
-  /events/{user_id}/{interval}:
+  /{user_id}/{start}_{end}:
     get:
       description: Responds with series of event info objects within given time period.
+        The parameters are start date and end date.
+      operationId: getMultipleEventsByTag
       parameters:
       - default: 1234
         description: user_id
@@ -329,13 +335,6 @@ paths:
         name: user_id
         required: true
         type: integer
-      - default: 550e8400-e29b-41d4-a716-446655440000
-        description: event_id
-        format: uuid
-        in: path
-        name: event_id
-        required: true
-        type: string
       - default: all
         description: interval
         in: path
@@ -368,9 +367,10 @@ paths:
       summary: Get several events info
       tags:
       - events
-  /events/{user_id}/{suite_id}/get-vacant-dates:
+  /{user_id}/{suite_id}/get-vacant-dates:
     get:
       description: Responds with free dates within month for selected suite.
+      operationId: getDatesBySuiteID
       parameters:
       - default: 1234
         description: user_id
@@ -412,11 +412,13 @@ paths:
       summary: Get vacant intervals
       tags:
       - events
-  /events/{user_id}/add:
+  /{user_id}/add:
     post:
       consumes:
       - application/json
-      description: Adds an even with given parameters associated with user.
+      description: Adds an even with given parameters associated with user. NotificationPeriod
+        must look like {number}s,{number}m or {number}h.
+      operationId: addByEventJSON
       parameters:
       - default: 1234
         description: user_id
@@ -457,9 +459,10 @@ paths:
       summary: Adds event
       tags:
       - events
-  /events/{user_id}/get-vacant-rooms/{start}-{end}:
+  /{user_id}/get-vacant-rooms/{start}_{end}:
     get:
-      description: Responds with event info with given EventID
+      description: Receives two dates. Responds with list of vacant rooms.
+      operationId: getRoomsByDates
       parameters:
       - default: 1234
         description: user_id
@@ -468,14 +471,14 @@ paths:
         name: user_id
         required: true
         type: integer
-      - default: 2006-01-02T15:04:05Z07:00
+      - default: "2006-01-02T15:04:05-07:00"
         description: start
         format: time.Time
         in: path
         name: start
         required: true
         type: string
-      - default: 2006-01-02T15:04:05Z07:00
+      - default: "2006-01-02T15:04:05-07:00"
         description: end
         format: time.Time
         in: path
@@ -508,4 +511,7 @@ paths:
       summary: Get list of vacant rooms
       tags:
       - events
+schemes:
+- http
+- https
 swagger: "2.0"

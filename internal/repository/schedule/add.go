@@ -12,8 +12,8 @@ import (
 
 func (r *repository) AddEvent(ctx context.Context, mod *model.Event) (uuid.UUID, error) {
 	builder := sq.Insert(table.EventTable).
-		Columns("suite_id", "start_date", "end_date", "notification_period").
-		Values(mod.SuiteID, mod.StartDate, mod.EndDate, mod.NotificationPeriod).
+		Columns("user_id", "suite_id", "start_date", "end_date", "notification_period").
+		Values(mod.UserID, mod.SuiteID, mod.StartDate, mod.EndDate, mod.NotificationPeriod).
 		Suffix("returning id").
 		PlaceholderFormat(sq.Dollar)
 

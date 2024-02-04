@@ -25,6 +25,7 @@ type Response struct {
 	ErrorText string `json:"error,omitempty"` // application-level error message, for debugging
 }
 
+var ErrMissingValues = errors.New("could not get path variables and query parameters")
 var ErrNoUserID = errors.New(" received no user id")
 var ErrNoEventID = errors.New("received no event id")
 var ErrNoInterval = errors.New(" received no time period")

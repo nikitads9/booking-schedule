@@ -15,17 +15,17 @@ const docTemplate = `{
             "url": "https://vk.com/ndenisenok"
         },
         "license": {
-            "name": "Apache 2.0",
-            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+            "name": "GNU 3.0",
+            "url": "https://www.gnu.org/licenses/gpl-3.0.ru.html"
         },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/events/{user_id}/add": {
+        "/{user_id}/add": {
             "post": {
-                "description": "Adds an even with given parameters associated with user.",
+                "description": "Adds an even with given parameters associated with user. NotificationPeriod must look like {number}s,{number}m or {number}h.",
                 "consumes": [
                     "application/json"
                 ],
@@ -36,6 +36,7 @@ const docTemplate = `{
                     "events"
                 ],
                 "summary": "Adds event",
+                "operationId": "addByEventJSON",
                 "parameters": [
                     {
                         "type": "integer",
@@ -90,9 +91,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/events/{user_id}/get-vacant-rooms/{start}-{end}": {
+        "/{user_id}/get-vacant-rooms/{start}_{end}": {
             "get": {
-                "description": "Responds with event info with given EventID",
+                "description": "Receives two dates. Responds with list of vacant rooms.",
                 "produces": [
                     "application/json"
                 ],
@@ -100,6 +101,7 @@ const docTemplate = `{
                     "events"
                 ],
                 "summary": "Get list of vacant rooms",
+                "operationId": "getRoomsByDates",
                 "parameters": [
                     {
                         "type": "integer",
@@ -113,7 +115,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "format": "time.Time",
-                        "default": "2006-01-02T15:04:05Z07:00",
+                        "default": "2006-01-02T15:04:05-07:00",
                         "description": "start",
                         "name": "start",
                         "in": "path",
@@ -122,7 +124,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "format": "time.Time",
-                        "default": "2006-01-02T15:04:05Z07:00",
+                        "default": "2006-01-02T15:04:05-07:00",
                         "description": "end",
                         "name": "end",
                         "in": "path",
@@ -163,9 +165,139 @@ const docTemplate = `{
                 }
             }
         },
-        "/events/{user_id}/{event-id}/update": {
+        "/{user_id}/{event_id}/delete": {
+            "delete": {
+                "description": "Deletes an event with given UUID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "Deletes an event",
+                "operationId": "removeByEventID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "int64",
+                        "default": 1234,
+                        "description": "user_id",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "default": "550e8400-e29b-41d4-a716-446655440000",
+                        "description": "event_id",
+                        "name": "event_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.DeleteEventResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.DeleteEventResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.DeleteEventResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.DeleteEventResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.DeleteEventResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/{user_id}/{event_id}/get": {
+            "get": {
+                "description": "Responds with event info with given EventID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "Get event info",
+                "operationId": "getEventbyTag",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "int64",
+                        "default": 1234,
+                        "description": "user_id",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "default": "550e8400-e29b-41d4-a716-446655440000",
+                        "description": "event_id",
+                        "name": "event_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetEventResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetEventResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetEventResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetEventResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetEventResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/{user_id}/{event_id}/update": {
             "patch": {
-                "description": "Updates an existing Event with given EventID and several optional fields. At least one field should not be empty.",
+                "description": "Updates an existing Event with given EventID and several optional fields. At least one field should not be empty. NotificationPeriod must look like {number}s,{number}m or {number}h.",
                 "consumes": [
                     "application/json"
                 ],
@@ -176,6 +308,7 @@ const docTemplate = `{
                     "events"
                 ],
                 "summary": "Updates event info",
+                "operationId": "modifyEventByJSON",
                 "parameters": [
                     {
                         "type": "integer",
@@ -239,137 +372,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/events/{user_id}/{event_id}/delete": {
-            "delete": {
-                "description": "Deletes an event with given uuid.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "events"
-                ],
-                "summary": "Deletes an event",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "format": "int64",
-                        "default": 1234,
-                        "description": "user_id",
-                        "name": "user_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "format": "uuid",
-                        "default": "550e8400-e29b-41d4-a716-446655440000",
-                        "description": "event_id",
-                        "name": "event_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.DeleteEventResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.DeleteEventResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.DeleteEventResponse"
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity",
-                        "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.DeleteEventResponse"
-                        }
-                    },
-                    "503": {
-                        "description": "Service Unavailable",
-                        "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.DeleteEventResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/events/{user_id}/{event_id}/get": {
+        "/{user_id}/{start}_{end}": {
             "get": {
-                "description": "Responds with event info with given EventID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "events"
-                ],
-                "summary": "Get event info",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "format": "int64",
-                        "default": 1234,
-                        "description": "user_id",
-                        "name": "user_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "format": "uuid",
-                        "default": "550e8400-e29b-41d4-a716-446655440000",
-                        "description": "event_id",
-                        "name": "event_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetEventResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetEventResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetEventResponse"
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity",
-                        "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetEventResponse"
-                        }
-                    },
-                    "503": {
-                        "description": "Service Unavailable",
-                        "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetEventResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/events/{user_id}/{interval}": {
-            "get": {
-                "description": "Responds with series of event info objects within given time period.",
+                "description": "Responds with series of event info objects within given time period. The parameters are start date and end date.",
                 "produces": [
                     "application/json"
                 ],
@@ -377,6 +382,7 @@ const docTemplate = `{
                     "events"
                 ],
                 "summary": "Get several events info",
+                "operationId": "getMultipleEventsByTag",
                 "parameters": [
                     {
                         "type": "integer",
@@ -384,15 +390,6 @@ const docTemplate = `{
                         "default": 1234,
                         "description": "user_id",
                         "name": "user_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "format": "uuid",
-                        "default": "550e8400-e29b-41d4-a716-446655440000",
-                        "description": "event_id",
-                        "name": "event_id",
                         "in": "path",
                         "required": true
                     },
@@ -439,7 +436,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/events/{user_id}/{suite_id}/get-vacant-dates": {
+        "/{user_id}/{suite_id}/get-vacant-dates": {
             "get": {
                 "description": "Responds with free dates within month for selected suite.",
                 "produces": [
@@ -449,6 +446,7 @@ const docTemplate = `{
                     "events"
                 ],
                 "summary": "Get vacant intervals",
+                "operationId": "getDatesBySuiteID",
                 "parameters": [
                     {
                         "type": "integer",
@@ -516,7 +514,7 @@ const docTemplate = `{
                 "endDate": {
                     "description": "Дата и время окончания бронировании",
                     "type": "string",
-                    "example": "2024-01-29T17:43:00Z03:00"
+                    "example": "2024-01-29T17:43:00-03:00"
                 },
                 "notificationPeriod": {
                     "description": "Интервал времени для предварительного уведомления о бронировании",
@@ -526,7 +524,7 @@ const docTemplate = `{
                 "startDate": {
                     "description": "Дата и время начала бронировании",
                     "type": "string",
-                    "example": "2024-01-28T17:43:00Z03:00"
+                    "example": "2024-01-28T17:43:00-03:00"
                 },
                 "suiteID": {
                     "description": "номер апаратаментов",
@@ -633,7 +631,7 @@ const docTemplate = `{
                 "endDate": {
                     "description": "Дата и время окончания бронирования",
                     "type": "string",
-                    "example": "2006-01-02T15:04:05Z07:00"
+                    "example": "2006-01-02T15:04:05-07:00"
                 },
                 "notificationPeriod": {
                     "description": "Интервал времени для уведомления о бронировании",
@@ -643,7 +641,7 @@ const docTemplate = `{
                 "startDate": {
                     "description": "Дата и время начала бронировании",
                     "type": "string",
-                    "example": "2006-01-02T15:04:05Z07:00"
+                    "example": "2006-01-02T15:04:05-07:00"
                 },
                 "suiteID": {
                     "description": "Номер апартаментов",
@@ -665,13 +663,13 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "EventID": {
-                    "description": "уникальный идентификатор бронирования",
+                    "description": "Уникальный идентификатор бронирования",
                     "type": "string",
                     "format": "uuid",
                     "example": "550e8400-e29b-41d4-a716-446655440000"
                 },
                 "createdAt": {
-                    "description": "датаи время создания",
+                    "description": "Дата и время создания",
                     "type": "string"
                 },
                 "endDate": {
@@ -687,11 +685,11 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "suiteID": {
-                    "description": "номер апартаментов",
+                    "description": "Номер апартаментов",
                     "type": "integer"
                 },
                 "updatedAt": {
-                    "description": "дата и время обновления",
+                    "description": "Дата и время обновления",
                     "allOf": [
                         {
                             "$ref": "#/definitions/sql.NullTime"
@@ -708,7 +706,7 @@ const docTemplate = `{
                 },
                 "startDate": {
                     "type": "string",
-                    "example": "2006-01-02T15:04:05Z07:00"
+                    "example": "2006-01-02T15:04:05-07:00"
                 }
             }
         },
@@ -748,8 +746,8 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "127.0.0.1:3000",
-	BasePath:         "/events/",
-	Schemes:          []string{},
+	BasePath:         "/events",
+	Schemes:          []string{"http", "https"},
 	Title:            "event-schedule API",
 	Description:      "This is a service for writing and reading booking entries.",
 	InfoInstanceName: "swagger",
