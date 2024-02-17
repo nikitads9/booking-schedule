@@ -29,7 +29,7 @@ import (
 //	@Router			/{user_id}/{suite_id}/get-vacant-dates [get]
 func (i *Implementation) GetVacantDates(log *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "handlers.events.api.GetVacantDates"
+		const op = "events.api.handlers.GetVacantDates"
 
 		ctx := r.Context()
 
@@ -48,18 +48,24 @@ func (i *Implementation) GetVacantDates(log *slog.Logger) http.HandlerFunc {
 		id, err := strconv.ParseInt(suiteID, 10, 64)
 		if err != nil {
 			log.Error("invalid request", sl.Err(err))
-			render.Render(w, r, api.ErrInvalidRequest(err))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
 			return
 		}
 
-		intervals, err := i.Service.GetVacantDates(ctx, id) //TODO:GetVacantDates
+		if id == 0 {
+			log.Error("invalid request", sl.Err(api.ErrNoSuiteID))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoSuiteID))
+			return
+		}
+
+		intervals, err := i.Service.GetVacantDates(ctx, id)
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
 			render.Render(w, r, api.ErrInternalError(err))
 			return
 		}
 
-		log.Info("vacant dates acquired", slog.Any("intervals", intervals))
+		log.Info("vacant dates acquired", slog.Any("quantity:", len(intervals)))
 
 		render.Status(r, http.StatusCreated)
 		render.Render(w, r, api.GetVacantDatesAPI(intervals))

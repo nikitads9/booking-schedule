@@ -4,20 +4,17 @@ import (
 	"event-schedule/internal/api"
 	"event-schedule/internal/convert"
 	"event-schedule/internal/lib/logger/sl"
-	"event-schedule/internal/model"
 	"log/slog"
 	"net/http"
-	"strconv"
 
 	"github.com/go-chi/chi/middleware"
-	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 )
 
 // UpdateEvent godoc
 //
 //	@Summary		Updates event info
-//	@Description	Updates an existing Event with given EventID and several optional fields. At least one field should not be empty. NotificationPeriod must look like {number}s,{number}m or {number}h.
+//	@Description	Updates an existing Event with given EventID and several optional fields. At least one field should not be empty. NotificationPeriod must look like {number}s,{number}m or {number}h. Implemented with the use of transaction: first availibility is checked - in case one attempts to alter his previous booking (i.e. widen or tighten its' limits) the booking is updated. If it overlaps with smb else's booking the request is considered unsuccessful.
 //	@ID				modifyEventByJSON
 //	@Tags			events
 //	@Accept			json
@@ -30,10 +27,10 @@ import (
 //	@Failure		404	{object}	api.UpdateEventResponse
 //	@Failure		422	{object}	api.UpdateEventResponse
 //	@Failure		503	{object}	api.UpdateEventResponse
-//	@Router			/{user_id}/{event_id}/update [patch]
+//	@Router			/{user_id}/{event_id}/update [put]
 func (i *Implementation) UpdateEvent(log *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "handlers.events.api.UpdateEvent"
+		const op = "events.api.handlers.UpdateEvent"
 
 		ctx := r.Context()
 
@@ -41,14 +38,6 @@ func (i *Implementation) UpdateEvent(log *slog.Logger) http.HandlerFunc {
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(ctx)),
 		)
-
-		//TODO: getters for EventInfo
-		event := r.Context().Value("event").(*model.EventInfo)
-		if event == nil {
-			log.Error("failed to load event from context", sl.Err(api.ErrEventNotFound))
-			render.Render(w, r, api.ErrInternalError(api.ErrEventNotFound))
-			return
-		}
 
 		req := &api.UpdateEventRequest{}
 		err := render.Bind(r, req)
@@ -60,26 +49,20 @@ func (i *Implementation) UpdateEvent(log *slog.Logger) http.HandlerFunc {
 
 		log.Info("request body decoded", slog.Any("req", req))
 
-		userID := chi.URLParam(r, "user_id")
-		if userID == "" {
-			log.Error("invalid request", sl.Err(api.ErrNoUserID))
-			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoUserID))
-		}
-
-		id, err := strconv.ParseInt(userID, 10, 64)
+		mod, err := convert.ToUpdateEventInfo(r, req)
 		if err != nil {
-			log.Error("invalid request", sl.Err(err))
+			log.Error("invalid request", sl.Err(err)) //TODO: log real error
 			render.Render(w, r, api.ErrInvalidRequest(err))
 		}
 
-		err = i.Service.UpdateEvent(ctx, convert.ToUpdateEventInfo(req, event.EventID, id))
+		err = i.Service.UpdateEvent(ctx, mod)
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
 			render.Render(w, r, api.ErrInternalError(err))
 			return
 		}
 
-		log.Info("event updated", slog.Any("id", event.EventID))
+		log.Info("event updated", slog.Any("id:", mod.EventID))
 
 		render.Render(w, r, api.UpdateEventResponseAPI())
 	}

@@ -2,30 +2,32 @@ package app
 
 import (
 	"context"
-	"event-schedule/internal/api/handlers"
-	"event-schedule/internal/client/db"
-	"event-schedule/internal/config"
-	scheduleRepository "event-schedule/internal/repository/schedule"
-	scheduleService "event-schedule/internal/service/schedule"
 	"log"
 	"log/slog"
 	"net/http"
 	"os"
+
+	"event-schedule/internal/api/handlers"
+	"event-schedule/internal/client/db"
+	"event-schedule/internal/client/db/transaction"
+	"event-schedule/internal/config"
+	eventRepository "event-schedule/internal/repository/event"
+	eventService "event-schedule/internal/service/event"
 )
 
 type serviceProvider struct {
-	db db.Client
-	//txManager  db.TxManager
+	db         db.Client
+	txManager  db.TxManager
 	configPath string
 	config     *config.Config
 
 	server *http.Server
 	log    *slog.Logger
 
-	scheduleRepository scheduleRepository.Repository
-	scheduleService    *scheduleService.Service
+	eventRepository eventRepository.Repository
+	eventService    *eventService.Service
 
-	scheduleImpl *handlers.Implementation
+	eventImpl *handlers.Implementation
 }
 
 func newServiceProvider(configPath string) *serviceProvider {
@@ -63,30 +65,30 @@ func (s *serviceProvider) GetConfig() *config.Config {
 	return s.config
 }
 
-func (s *serviceProvider) GetScheduleRepository(ctx context.Context) scheduleRepository.Repository {
-	if s.scheduleRepository == nil {
-		s.scheduleRepository = scheduleRepository.NewScheduleRepository(s.GetDB(ctx))
-		return s.scheduleRepository
+func (s *serviceProvider) GetEventRepository(ctx context.Context, log *slog.Logger) eventRepository.Repository {
+	if s.eventRepository == nil {
+		s.eventRepository = eventRepository.NewEventRepository(s.GetDB(ctx), log)
+		return s.eventRepository
 	}
 
-	return s.scheduleRepository
+	return s.eventRepository
 }
 
-func (s *serviceProvider) GetScheduleService(ctx context.Context) *scheduleService.Service {
-	if s.scheduleService == nil {
-		scheduleRepository := s.GetScheduleRepository(ctx)
-		s.scheduleService = scheduleService.NewScheduleService(scheduleRepository)
+func (s *serviceProvider) GetEventService(ctx context.Context, log *slog.Logger) *eventService.Service {
+	if s.eventService == nil {
+		eventRepository := s.GetEventRepository(ctx, log)
+		s.eventService = eventService.NewEventService(eventRepository, log, s.TxManager(ctx))
 	}
 
-	return s.scheduleService
+	return s.eventService
 }
 
-func (s *serviceProvider) GetScheduleImpl(ctx context.Context) *handlers.Implementation {
-	if s.scheduleImpl == nil {
-		s.scheduleImpl = handlers.NewImplementation(s.GetScheduleService(ctx))
+func (s *serviceProvider) GetEventImpl(ctx context.Context) *handlers.Implementation {
+	if s.eventImpl == nil {
+		s.eventImpl = handlers.NewImplementation(s.GetEventService(ctx, s.setupLogger()))
 	}
 
-	return s.scheduleImpl
+	return s.eventImpl
 }
 
 func (s *serviceProvider) getServer(router http.Handler) *http.Server {
@@ -123,11 +125,10 @@ func (s *serviceProvider) setupLogger() *slog.Logger {
 	return s.log
 }
 
-/* func (s *serviceProvider) TxManager(ctx context.Context) db.TxManager {
+func (s *serviceProvider) TxManager(ctx context.Context) db.TxManager {
 	if s.txManager == nil {
 		s.txManager = transaction.NewTransactionManager(s.GetDB(ctx).DB())
 	}
 
 	return s.txManager
 }
-*/

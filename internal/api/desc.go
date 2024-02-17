@@ -1,11 +1,13 @@
 package api
 
 import (
-	"database/sql"
 	"event-schedule/internal/model"
 	"net/http"
 	"time"
 
+	"gopkg.in/guregu/null.v3"
+
+	validator "github.com/go-playground/validator/v10"
 	"github.com/gofrs/uuid"
 )
 
@@ -48,26 +50,27 @@ func AddEventResponseAPI(eventID uuid.UUID) *AddEventResponse {
 	return resp
 }
 
-func (e *AddEventRequest) Bind(r *http.Request) error {
-	// a.Article is nil if no Article fields are sent in the request. Return an
-	// error to avoid a nil pointer dereference.
-	/* 	if e.OwnerID == "" {
-		return errors.New("missing required event fields")
-	} */
+func (a *AddEventRequest) Bind(r *http.Request) error {
 
-	// a.User is nil if no Userpayload fields are sent in the request. In this app
-	// this won't cause a panic, but checks in this Bind method may be required if
-	// a.User or further nested fields like a.User.Name are accessed elsewhere.
+	// Создаем объект валидатора
+	// и передаем в него структуру, которую нужно провалидировать
+	err := validator.New().Struct(a)
+	if err != nil {
+		return err
+	}
 
-	// just a post-process after a decode..
-	//a.ProtectedID = ""                                 // unset the protected ID
-	//e.Event = strings.ToLower(a.Article.Title) // as an example, we down-case
+	if a.StartDate.After(a.EndDate) {
+		return ErrInvalidInterval
+	}
+
+	if a.StartDate.UTC().Before(time.Now().UTC()) || a.EndDate.UTC().Before(time.Now().UTC()) {
+		return ErrExpiredDate
+	}
+
 	return nil
 }
 
 func (rd *AddEventResponse) Render(w http.ResponseWriter, r *http.Request) error {
-	// Pre-processing before a response is marshalled and sent across the wire
-	//rd.Elapsed = 10
 	return nil
 }
 
@@ -106,8 +109,7 @@ func (rd *GetEventResponse) Render(w http.ResponseWriter, r *http.Request) error
 }
 
 type GetEventsResponse struct {
-	Response *Response `json:"response"`
-	//TODO: implement convert Event structs
+	Response   *Response          `json:"response"`
 	EventsInfo []*model.EventInfo `json:"events"`
 }
 
@@ -142,20 +144,43 @@ func (rd *GetVacantRoomsResponse) Render(w http.ResponseWriter, r *http.Request)
 
 type UpdateEventRequest struct {
 	// Номер апартаментов
-	SuiteID sql.NullInt64 `json:"suiteID,omitempty" swaggertype:"primitive,integer" format:"int64" example:"123"`
+	SuiteID null.Int `json:"suiteID,omitempty" swaggertype:"primitive,integer" format:"int64" example:"123"`
 	// Дата и время начала бронировании
-	StartDate sql.NullTime `json:"startDate,omitempty" swaggertype:"primitive,string" example:"2006-01-02T15:04:05-07:00"`
+	StartDate null.Time `json:"startDate,omitempty" swaggertype:"primitive,string" example:"2006-01-02T15:04:05-07:00"`
 	// Дата и время окончания бронирования
-	EndDate sql.NullTime `json:"endDate,omitempty" swaggertype:"primitive,string" example:"2006-01-02T15:04:05-07:00"`
+	EndDate null.Time `json:"endDate,omitempty" swaggertype:"primitive,string" example:"2006-01-02T15:04:05-07:00"`
 	// Интервал времени для уведомления о бронировании
-	NotificationPeriod sql.NullString `json:"notificationPeriod,omitempty" swaggertype:"primitive,string" example:"24h"`
+	NotificationPeriod null.String `json:"notificationPeriod,omitempty" swaggertype:"primitive,string" example:"24h"`
 }
 
 type UpdateEventResponse struct {
 	Response *Response `json:"response"`
 }
 
-func (e *UpdateEventRequest) Bind(r *http.Request) error {
+// Функцияя для проверки поступающего запроса, чтобы удостовериться, что
+// окончание бронирования не  происходит до его начала, чтобы даты не были истекшими.
+// Также при изменении одной даты нужно изменять и другую, а также указывать, за сколько оповестить о бронировании.
+func (u *UpdateEventRequest) Bind(r *http.Request) error {
+	// Проверка, что при наличии одной даты, есть и вторая
+	if (u.EndDate.Valid && !u.StartDate.Valid) || (u.StartDate.Valid && !u.EndDate.Valid) {
+		return ErrIncompleteInterval
+	}
+
+	// Проверка, что обе даты еще не прошли
+	if (u.StartDate.Time.UTC().Before(time.Now().UTC())) || (u.EndDate.Time.UTC().Before(time.Now().UTC())) {
+		return ErrExpiredDate
+	}
+
+	//проверка, что дата окончания не находится перед датой начала и не совпадает с ней
+	if u.EndDate.Time.UTC().Sub(u.StartDate.Time.UTC()) <= 0 { //u.StartDate.Time.After(u.EndDate.Time) ||
+		return ErrInvalidInterval
+	}
+
+	//проверк
+	if u.StartDate.Valid && !u.NotificationPeriod.Valid {
+		return ErrIncompleteRequest
+	}
+
 	return nil
 }
 

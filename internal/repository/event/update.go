@@ -1,23 +1,29 @@
-package schedule
+package event
 
 import (
 	"context"
+	"errors"
 	"event-schedule/internal/client/db"
 	"event-schedule/internal/model"
-	"event-schedule/internal/repository/table"
+	t "event-schedule/internal/repository/table"
+	"log/slog"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/georgysavva/scany/pgxscan"
+	"github.com/go-chi/chi/middleware"
 )
 
 func (r *repository) UpdateEvent(ctx context.Context, mod *model.UpdateEventInfo) error {
-	//TODO: check this at service level
-	if !mod.SuiteID.Valid && !mod.StartDate.Valid && !mod.EndDate.Valid && !mod.NotificationPeriod.Valid {
-		return ErrFailed
-	}
+	const op = "events.repository.UpdateEvent"
 
-	builder := sq.Update(table.EventTable).
-		Set("updated_at", time.Now().UTC()).
+	r.log = r.log.With(
+		slog.String("op", op),
+		slog.String("request_id", middleware.GetReqID(ctx)),
+	)
+
+	builder := sq.Update(t.EventTable).
+		Set(t.UpdatedAt, time.Now().UTC()).
 		Where(sq.Eq{"id": mod.EventID}).
 		PlaceholderFormat(sq.Dollar)
 
@@ -36,24 +42,35 @@ func (r *repository) UpdateEvent(ctx context.Context, mod *model.UpdateEventInfo
 	if mod.NotificationPeriod.Valid {
 		notificationPeriod, err := time.ParseDuration(mod.NotificationPeriod.String)
 		if err != nil {
-			return ErrFailed
+			r.log.Error("failed to parse duration", err)
+			return ErrParseDuration
 		}
 		builder.Set("notification_period", notificationPeriod)
 	}
 
 	query, args, err := builder.ToSql()
 	if err != nil {
-		return err
+		r.log.Error("failed to build a query", err)
+		return ErrQueryBuild
 	}
 
 	q := db.Query{
-		Name:     "event_repository.UpdateEvent",
+		Name:     op,
 		QueryRaw: query,
 	}
 
 	_, err = r.client.DB().ExecContext(ctx, q, args...)
 	if err != nil {
-		return err
+		if errors.As(err, pgNoConnection) {
+			r.log.Error("no connection to database host", err)
+			return ErrNoConnection
+		}
+		if pgxscan.NotFound(err) {
+			r.log.Error("event with this id not found", err)
+			return ErrNotFound
+		}
+		r.log.Error("query execution error", err)
+		return ErrQuery
 	}
 
 	return nil

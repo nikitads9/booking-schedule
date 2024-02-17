@@ -2,7 +2,7 @@ server:
   env: "dev"
   host: "127.0.0.1"
   port: ":3000"
-  timeout: 10s
+  timeout: 4s
   idle_timeout: 30s
 
 database:

@@ -25,7 +25,7 @@ const docTemplate = `{
     "paths": {
         "/{user_id}/add": {
             "post": {
-                "description": "Adds an even with given parameters associated with user. NotificationPeriod must look like {number}s,{number}m or {number}h.",
+                "description": "Adds an even with given parameters associated with user. NotificationPeriod must look like {number}s,{number}m or {number}h. Implemented with the use of transaction: first the availibility is checked. In case one's new booking request intersects with and old one(even if belongs to him), the request is considered erratic.",
                 "consumes": [
                     "application/json"
                 ],
@@ -91,7 +91,81 @@ const docTemplate = `{
                 }
             }
         },
-        "/{user_id}/get-vacant-rooms/{start}_{end}": {
+        "/{user_id}/get-events": {
+            "get": {
+                "description": "Responds with series of event info objects within given time period. The parameters are start date and end date.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "Get several events info",
+                "operationId": "getMultipleEventsByTag",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "int64",
+                        "default": 1234,
+                        "description": "user_id",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "format": "time.Time",
+                        "default": "2006-01-02T15:04:05-07:00",
+                        "description": "start",
+                        "name": "start",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "format": "time.Time",
+                        "default": "2006-01-02T15:04:05-07:00",
+                        "description": "end",
+                        "name": "end",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetEventsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetEventsResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetEventsResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetEventsResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/event-schedule_internal_api.GetEventsResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/{user_id}/get-vacant-rooms": {
             "get": {
                 "description": "Receives two dates. Responds with list of vacant rooms.",
                 "produces": [
@@ -118,7 +192,7 @@ const docTemplate = `{
                         "default": "2006-01-02T15:04:05-07:00",
                         "description": "start",
                         "name": "start",
-                        "in": "path",
+                        "in": "query",
                         "required": true
                     },
                     {
@@ -127,7 +201,7 @@ const docTemplate = `{
                         "default": "2006-01-02T15:04:05-07:00",
                         "description": "end",
                         "name": "end",
-                        "in": "path",
+                        "in": "query",
                         "required": true
                     }
                 ],
@@ -297,7 +371,7 @@ const docTemplate = `{
         },
         "/{user_id}/{event_id}/update": {
             "patch": {
-                "description": "Updates an existing Event with given EventID and several optional fields. At least one field should not be empty. NotificationPeriod must look like {number}s,{number}m or {number}h.",
+                "description": "Updates an existing Event with given EventID and several optional fields. At least one field should not be empty. NotificationPeriod must look like {number}s,{number}m or {number}h. Implemented with the use of transaction: first availibility is checked - in case one attempts to alter his previous booking (i.e. widen or tighten its' limits) the booking is updated. If it overlaps with smb else's booking the request is considered unsuccessful.",
                 "consumes": [
                     "application/json"
                 ],
@@ -367,70 +441,6 @@ const docTemplate = `{
                         "description": "Service Unavailable",
                         "schema": {
                             "$ref": "#/definitions/event-schedule_internal_api.UpdateEventResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/{user_id}/{start}_{end}": {
-            "get": {
-                "description": "Responds with series of event info objects within given time period. The parameters are start date and end date.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "events"
-                ],
-                "summary": "Get several events info",
-                "operationId": "getMultipleEventsByTag",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "format": "int64",
-                        "default": 1234,
-                        "description": "user_id",
-                        "name": "user_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "default": "all",
-                        "description": "interval",
-                        "name": "interval",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetEventsResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetEventsResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetEventsResponse"
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity",
-                        "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetEventsResponse"
-                        }
-                    },
-                    "503": {
-                        "description": "Service Unavailable",
-                        "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetEventsResponse"
                         }
                     }
                 }

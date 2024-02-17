@@ -56,23 +56,22 @@ func (a *App) initServiceProvider(_ context.Context) error {
 }
 
 func (a *App) initServer(ctx context.Context) error {
-	log := a.serviceProvider.setupLogger()
-	impl := a.serviceProvider.GetScheduleImpl(ctx)
+	impl := a.serviceProvider.GetEventImpl(ctx)
 	defer a.serviceProvider.db.Close()
 
 	address, err := a.serviceProvider.config.GetAddress()
 	if err != nil {
 		return err
 	}
-	log.Info("initializing server", slog.String("address", address)) // Вывод параметра с адресом
-	log.Debug("logger debug mode enabled")
+	a.serviceProvider.log.Info("initializing server", slog.String("address", address)) // Вывод параметра с адресом
+	a.serviceProvider.log.Debug("logger debug mode enabled")
 
 	a.setupRouter(impl, ctx)
 
 	srv := a.serviceProvider.getServer(a.router)
 	err = a.startServer(srv)
 	if err != nil {
-		log.Error("failed to start server %s", err)
+		a.serviceProvider.log.Error("failed to start server %s", err)
 		return err
 	}
 
@@ -90,13 +89,12 @@ func (a *App) setupRouter(impl *handlers.Implementation, ctx context.Context) {
 	// RESTy routes for "events" resource
 	a.router.Route("/events/{user_id}", func(r chi.Router) {
 		r.Post("/add", impl.AddEvent(a.serviceProvider.log))                              // POST /events/u123
-		r.Get("/", impl.GetEvents(a.serviceProvider.log))                                 // GET /events/u123/get/{interval}
+		r.Get("/get-events", impl.GetEvents(a.serviceProvider.log))                       // GET /events/u123/get/{interval}
 		r.Get("/get-vacant-rooms", impl.GetVacantRooms(a.serviceProvider.log))            // GET /events/u123/get-vacant-rooms
 		r.Get("/{suite_id}/get-vacant-dates", impl.GetVacantDates(a.serviceProvider.log)) // GET /events/u123/get-vacant-dates
 		r.Route("/{event_id}", func(r chi.Router) {
-			r.Use(impl.EventCtx(a.serviceProvider.log)) // Load the *Event on the request context
 			r.Get("/get", impl.GetEvent(a.serviceProvider.log))
-			r.Patch("/update", impl.UpdateEvent(a.serviceProvider.log))  // PATCH /event/123/update
+			r.Put("/update", impl.UpdateEvent(a.serviceProvider.log))    // не Patch потому что невозможно частично обновить бронь
 			r.Delete("/delete", impl.DeleteEvent(a.serviceProvider.log)) // DELETE /event/123/delete
 		})
 

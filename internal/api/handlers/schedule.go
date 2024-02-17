@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"event-schedule/internal/service/schedule"
+	schedule "event-schedule/internal/service/event"
 )
 
 type Implementation struct {

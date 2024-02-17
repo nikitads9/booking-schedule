@@ -3,12 +3,13 @@ package handlers
 import (
 	"event-schedule/internal/api"
 	"event-schedule/internal/lib/logger/sl"
-	"event-schedule/internal/model"
 	"log/slog"
 	"net/http"
 
+	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
+	"github.com/gofrs/uuid"
 )
 
 // DeleteEvent godoc
@@ -28,7 +29,7 @@ import (
 //	@Router			/{user_id}/{event_id}/delete [delete]
 func (i *Implementation) DeleteEvent(log *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "handlers.events.api.DeleteEvent"
+		const op = "events.api.handlers.DeleteEvent"
 
 		ctx := r.Context()
 
@@ -36,26 +37,37 @@ func (i *Implementation) DeleteEvent(log *slog.Logger) http.HandlerFunc {
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(ctx)),
 		)
-		//TODO: check panic
-		// Assume if we've reach this far, we can access the event
-		// context because this handler is a child of the EventCtx
-		// middleware. The worst case, the recoverer middleware will save us.
 
-		event := r.Context().Value("event").(*model.EventInfo)
-		if event == nil {
-			log.Error("failed to load event from context", sl.Err(api.ErrEventNotFound))
-			render.Render(w, r, api.ErrInternalError(api.ErrEventNotFound))
+		id := chi.URLParam(r, "event_id")
+		if id == "" {
+			log.Error("invalid request", sl.Err(api.ErrNoEventID))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoEventID))
 			return
 		}
 
-		err := i.Service.DeleteEvent(ctx, event.EventID)
+		eventUUID, err := uuid.FromString(id)
 		if err != nil {
-			log.Error("failed to remove event", sl.Err(err))
+			log.Error("invalid request", sl.Err(err))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
+			return
+		}
+
+		if eventUUID == uuid.Nil {
+			log.Error("invalid request", sl.Err(api.ErrNoEventID))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoEventID))
+			return
+		}
+
+		log.Info("decoded URL param", slog.Any("eventID:", eventUUID))
+
+		err = i.Service.DeleteEvent(ctx, eventUUID)
+		if err != nil {
+			log.Error("internal error", sl.Err(err))
 			render.Render(w, r, api.ErrInternalError(err))
 			return
 		}
 
-		log.Info("deleted event", slog.Any("id:", event.EventID))
+		log.Info("deleted event", slog.Any("id:", eventUUID))
 
 		render.Render(w, r, api.DeleteEventResponseAPI())
 	}

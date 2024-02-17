@@ -1,17 +1,16 @@
 package handlers
 
 import (
+	"errors"
 	"event-schedule/internal/api"
 	"event-schedule/internal/convert"
 	"event-schedule/internal/lib/logger/sl"
 	"log/slog"
-	"strconv"
 
 	"net/http"
 
 	validator "github.com/go-playground/validator/v10"
 
-	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
 )
@@ -19,7 +18,7 @@ import (
 // AddEvent godoc
 //
 //	@Summary		Adds event
-//	@Description	Adds an even with given parameters associated with user. NotificationPeriod must look like {number}s,{number}m or {number}h.
+//	@Description	Adds an even with given parameters associated with user. NotificationPeriod must look like {number}s,{number}m or {number}h. Implemented with the use of transaction: first the availibility is checked. In case one's new booking request intersects with and old one(even if belongs to him), the request is considered erratic.
 //	@ID				addByEventJSON
 //	@Tags			events
 //	@Accept			json
@@ -34,7 +33,7 @@ import (
 //	@Router			/{user_id}/add [post]
 func (i *Implementation) AddEvent(log *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "handlers.events.api.AddEvent"
+		const op = "events.api.handlers.AddEvent"
 
 		ctx := r.Context()
 
@@ -48,47 +47,34 @@ func (i *Implementation) AddEvent(log *slog.Logger) http.HandlerFunc {
 		req := &api.AddEventRequest{}
 		err := render.Bind(r, req)
 		if err != nil {
+			if errors.As(err, api.ValidateErr) {
+				// Приводим ошибку к типу ошибки валидации
+				validateErr := err.(validator.ValidationErrors)
+				log.Error("some of the required values were not received", sl.Err(validateErr))
+				render.Render(w, r, api.ErrValidationError(validateErr))
+				return
+			}
 			log.Error("failed to decode request body", sl.Err(err))
 			render.Render(w, r, api.ErrInvalidRequest(err))
 			return
 		}
 		log.Info("request body decoded", slog.Any("req", req))
 
-		// Создаем объект валидатора
-		// и передаем в него структуру, которую нужно провалидировать
-		err = validator.New().Struct(req)
+		mod, err := convert.ToEvent(r, req)
 		if err != nil {
-			// Приводим ошибку к типу ошибки валидации
-			validateErr := err.(validator.ValidationErrors)
-
-			log.Error("invalid request", sl.Err(err))
-
-			render.Render(w, r, api.ErrValidationError(validateErr))
-
-			return
-		}
-
-		userID := chi.URLParam(r, "user_id")
-		if userID == "" {
-			log.Error("invalid request", sl.Err(api.ErrNoUserID))
-			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoUserID))
-			return
-		}
-
-		id, err := strconv.ParseInt(userID, 10, 64)
-		if err != nil {
-			log.Error("invalid request", sl.Err(err))
+			log.Error("invalid request", sl.Err(err)) //TODO: log real error
 			render.Render(w, r, api.ErrInvalidRequest(err))
+			return
 		}
 
-		eventID, err := i.Service.AddEvent(ctx, convert.ToEvent(req, id))
+		eventID, err := i.Service.AddEvent(ctx, mod)
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
 			render.Render(w, r, api.ErrInternalError(err))
 			return
 		}
 
-		log.Info("event added", slog.Any("id", eventID))
+		log.Info("event added", slog.Any("id:", eventID))
 
 		render.Status(r, http.StatusCreated)
 		render.Render(w, r, api.AddEventResponseAPI(eventID))

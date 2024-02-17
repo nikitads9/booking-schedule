@@ -25,14 +25,22 @@ type Response struct {
 	ErrorText string `json:"error,omitempty"` // application-level error message, for debugging
 }
 
-var ErrMissingValues = errors.New("could not get path variables and query parameters")
-var ErrNoUserID = errors.New(" received no user id")
-var ErrNoEventID = errors.New("received no event id")
-var ErrNoInterval = errors.New(" received no time period")
-var ErrNoSuiteID = errors.New(" received no suite id")
-var ErrUserNotFound = errors.New("no user with this id")
-var ErrEventNotFound = errors.New("no event with this id")
-var ErrInvalidDateFormat = errors.New("received invalid date")
+var (
+	ErrNoUserID           = errors.New(" received no user id")
+	ErrNoEventID          = errors.New("received no event id")
+	ErrNoInterval         = errors.New(" received no time period")
+	ErrNoSuiteID          = errors.New(" received no suite id")
+	ErrUserNotFound       = errors.New("no user with this id")
+	ErrEventNotFound      = errors.New("no event with this id")
+	ErrInvalidDateFormat  = errors.New("received invalid date")
+	ErrInvalidInterval    = errors.New("end date is beforehand the start date or matches it")
+	ErrExpiredDate        = errors.New("date is expired")
+	ErrParse              = errors.New("failed to parse parameter")
+	ErrEmptyRequest       = errors.New("received empty request")
+	ErrIncompleteInterval = errors.New("received no start date or no end date")
+	ErrIncompleteRequest  = errors.New("received booking interval with no notification time")
+	ValidateErr           = new(validator.ValidationErrors)
+)
 
 func (e *Response) Render(w http.ResponseWriter, r *http.Request) error {
 	render.Status(r, e.HTTPStatusCode)
@@ -82,9 +90,6 @@ func ErrValidationError(errs validator.ValidationErrors) render.Renderer {
 		switch err.ActualTag() {
 		case "required":
 			errMsgs = append(errMsgs, fmt.Sprintf("field %s is a required field", err.Field()))
-		//TODO: forbid past dates
-		/* 		case "date":
-		errMsgs = append(errMsgs, fmt.Sprintf("field %s is not a valid URL", err.Field())) */
 		default:
 			errMsgs = append(errMsgs, fmt.Sprintf("field %s is not valid", err.Field()))
 		}

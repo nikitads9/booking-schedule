@@ -1,4 +1,4 @@
-package schedule
+package event
 
 import (
 	"context"
@@ -8,5 +8,5 @@ import (
 )
 
 func (s *Service) GetEvent(ctx context.Context, eventID uuid.UUID) (*model.EventInfo, error) {
-	return s.scheduleRepository.GetEvent(ctx, eventID)
+	return s.eventRepository.GetEvent(ctx, eventID)
 }

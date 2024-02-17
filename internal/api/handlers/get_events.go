@@ -20,16 +20,17 @@ import (
 //	@Tags			events
 //	@Produce		json
 //	@Param			user_id	path	int	true	"user_id"	Format(int64) default(1234)
-//	@Param			interval	path	string	true	"interval" default(all)
+//	@Param			start query		string	true	"start" Format(time.Time) default(2006-01-02T15:04:05-07:00)
+//	@Param			end query		string	true	"end" Format(time.Time) default(2006-01-02T15:04:05-07:00)
 //	@Success		200	{object}	api.GetEventsResponse
 //	@Failure		400	{object}	api.GetEventsResponse
 //	@Failure		404	{object}	api.GetEventsResponse
 //	@Failure		422	{object}	api.GetEventsResponse
 //	@Failure		503	{object}	api.GetEventsResponse
-//	@Router			/{user_id}/?start={start}&end={end} [get]
+//	@Router			/{user_id}/get-events [get]
 func (i *Implementation) GetEvents(log *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "handlers.events.api.GetEvents"
+		const op = "events.api.handlers.GetEvents"
 
 		ctx := r.Context()
 
@@ -40,7 +41,7 @@ func (i *Implementation) GetEvents(log *slog.Logger) http.HandlerFunc {
 
 		getEventsInfo, err := convert.ToGetEventsInfo(r)
 		if err != nil {
-			log.Error("invalid request", sl.Err(api.ErrMissingValues))
+			log.Error("invalid request", sl.Err(err)) //TODO: log real errors
 			render.Render(w, r, api.ErrInvalidRequest(err))
 			return
 		}
@@ -53,7 +54,7 @@ func (i *Implementation) GetEvents(log *slog.Logger) http.HandlerFunc {
 			return
 		}
 
-		log.Info("events acquired", slog.Int("quantity", len(events)))
+		log.Info("events acquired", slog.Int("quantity:", len(events)))
 
 		render.Status(r, http.StatusCreated)
 		render.Render(w, r, api.GetEventsResponseAPI(events))

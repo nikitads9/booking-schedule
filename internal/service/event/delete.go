@@ -1,4 +1,4 @@
-package schedule
+package event
 
 import (
 	"context"
@@ -7,5 +7,5 @@ import (
 )
 
 func (s *Service) DeleteEvent(ctx context.Context, eventID uuid.UUID) error {
-	return s.scheduleRepository.DeleteEvent(ctx, eventID)
+	return s.eventRepository.DeleteEvent(ctx, eventID)
 }

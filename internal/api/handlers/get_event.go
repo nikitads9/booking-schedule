@@ -3,12 +3,13 @@ package handlers
 import (
 	"event-schedule/internal/api"
 	"event-schedule/internal/lib/logger/sl"
-	"event-schedule/internal/model"
 	"log/slog"
 	"net/http"
 
+	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
+	"github.com/gofrs/uuid"
 )
 
 // GetEvent godoc
@@ -28,7 +29,7 @@ import (
 //	@Router			/{user_id}/{event_id}/get [get]
 func (i *Implementation) GetEvent(log *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "handlers.events.api.GetEvent"
+		const op = "events.api.handlers.GetEvent"
 
 		ctx := r.Context()
 
@@ -37,24 +38,42 @@ func (i *Implementation) GetEvent(log *slog.Logger) http.HandlerFunc {
 			slog.String("request_id", middleware.GetReqID(ctx)),
 		)
 
-		//TODO: проверить
-		// Assume if we've reach this far, we can access the event
-		// context because this handler is a child of the EventCtx
-		// middleware. The worst case, the recoverer middleware will save us.
-		event := ctx.Value("event").(*model.EventInfo)
-		if event == nil {
-			log.Error("failed to load event from context", sl.Err(api.ErrEventNotFound))
-			render.Render(w, r, api.ErrInternalError(api.ErrEventNotFound))
+		id := chi.URLParam(r, "event_id")
+		if id == "" {
+			log.Error("invalid request", sl.Err(api.ErrNoEventID))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoEventID))
 			return
 		}
 
-		err := render.Render(w, r, api.GetEventResponseAPI(event))
+		eventUUID, err := uuid.FromString(id)
+		if err != nil {
+			log.Error("invalid request", sl.Err(err))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
+			return
+		}
+
+		if eventUUID == uuid.Nil {
+			log.Error("invalid request", sl.Err(api.ErrNoEventID))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoEventID))
+			return
+		}
+
+		log.Info("decoded URL param", slog.Any("eventID:", eventUUID))
+
+		event, err := i.Service.GetEvent(ctx, eventUUID)
+		if err != nil {
+			log.Error("internal error", sl.Err(err))
+			render.Render(w, r, api.ErrInternalError(err))
+			return
+		}
+
+		err = render.Render(w, r, api.GetEventResponseAPI(event))
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
 			render.Render(w, r, api.ErrRender(err))
 			return
 		}
 
-		log.Info("event acquired", slog.Any("event", event))
+		log.Info("event acquired", slog.Any("event:", event))
 	}
 }
