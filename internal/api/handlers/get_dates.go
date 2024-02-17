@@ -15,7 +15,7 @@ import (
 // GetVacantDates godoc
 //
 //	@Summary		Get vacant intervals
-//	@Description	Responds with free dates within month for selected suite.
+//	@Description	Responds with list of vacant intervals within month for selected suite.
 //	@ID				getDatesBySuiteID
 //	@Tags			events
 //	@Produce		json

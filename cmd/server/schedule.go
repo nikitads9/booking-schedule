@@ -38,6 +38,3 @@ func main() {
 		log.Fatalf("failed to start app err:%s\n", err.Error())
 	}
 }
-
-//TODO: go install github.com/swaggo/swag/cmd/swag@latest и еще chi
-// swag init --generalInfo cmd/server/schedule.go --parseDependency --parseInternal

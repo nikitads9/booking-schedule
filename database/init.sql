@@ -40,3 +40,5 @@ create index ix_end ON events using brin (end_date);
 
 create index ix_suite ON events using btree (suite_id);
 create index ix_owner ON events using btree (owner_id);
+
+

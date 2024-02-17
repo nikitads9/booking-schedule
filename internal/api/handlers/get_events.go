@@ -15,13 +15,13 @@ import (
 // GetEvents godoc
 //
 //	@Summary		Get several events info
-//	@Description	Responds with series of event info objects within given time period. The parameters are start date and end date.
+//	@Description	Responds with series of event info objects within given time period. The query parameters are start date and end date (start is to be before end and both should not be expired).
 //	@ID				getMultipleEventsByTag
 //	@Tags			events
 //	@Produce		json
 //	@Param			user_id	path	int	true	"user_id"	Format(int64) default(1234)
-//	@Param			start query		string	true	"start" Format(time.Time) default(2006-01-02T15:04:05-07:00)
-//	@Param			end query		string	true	"end" Format(time.Time) default(2006-01-02T15:04:05-07:00)
+//	@Param			start query		string	true	"start" Format(time.Time) default(2024-03-28T17:43:00-03:00)
+//	@Param			end query		string	true	"end" Format(time.Time) default(2024-03-29T17:43:00-03:00)
 //	@Success		200	{object}	api.GetEventsResponse
 //	@Failure		400	{object}	api.GetEventsResponse
 //	@Failure		404	{object}	api.GetEventsResponse

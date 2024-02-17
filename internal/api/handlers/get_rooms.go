@@ -14,13 +14,13 @@ import (
 // GetVacantRooms godoc
 //
 //	@Summary		Get list of vacant rooms
-//	@Description	Receives two dates. Responds with list of vacant rooms.
+//	@Description	Receives two dates as query parameters. start is to be before end and both should not be expired. Responds with list of vacant rooms and their parameters for given interval.
 //	@ID				getRoomsByDates
 //	@Tags			events
 //	@Produce		json
 //	@Param			user_id	path	int	true	"user_id"	Format(int64) default(1234)
-//	@Param			start	query	string	true	"start"	Format(time.Time) default(2006-01-02T15:04:05-07:00)
-//	@Param			end	query	string	true	"end"	Format(time.Time) default(2006-01-02T15:04:05-07:00)
+//	@Param			start	query	string	true	"start"	Format(time.Time) default(2024-03-28T17:43:00-03:00)
+//	@Param			end	query	string	true	"end"	Format(time.Time) default(2024-03-29T17:43:00-03:00)
 //	@Success		200	{object}	api.GetVacantRoomsResponse
 //	@Failure		400	{object}	api.GetVacantRoomsResponse
 //	@Failure		404	{object}	api.GetVacantRoomsResponse

@@ -16,7 +16,7 @@ import (
 // UpdateEvent godoc
 //
 //	@Summary		Updates event info
-//	@Description	Updates an existing Event with given EventID, suiteID, startDate, endDate values (notificationPeriod being optional). Implemented with the use of transaction: first the availibility is checked. In case one attempts to alter his previous booking (i.e. widen or tighten its' limits) the booking is updated.  If it overlaps with smb else's booking the request is considered unsuccessful. startDate parameter  is to be before endDate and both should not be expired.
+//	@Description	Updates an existing event with given EventID, suiteID, startDate, endDate values (notificationPeriod being optional). Implemented with the use of transaction: first room availibility is checked. In case one attempts to alter his previous booking (i.e. widen or tighten its' limits) the booking is updated.  If it overlaps with smb else's booking the request is considered unsuccessful. startDate parameter  is to be before endDate and both should not be expired.
 //	@ID				modifyEventByJSON
 //	@Tags			events
 //	@Accept			json

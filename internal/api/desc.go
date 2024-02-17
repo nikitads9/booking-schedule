@@ -33,7 +33,7 @@ type AddEventRequest struct {
 	// Дата и время окончания бронировании
 	EndDate time.Time `json:"endDate" validate:"required" example:"2024-03-29T17:43:00-03:00"`
 	// Интервал времени для предварительного уведомления о бронировании
-	NotificationPeriod null.String `json:"notificationPeriod,omitempty" example:"24h"`
+	NotificationPeriod null.String `json:"notificationPeriod,omitempty" swaggertype:"primitive,string" example:"24h"`
 }
 
 type AddEventResponse struct {

@@ -15,7 +15,7 @@ import (
 // GetEvent godoc
 //
 //	@Summary		Get event info
-//	@Description	Responds with event info with given EventID.
+//	@Description	Responds with booking info for booking with given EventID.
 //	@ID				getEventbyTag
 //	@Tags			events
 //	@Produce		json

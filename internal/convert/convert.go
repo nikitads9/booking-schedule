@@ -139,6 +139,16 @@ func ToGetEventsInfo(r *http.Request) (*model.GetEventsInfo, error) {
 		return nil, err
 	}
 
+	// Проверка, что обе даты еще не прошли
+	if (startDate.UTC().Before(time.Now().UTC())) || (endDate.UTC().Before(time.Now().UTC())) {
+		return nil, api.ErrExpiredDate
+	}
+
+	//проверка, что дата окончания не находится перед датой начала и не совпадает с ней
+	if endDate.UTC().Sub(startDate.UTC()) <= 0 {
+		return nil, api.ErrInvalidInterval
+	}
+
 	return &model.GetEventsInfo{
 		UserID:    id,
 		StartDate: startDate,

@@ -25,7 +25,7 @@ const docTemplate = `{
     "paths": {
         "/{user_id}/add": {
             "post": {
-                "description": "Adds an even with given parameters associated with user. NotificationPeriod must look like {number}s,{number}m or {number}h. Implemented with the use of transaction: first the availibility is checked. In case one's new booking request intersects with and old one(even if belongs to him), the request is considered erratic.",
+                "description": "Adds an even with given parameters associated with user. NotificationPeriod is optional and must look like {number}s,{number}m or {number}h. Implemented with the use of transaction: first the availibility is checked. In case one's new booking request intersects with and old one(even if belongs to him), the request is considered erratic. startDate is to be before endDate and both should not be expired.",
                 "consumes": [
                     "application/json"
                 ],
@@ -93,7 +93,7 @@ const docTemplate = `{
         },
         "/{user_id}/get-events": {
             "get": {
-                "description": "Responds with series of event info objects within given time period. The parameters are start date and end date.",
+                "description": "Responds with series of event info objects within given time period. The query parameters are start date and end date (start date is to be before end date and both should not be expired).",
                 "produces": [
                     "application/json"
                 ],
@@ -115,7 +115,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "format": "time.Time",
-                        "default": "2006-01-02T15:04:05-07:00",
+                        "default": "2024-03-28T17:43:00-03:00",
                         "description": "start",
                         "name": "start",
                         "in": "query",
@@ -124,7 +124,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "format": "time.Time",
-                        "default": "2006-01-02T15:04:05-07:00",
+                        "default": "2024-03-29T17:43:00-03:00",
                         "description": "end",
                         "name": "end",
                         "in": "query",
@@ -167,7 +167,7 @@ const docTemplate = `{
         },
         "/{user_id}/get-vacant-rooms": {
             "get": {
-                "description": "Receives two dates. Responds with list of vacant rooms.",
+                "description": "Receives two dates as query parameters. start is to be before end and both should not be expired. Responds with list of vacant rooms and their parameters for given interval.",
                 "produces": [
                     "application/json"
                 ],
@@ -189,7 +189,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "format": "time.Time",
-                        "default": "2006-01-02T15:04:05-07:00",
+                        "default": "2024-03-28T17:43:00-03:00",
                         "description": "start",
                         "name": "start",
                         "in": "query",
@@ -198,7 +198,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "format": "time.Time",
-                        "default": "2006-01-02T15:04:05-07:00",
+                        "default": "2024-03-29T17:43:00-03:00",
                         "description": "end",
                         "name": "end",
                         "in": "query",
@@ -371,7 +371,7 @@ const docTemplate = `{
         },
         "/{user_id}/{event_id}/update": {
             "patch": {
-                "description": "Updates an existing Event with given EventID and several optional fields. At least one field should not be empty. NotificationPeriod must look like {number}s,{number}m or {number}h. Implemented with the use of transaction: first availibility is checked - in case one attempts to alter his previous booking (i.e. widen or tighten its' limits) the booking is updated. If it overlaps with smb else's booking the request is considered unsuccessful.",
+                "description": "Updates an existing Event with given EventID, suiteID, startDate, endDate values (notificationPeriod being optional). Implemented with the use of transaction: first the availibility is checked. In case one attempts to alter his previous booking (i.e. widen or tighten its' limits) the booking is updated.  If it overlaps with smb else's booking the request is considered unsuccessful. startDate parameter  is to be before endDate and both should not be expired.",
                 "consumes": [
                     "application/json"
                 ],
@@ -448,7 +448,7 @@ const docTemplate = `{
         },
         "/{user_id}/{suite_id}/get-vacant-dates": {
             "get": {
-                "description": "Responds with free dates within month for selected suite.",
+                "description": "Responds with list of vacant intervals within month for selected suite.",
                 "produces": [
                     "application/json"
                 ],
@@ -524,17 +524,17 @@ const docTemplate = `{
                 "endDate": {
                     "description": "Дата и время окончания бронировании",
                     "type": "string",
-                    "example": "2024-01-29T17:43:00-03:00"
+                    "example": "2024-03-29T17:43:00-03:00"
                 },
                 "notificationPeriod": {
                     "description": "Интервал времени для предварительного уведомления о бронировании",
                     "type": "string",
-                    "example": "1h"
+                    "example": "24h"
                 },
                 "startDate": {
                     "description": "Дата и время начала бронировании",
                     "type": "string",
-                    "example": "2024-01-28T17:43:00-03:00"
+                    "example": "2024-03-28T17:43:00-03:00"
                 },
                 "suiteID": {
                     "description": "номер апаратаментов",
@@ -579,7 +579,6 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "events": {
-                    "description": "TODO: implement convert Event structs",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/event-schedule_internal_model.EventInfo"
@@ -637,11 +636,16 @@ const docTemplate = `{
         },
         "event-schedule_internal_api.UpdateEventRequest": {
             "type": "object",
+            "required": [
+                "endDate",
+                "startDate",
+                "suiteID"
+            ],
             "properties": {
                 "endDate": {
                     "description": "Дата и время окончания бронирования",
                     "type": "string",
-                    "example": "2006-01-02T15:04:05-07:00"
+                    "example": "2024-03-29T17:43:00-03:00"
                 },
                 "notificationPeriod": {
                     "description": "Интервал времени для уведомления о бронировании",
@@ -651,7 +655,7 @@ const docTemplate = `{
                 "startDate": {
                     "description": "Дата и время начала бронировании",
                     "type": "string",
-                    "example": "2006-01-02T15:04:05-07:00"
+                    "example": "2024-03-28T17:43:00-03:00"
                 },
                 "suiteID": {
                     "description": "Номер апартаментов",
@@ -686,7 +690,7 @@ const docTemplate = `{
                     "description": "Дата и время окончания бронировании",
                     "type": "string"
                 },
-                "notificationPeriod": {
+                "notifyAt": {
                     "description": "Интервал времени для уведомления о бронировании",
                     "type": "string"
                 },
@@ -700,11 +704,7 @@ const docTemplate = `{
                 },
                 "updatedAt": {
                     "description": "Дата и время обновления",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/sql.NullTime"
-                        }
-                    ]
+                    "type": "string"
                 }
             }
         },
@@ -716,7 +716,7 @@ const docTemplate = `{
                 },
                 "startDate": {
                     "type": "string",
-                    "example": "2006-01-02T15:04:05-07:00"
+                    "example": "2024-03-02T15:04:05-07:00"
                 }
             }
         },
@@ -734,18 +734,6 @@ const docTemplate = `{
                 "suiteID": {
                     "type": "integer",
                     "example": 123
-                }
-            }
-        },
-        "sql.NullTime": {
-            "type": "object",
-            "properties": {
-                "time": {
-                    "type": "string"
-                },
-                "valid": {
-                    "description": "Valid is true if Time is not NULL",
-                    "type": "boolean"
                 }
             }
         }

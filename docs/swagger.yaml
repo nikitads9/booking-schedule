@@ -4,15 +4,15 @@ definitions:
     properties:
       endDate:
         description: Дата и время окончания бронировании
-        example: "2024-01-29T17:43:00-03:00"
+        example: "2024-03-29T17:43:00-03:00"
         type: string
       notificationPeriod:
         description: Интервал времени для предварительного уведомления о бронировании
-        example: 1h
+        example: 24h
         type: string
       startDate:
         description: Дата и время начала бронировании
-        example: "2024-01-28T17:43:00-03:00"
+        example: "2024-03-28T17:43:00-03:00"
         type: string
       suiteID:
         description: номер апаратаментов
@@ -47,7 +47,6 @@ definitions:
   event-schedule_internal_api.GetEventsResponse:
     properties:
       events:
-        description: 'TODO: implement convert Event structs'
         items:
           $ref: '#/definitions/event-schedule_internal_model.EventInfo'
         type: array
@@ -88,7 +87,7 @@ definitions:
     properties:
       endDate:
         description: Дата и время окончания бронирования
-        example: "2006-01-02T15:04:05-07:00"
+        example: "2024-03-29T17:43:00-03:00"
         type: string
       notificationPeriod:
         description: Интервал времени для уведомления о бронировании
@@ -96,13 +95,17 @@ definitions:
         type: string
       startDate:
         description: Дата и время начала бронировании
-        example: "2006-01-02T15:04:05-07:00"
+        example: "2024-03-28T17:43:00-03:00"
         type: string
       suiteID:
         description: Номер апартаментов
         example: 123
         format: int64
         type: integer
+    required:
+    - endDate
+    - startDate
+    - suiteID
     type: object
   event-schedule_internal_api.UpdateEventResponse:
     properties:
@@ -122,7 +125,7 @@ definitions:
       endDate:
         description: Дата и время окончания бронировании
         type: string
-      notificationPeriod:
+      notifyAt:
         description: Интервал времени для уведомления о бронировании
         type: string
       startDate:
@@ -132,16 +135,15 @@ definitions:
         description: Номер апартаментов
         type: integer
       updatedAt:
-        allOf:
-        - $ref: '#/definitions/sql.NullTime'
         description: Дата и время обновления
+        type: string
     type: object
   event-schedule_internal_model.Interval:
     properties:
       endDate:
         type: string
       startDate:
-        example: "2006-01-02T15:04:05-07:00"
+        example: "2024-03-02T15:04:05-07:00"
         type: string
     type: object
   event-schedule_internal_model.Suite:
@@ -155,14 +157,6 @@ definitions:
       suiteID:
         example: 123
         type: integer
-    type: object
-  sql.NullTime:
-    properties:
-      time:
-        type: string
-      valid:
-        description: Valid is true if Time is not NULL
-        type: boolean
     type: object
 host: 127.0.0.1:3000
 info:
@@ -271,12 +265,13 @@ paths:
     patch:
       consumes:
       - application/json
-      description: 'Updates an existing Event with given EventID and several optional
-        fields. At least one field should not be empty. NotificationPeriod must look
-        like {number}s,{number}m or {number}h. Implemented with the use of transaction:
-        first availibility is checked - in case one attempts to alter his previous
-        booking (i.e. widen or tighten its'' limits) the booking is updated. If it
-        overlaps with smb else''s booking the request is considered unsuccessful.'
+      description: 'Updates an existing Event with given EventID, suiteID, startDate,
+        endDate values (notificationPeriod being optional). Implemented with the use
+        of transaction: first the availibility is checked. In case one attempts to
+        alter his previous booking (i.e. widen or tighten its'' limits) the booking
+        is updated.  If it overlaps with smb else''s booking the request is considered
+        unsuccessful. startDate parameter  is to be before endDate and both should
+        not be expired.'
       operationId: modifyEventByJSON
       parameters:
       - default: 1234
@@ -327,7 +322,8 @@ paths:
       - events
   /{user_id}/{suite_id}/get-vacant-dates:
     get:
-      description: Responds with free dates within month for selected suite.
+      description: Responds with list of vacant intervals within month for selected
+        suite.
       operationId: getDatesBySuiteID
       parameters:
       - default: 1234
@@ -375,10 +371,11 @@ paths:
       consumes:
       - application/json
       description: 'Adds an even with given parameters associated with user. NotificationPeriod
-        must look like {number}s,{number}m or {number}h. Implemented with the use
-        of transaction: first the availibility is checked. In case one''s new booking
-        request intersects with and old one(even if belongs to him), the request is
-        considered erratic.'
+        is optional and must look like {number}s,{number}m or {number}h. Implemented
+        with the use of transaction: first the availibility is checked. In case one''s
+        new booking request intersects with and old one(even if belongs to him), the
+        request is considered erratic. startDate is to be before endDate and both
+        should not be expired.'
       operationId: addByEventJSON
       parameters:
       - default: 1234
@@ -423,7 +420,8 @@ paths:
   /{user_id}/get-events:
     get:
       description: Responds with series of event info objects within given time period.
-        The parameters are start date and end date.
+        The query parameters are start date and end date (start date is to be before
+        end date and both should not be expired).
       operationId: getMultipleEventsByTag
       parameters:
       - default: 1234
@@ -433,14 +431,14 @@ paths:
         name: user_id
         required: true
         type: integer
-      - default: "2006-01-02T15:04:05-07:00"
+      - default: "2024-03-28T17:43:00-03:00"
         description: start
         format: time.Time
         in: query
         name: start
         required: true
         type: string
-      - default: "2006-01-02T15:04:05-07:00"
+      - default: "2024-03-29T17:43:00-03:00"
         description: end
         format: time.Time
         in: query
@@ -475,7 +473,9 @@ paths:
       - events
   /{user_id}/get-vacant-rooms:
     get:
-      description: Receives two dates. Responds with list of vacant rooms.
+      description: Receives two dates as query parameters. start is to be before end
+        and both should not be expired. Responds with list of vacant rooms and their
+        parameters for given interval.
       operationId: getRoomsByDates
       parameters:
       - default: 1234
@@ -485,14 +485,14 @@ paths:
         name: user_id
         required: true
         type: integer
-      - default: "2006-01-02T15:04:05-07:00"
+      - default: "2024-03-28T17:43:00-03:00"
         description: start
         format: time.Time
         in: query
         name: start
         required: true
         type: string
-      - default: "2006-01-02T15:04:05-07:00"
+      - default: "2024-03-29T17:43:00-03:00"
         description: end
         format: time.Time
         in: query
