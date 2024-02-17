@@ -1,7 +1,6 @@
 package model
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -18,7 +17,7 @@ type Event struct {
 	// Дата и время окончания бронировании
 	EndDate time.Time
 	// Интервал времени для уведомления о бронировании
-	NotifyAt sql.NullTime
+	NotifyAt null.Time
 }
 
 type EventInfo struct {
@@ -35,22 +34,22 @@ type EventInfo struct {
 	// Дата и время создания
 	CreatedAt time.Time `json:"createdAt" db:"created_at"`
 	// Дата и время обновления
-	UpdatedAt sql.NullTime `json:"updatedAt,omitempty" db:"updated_at"`
+	UpdatedAt null.Time `json:"updatedAt,omitempty" db:"updated_at"`
 }
 
 // Содержимое Update/Modify запроса
 type UpdateEventInfo struct {
-	EventID uuid.UUID `json:"eventID" example:"550e8400-e29b-41d4-a716-446655440000" format:"uuid"`
+	EventID uuid.UUID
 	// Идентификатор пользователя в системе
 	UserID int64
 	// Номер апартаментов
-	SuiteID null.Int `json:"suiteID" example:"123"`
+	SuiteID int64
 	// Дата и время начала бронировании
-	StartDate null.Time `json:"startDate" example:"2024-03-02T15:04:05-07:00"`
+	StartDate time.Time
 	// Дата и время окончания бронировании
-	EndDate null.Time `json:"endDate" example:"2024-04-02T15:04:05-07:00"`
+	EndDate time.Time
 	// Интервал времени для уведомления о бронировании
-	NotificationPeriod null.String `json:"notificationPeriod,omitempty" example:"24h"`
+	NotifyAt null.Time
 }
 
 type GetEventsInfo struct {

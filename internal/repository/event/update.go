@@ -24,28 +24,14 @@ func (r *repository) UpdateEvent(ctx context.Context, mod *model.UpdateEventInfo
 
 	builder := sq.Update(t.EventTable).
 		Set(t.UpdatedAt, time.Now().UTC()).
+		Set("end_date", mod.EndDate).
+		Set("start_date", mod.StartDate).
+		Set("suite_id", mod.SuiteID).
 		Where(sq.Eq{"id": mod.EventID}).
 		PlaceholderFormat(sq.Dollar)
 
-	if mod.SuiteID.Valid {
-		builder.Set("suite_id", mod.SuiteID.Int64)
-	}
-
-	if mod.StartDate.Valid {
-		builder.Set("start_date", mod.StartDate.Time)
-	}
-
-	if mod.EndDate.Valid {
-		builder.Set("end_date", mod.EndDate.Time)
-	}
-
-	if mod.NotificationPeriod.Valid {
-		notificationPeriod, err := time.ParseDuration(mod.NotificationPeriod.String)
-		if err != nil {
-			r.log.Error("failed to parse duration", err)
-			return ErrParseDuration
-		}
-		builder.Set("notification_period", notificationPeriod)
+	if mod.NotifyAt.Valid {
+		builder = builder.Set("notify_at", mod.NotifyAt.Time)
 	}
 
 	query, args, err := builder.ToSql()

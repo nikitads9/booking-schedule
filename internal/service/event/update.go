@@ -22,12 +22,8 @@ func (s *Service) UpdateEvent(ctx context.Context, mod *model.UpdateEventInfo) e
 		return ErrNoModel
 	}
 
-	if !mod.SuiteID.Valid && !mod.StartDate.Valid && !mod.EndDate.Valid && !mod.NotificationPeriod.Valid {
-		s.log.Error("every update parameter is missing")
-		return ErrEmptyUpdate
-	}
 	err := s.txManager.ReadCommitted(ctx, func(ctx context.Context) error {
-		availibility, errTx := s.eventRepository.CheckAvailibility(ctx, mod.SuiteID.Int64, mod.StartDate.Time, mod.EndDate.Time, mod.UserID)
+		availibility, errTx := s.eventRepository.CheckAvailibility(ctx, mod.SuiteID, mod.StartDate, mod.EndDate, mod.UserID)
 		if errTx != nil {
 			s.log.Error("could not check availibility", errTx)
 			return errTx

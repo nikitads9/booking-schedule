@@ -24,10 +24,15 @@ func (r *repository) AddEvent(ctx context.Context, mod *model.Event) (uuid.UUID,
 	)
 
 	builder := sq.Insert(t.EventTable).
-		Columns(t.OwnerID, t.SuiteID, t.StartDate, t.EndDate, t.NotifyAt, t.CreatedAt).
-		Values(mod.UserID, mod.SuiteID, mod.StartDate, mod.EndDate, mod.NotifyAt, time.Now()).
+		Columns(t.OwnerID, t.SuiteID, t.StartDate, t.EndDate, t.CreatedAt).
+		Values(mod.UserID, mod.SuiteID, mod.StartDate, mod.EndDate, time.Now()).
 		Suffix("returning id").
 		PlaceholderFormat(sq.Dollar)
+
+	if mod.NotifyAt.Valid {
+		builder = builder.Columns("notify_at", t.NotifyAt).
+			Values(mod.NotifyAt.Time)
+	}
 
 	query, args, err := builder.ToSql()
 	if err != nil {

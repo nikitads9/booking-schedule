@@ -18,7 +18,7 @@ import (
 // AddEvent godoc
 //
 //	@Summary		Adds event
-//	@Description	Adds an even with given parameters associated with user. NotificationPeriod must look like {number}s,{number}m or {number}h. Implemented with the use of transaction: first the availibility is checked. In case one's new booking request intersects with and old one(even if belongs to him), the request is considered erratic.
+//	@Description	Adds an even with given parameters associated with user. NotificationPeriod is optional and must look like {number}s,{number}m or {number}h. Implemented with the use of transaction: first the availibility is checked. In case one's new booking request intersects with and old one(even if belongs to him), the request is considered erratic. Start date is to be before end date and both should not be expired.
 //	@ID				addByEventJSON
 //	@Tags			events
 //	@Accept			json

@@ -1,7 +1,6 @@
 package convert
 
 import (
-	"database/sql"
 	"event-schedule/internal/api"
 	"event-schedule/internal/model"
 	"net/http"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/gofrs/uuid"
+	"gopkg.in/guregu/null.v3"
 )
 
 func ToEvent(r *http.Request, req *api.AddEventRequest) (*model.Event, error) {
@@ -29,8 +29,8 @@ func ToEvent(r *http.Request, req *api.AddEventRequest) (*model.Event, error) {
 		return nil, api.ErrEmptyRequest
 	}
 
-	if req.NotificationPeriod != "" {
-		dur, err = time.ParseDuration(req.NotificationPeriod)
+	if req.NotificationPeriod.Valid {
+		dur, err = time.ParseDuration(req.NotificationPeriod.String)
 		if err != nil {
 			return nil, err
 		}
@@ -40,7 +40,7 @@ func ToEvent(r *http.Request, req *api.AddEventRequest) (*model.Event, error) {
 			SuiteID:   req.SuiteID,
 			StartDate: req.StartDate,
 			EndDate:   req.EndDate,
-			NotifyAt: sql.NullTime{Time: req.StartDate.Add(-dur),
+			NotifyAt: null.Time{Time: req.StartDate.Add(-dur),
 				Valid: true},
 		}, nil
 	}
@@ -82,13 +82,29 @@ func ToUpdateEventInfo(r *http.Request, req *api.UpdateEventRequest) (*model.Upd
 		return nil, api.ErrNoEventID
 	}
 
+	if req.NotificationPeriod.Valid {
+		dur, err := time.ParseDuration(req.NotificationPeriod.String)
+		if err != nil {
+			return nil, err
+		}
+
+		return &model.UpdateEventInfo{
+			EventID:   eventUUID,
+			UserID:    id,
+			SuiteID:   req.SuiteID,
+			StartDate: req.StartDate,
+			EndDate:   req.EndDate,
+			NotifyAt: null.Time{Time: req.StartDate.Add(-dur),
+				Valid: true},
+		}, nil
+	}
+
 	return &model.UpdateEventInfo{
-		EventID:            eventUUID,
-		UserID:             id,
-		SuiteID:            req.SuiteID,
-		StartDate:          req.StartDate,
-		EndDate:            req.EndDate,
-		NotificationPeriod: req.NotificationPeriod,
+		EventID:   eventUUID,
+		UserID:    id,
+		SuiteID:   req.SuiteID,
+		StartDate: req.StartDate,
+		EndDate:   req.EndDate,
 	}, nil
 }
 
@@ -147,6 +163,16 @@ func ToGetRoomsInfo(r *http.Request) (*model.Interval, error) {
 	endDate, err := time.Parse("2006-01-02T15:04:05-07:00", end)
 	if err != nil {
 		return nil, api.ErrParse
+	}
+
+	// Проверка, что обе даты еще не прошли
+	if (startDate.UTC().Before(time.Now().UTC())) || (endDate.UTC().Before(time.Now().UTC())) {
+		return nil, api.ErrExpiredDate
+	}
+
+	//проверка, что дата окончания не находится перед датой начала и не совпадает с ней
+	if endDate.UTC().Sub(startDate.UTC()) <= 0 {
+		return nil, api.ErrInvalidInterval
 	}
 
 	return &model.Interval{

@@ -94,7 +94,7 @@ func (a *App) setupRouter(impl *handlers.Implementation, ctx context.Context) {
 		r.Get("/{suite_id}/get-vacant-dates", impl.GetVacantDates(a.serviceProvider.log)) // GET /events/u123/get-vacant-dates
 		r.Route("/{event_id}", func(r chi.Router) {
 			r.Get("/get", impl.GetEvent(a.serviceProvider.log))
-			r.Put("/update", impl.UpdateEvent(a.serviceProvider.log))    // не Patch потому что невозможно частично обновить бронь
+			r.Patch("/update", impl.UpdateEvent(a.serviceProvider.log))
 			r.Delete("/delete", impl.DeleteEvent(a.serviceProvider.log)) // DELETE /event/123/delete
 		})
 

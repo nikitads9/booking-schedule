@@ -29,11 +29,11 @@ type AddEventRequest struct {
 	// номер апаратаментов
 	SuiteID int64 `json:"suiteID" validate:"required" example:"123"`
 	//Дата и время начала бронировании
-	StartDate time.Time `json:"startDate" validate:"required" example:"2024-01-28T17:43:00-03:00"`
+	StartDate time.Time `json:"startDate" validate:"required" example:"2024-03-28T17:43:00-03:00"`
 	// Дата и время окончания бронировании
-	EndDate time.Time `json:"endDate" validate:"required" example:"2024-01-29T17:43:00-03:00"`
+	EndDate time.Time `json:"endDate" validate:"required" example:"2024-03-29T17:43:00-03:00"`
 	// Интервал времени для предварительного уведомления о бронировании
-	NotificationPeriod string `json:"notificationPeriod" example:"1h"`
+	NotificationPeriod null.String `json:"notificationPeriod,omitempty" example:"24h"`
 }
 
 type AddEventResponse struct {
@@ -59,12 +59,12 @@ func (a *AddEventRequest) Bind(r *http.Request) error {
 		return err
 	}
 
-	if a.StartDate.After(a.EndDate) {
-		return ErrInvalidInterval
-	}
-
 	if a.StartDate.UTC().Before(time.Now().UTC()) || a.EndDate.UTC().Before(time.Now().UTC()) {
 		return ErrExpiredDate
+	}
+
+	if a.EndDate.UTC().Sub(a.StartDate.UTC()) <= 0 {
+		return ErrInvalidInterval
 	}
 
 	return nil
@@ -144,11 +144,11 @@ func (rd *GetVacantRoomsResponse) Render(w http.ResponseWriter, r *http.Request)
 
 type UpdateEventRequest struct {
 	// Номер апартаментов
-	SuiteID null.Int `json:"suiteID,omitempty" swaggertype:"primitive,integer" format:"int64" example:"123"`
+	SuiteID int64 `json:"suiteID" validate:"required" format:"int64" example:"123"`
 	// Дата и время начала бронировании
-	StartDate null.Time `json:"startDate,omitempty" swaggertype:"primitive,string" example:"2006-01-02T15:04:05-07:00"`
+	StartDate time.Time `json:"startDate" validate:"required" example:"2024-03-28T17:43:00-03:00"`
 	// Дата и время окончания бронирования
-	EndDate null.Time `json:"endDate,omitempty" swaggertype:"primitive,string" example:"2006-01-02T15:04:05-07:00"`
+	EndDate time.Time `json:"endDate" validate:"required" example:"2024-03-29T17:43:00-03:00"`
 	// Интервал времени для уведомления о бронировании
 	NotificationPeriod null.String `json:"notificationPeriod,omitempty" swaggertype:"primitive,string" example:"24h"`
 }
@@ -161,24 +161,21 @@ type UpdateEventResponse struct {
 // окончание бронирования не  происходит до его начала, чтобы даты не были истекшими.
 // Также при изменении одной даты нужно изменять и другую, а также указывать, за сколько оповестить о бронировании.
 func (u *UpdateEventRequest) Bind(r *http.Request) error {
-	// Проверка, что при наличии одной даты, есть и вторая
-	if (u.EndDate.Valid && !u.StartDate.Valid) || (u.StartDate.Valid && !u.EndDate.Valid) {
-		return ErrIncompleteInterval
+	// Создаем объект валидатора
+	// и передаем в него структуру, которую нужно провалидировать
+	err := validator.New().Struct(u)
+	if err != nil {
+		return err
 	}
 
 	// Проверка, что обе даты еще не прошли
-	if (u.StartDate.Time.UTC().Before(time.Now().UTC())) || (u.EndDate.Time.UTC().Before(time.Now().UTC())) {
+	if (u.StartDate.UTC().Before(time.Now().UTC())) || (u.EndDate.UTC().Before(time.Now().UTC())) {
 		return ErrExpiredDate
 	}
 
 	//проверка, что дата окончания не находится перед датой начала и не совпадает с ней
-	if u.EndDate.Time.UTC().Sub(u.StartDate.Time.UTC()) <= 0 { //u.StartDate.Time.After(u.EndDate.Time) ||
+	if u.EndDate.UTC().Sub(u.StartDate.UTC()) <= 0 {
 		return ErrInvalidInterval
-	}
-
-	//проверк
-	if u.StartDate.Valid && !u.NotificationPeriod.Valid {
-		return ErrIncompleteRequest
 	}
 
 	return nil
