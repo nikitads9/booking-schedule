@@ -79,7 +79,7 @@ func (r *repository) CheckAvailibility(ctx context.Context, suiteID int64, start
 	}
 	//TODO: ensure that model is parsed correctly
 	var res = new(model.Availibility)
-	err = r.client.DB().SelectContext(ctx, &res, q, args...)
+	err = r.client.DB().GetContext(ctx, res, q, args...)
 	if err != nil {
 		if errors.As(err, pgNoConnection) {
 			r.log.Error("no connection to database host", err)

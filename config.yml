@@ -1,14 +1,13 @@
 server:
   env: "dev"
-  host: "127.0.0.1"
   port: ":3000"
-  timeout: 4s
+  timeout: 6s
   idle_timeout: 30s
 
 database:
-  host: "postgres"
+  host: "db"
   port: "5432"
   user: "postgres"
-  database: "schedule_db"
+  database: "events_db"
   ssl: "disable"
   max_opened_connections: 10

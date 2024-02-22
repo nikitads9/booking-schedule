@@ -1,7 +1,7 @@
 create table users (
 	id bigserial primary key,
 	telegram_id bigint not null,
-    telegram_nickname text notnull,
+    telegram_nickname text not null,
     unique(telegram_id),
     unique(telegram_nickname)
 );
@@ -9,7 +9,7 @@ create table users (
 create table rooms (
     id bigserial primary key,
     capacity int not null,
-    name text,
+    name text
 );
 
 create table events (

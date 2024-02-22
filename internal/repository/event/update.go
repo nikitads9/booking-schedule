@@ -10,7 +10,6 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/georgysavva/scany/pgxscan"
 	"github.com/go-chi/chi/middleware"
 )
 
@@ -24,8 +23,8 @@ func (r *repository) UpdateEvent(ctx context.Context, mod *model.UpdateEventInfo
 
 	builder := sq.Update(t.EventTable).
 		Set(t.UpdatedAt, time.Now().UTC()).
-		Set("end_date", mod.EndDate).
 		Set("start_date", mod.StartDate).
+		Set("end_date", mod.EndDate).
 		Set("suite_id", mod.SuiteID).
 		Where(sq.Eq{"id": mod.EventID}).
 		PlaceholderFormat(sq.Dollar)
@@ -45,18 +44,19 @@ func (r *repository) UpdateEvent(ctx context.Context, mod *model.UpdateEventInfo
 		QueryRaw: query,
 	}
 
-	_, err = r.client.DB().ExecContext(ctx, q, args...)
+	result, err := r.client.DB().ExecContext(ctx, q, args...)
 	if err != nil {
 		if errors.As(err, pgNoConnection) {
 			r.log.Error("no connection to database host", err)
 			return ErrNoConnection
 		}
-		if pgxscan.NotFound(err) {
-			r.log.Error("event with this id not found", err)
-			return ErrNotFound
-		}
 		r.log.Error("query execution error", err)
 		return ErrQuery
+	}
+
+	if result.RowsAffected() == 0 {
+		r.log.Error("unsuccessful update", ErrNoRowsAffected)
+		return ErrNotFound
 	}
 
 	return nil

@@ -9,9 +9,9 @@ import (
 	"log/slog"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/georgysavva/scany/pgxscan"
 	"github.com/go-chi/chi/middleware"
 	"github.com/gofrs/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 func (r *repository) GetEvent(ctx context.Context, eventID uuid.UUID) (*model.EventInfo, error) {
@@ -45,7 +45,7 @@ func (r *repository) GetEvent(ctx context.Context, eventID uuid.UUID) (*model.Ev
 			r.log.Error("no connection to database host", err)
 			return nil, ErrNoConnection
 		}
-		if pgxscan.NotFound(err) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			r.log.Error("event with this id not found", err)
 			return nil, ErrNotFound
 		}

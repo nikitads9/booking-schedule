@@ -32,6 +32,7 @@ var (
 	ErrPgxScan        = errors.New("failed to read database response")
 	ErrNoConnection   = errors.New("could not connect to database")
 	ErrNoDates        = errors.New("no vacant dates for this room within month")
+	ErrUuid           = errors.New("failed to generate uuid")
 	pgNoConnection    = new(*pgconn.ConnectError)
 )
 

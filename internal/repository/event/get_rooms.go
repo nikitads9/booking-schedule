@@ -59,7 +59,7 @@ func (r *repository) GetVacantRooms(ctx context.Context, mod *model.Interval) ([
 	}
 
 	var res []*model.Suite
-	err = r.client.DB().SelectContext(ctx, res, q, args...)
+	err = r.client.DB().SelectContext(ctx, &res, q, args...)
 	if err != nil {
 		if errors.As(err, pgNoConnection) {
 			r.log.Error("no connection to database host", err)

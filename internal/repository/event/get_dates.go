@@ -49,8 +49,8 @@ WHERE start < 30;
 func (r *repository) GetVacantDates(ctx context.Context, suiteID int64) ([]*model.Interval, error) {
 	const op = "events.repository.GetVacantDates"
 
-	now := time.Now().Format("01-02-2006")
-	month := time.Now().Add(720 * time.Hour).Format("01-02-2006")
+	now := "'" + time.Now().Format("01-02-2006") + "'"
+	month := "'" + time.Now().Add(720*time.Hour).Format("01-02-2006") + "'"
 
 	r.log = r.log.With(
 		slog.String("op", op),
@@ -80,6 +80,7 @@ func (r *repository) GetVacantDates(ctx context.Context, suiteID int64) ([]*mode
 	start := sq.Case().
 		When("booked_start is NULL", now).
 		Else("booked_start")
+
 	end := sq.Case().
 		When("booked_end IS NULL", month).
 		Else("booked_end")
@@ -91,7 +92,7 @@ func (r *repository) GetVacantDates(ctx context.Context, suiteID int64) ([]*mode
 
 	builder := sq.Select("*").
 		FromSelect(free, "free_intervals").
-		Where(sq.Lt{"start": month}).
+		Where("start <"+month).
 		Prefix(bookedQuery, bookedArgs...).
 		PlaceholderFormat(sq.Dollar)
 
@@ -107,12 +108,13 @@ func (r *repository) GetVacantDates(ctx context.Context, suiteID int64) ([]*mode
 	}
 
 	var res []*model.Interval
-	err = r.client.DB().SelectContext(ctx, res, q, args...)
+	err = r.client.DB().SelectContext(ctx, &res, q, args...)
 	if err != nil {
 		if errors.As(err, pgNoConnection) {
 			r.log.Error("no connection to database host", err)
 			return nil, ErrNoConnection
 		}
+		//TODO: check if this works
 		if pgxscan.NotFound(err) {
 			r.log.Error("no vacant dates within month for this room", err)
 			return nil, ErrNotFound

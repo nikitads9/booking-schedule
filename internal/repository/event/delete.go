@@ -46,8 +46,8 @@ func (r *repository) DeleteEvent(ctx context.Context, id uuid.UUID) error {
 	}
 
 	if result.RowsAffected() == 0 {
-		r.log.Error("no rows affected")
-		return ErrNoRowsAffected
+		r.log.Error("unsuccessful delete", ErrNoRowsAffected)
+		return ErrNotFound
 	}
 
 	return nil

@@ -4,6 +4,7 @@ const (
 	EventTable = `events`
 	UserTable  = `users`
 	SuiteTable = `rooms`
+	ID         = `id`
 	OwnerID    = `owner_id`
 	SuiteID    = `suite_id`
 	StartDate  = `start_date`

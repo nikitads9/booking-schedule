@@ -190,3 +190,44 @@ func ToGetRoomsInfo(r *http.Request) (*model.Interval, error) {
 		EndDate:   endDate,
 	}, nil
 }
+
+func ToFreeIntervals(mod []*model.Interval) []*model.Interval {
+	if mod == nil {
+		return nil
+	}
+	if len(mod) == 0 {
+		return nil
+	}
+	res := make([]*model.Interval, len(mod)+1)
+	if time.Now().UTC().Before(mod[0].StartDate.UTC()) {
+		res[0].StartDate, res[0].EndDate = time.Now(), mod[0].StartDate
+	}
+
+	if len(mod) == 1 && mod[0].EndDate.After(time.Now().UTC().Add(720*time.Hour)) {
+		return res
+	}
+
+	if len(mod) == 1 {
+		res[1].StartDate, res[1].EndDate = mod[0].EndDate, time.Now().Add(720*time.Hour)
+		return res
+	}
+
+	for i := 1; i < len(mod); i++ {
+
+		if mod[i].EndDate.UTC().Before(time.Now().Add(720 * time.Hour).UTC()) {
+			res[i].StartDate = mod[i-1].EndDate
+			res[i].EndDate = mod[i].StartDate
+		} else {
+			res[i].StartDate = mod[i-1].EndDate
+			res[i].EndDate = mod[i].StartDate
+			return res
+		}
+
+	}
+
+	if mod[len(mod)-1].EndDate.UTC().Before(time.Now().Add(720 * time.Hour).UTC()) {
+		res[len(res)-1].StartDate, res[len(res)-1].EndDate = mod[len(mod)-1].EndDate, time.Now().Add(720*time.Hour)
+	}
+
+	return res
+}

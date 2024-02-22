@@ -12,13 +12,12 @@ COPY . /github.com/nikitads9/event-schedule/
 
 WORKDIR /github.com/nikitads9/event-schedule/
 
-RUN go mod download
-RUN go build -o ./bin/event-schedule cmd/server/schedule.go
+RUN make build-scheduler
 RUN chown -R root ./bin/scheduler
 
 FROM alpine:latest
 
-WORKDIR /bin/
+WORKDIR /root/
 
 COPY --from=builder /github.com/nikitads9/event-schedule/bin .
 COPY --from=builder /github.com/nikitads9/event-schedule/config.yml .

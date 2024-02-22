@@ -30,7 +30,7 @@ type EventInfo struct {
 	// Дата и время окончания бронировании
 	EndDate time.Time `json:"endDate" db:"end_date"`
 	// Интервал времени для уведомления о бронировании
-	NotifyAt string `json:"notifyAt,omitempty" db:"notify_at"`
+	NotifyAt time.Time `json:"notifyAt,omitempty" db:"notify_at"`
 	// Дата и время создания
 	CreatedAt time.Time `json:"createdAt" db:"created_at"`
 	// Дата и время обновления
@@ -62,12 +62,12 @@ type GetEventsInfo struct {
 }
 
 type Interval struct {
-	StartDate time.Time `json:"startDate" db:"start_date" example:"2024-03-02T15:04:05-07:00"`
-	EndDate   time.Time `json:"endDate" db:"end_date" exaple:"2024-04-02T15:04:05-07:00"`
+	StartDate time.Time `json:"start" db:"start" example:"2024-03-02T15:04:05-07:00"`
+	EndDate   time.Time `json:"end" db:"end" exaple:"2024-04-02T15:04:05-07:00"`
 }
 
 type Suite struct {
-	SuiteID  int64  `json:"suiteID" db:"suie_id" example:"123"`
+	SuiteID  int64  `json:"suiteID" db:"suite_id" example:"123"`
 	Capacity int8   `json:"capacity" db:"capacity" example:"4"`
 	Name     string `json:"name" db:"name" example:"Winston Churchill"`
 }

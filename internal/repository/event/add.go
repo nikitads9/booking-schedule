@@ -23,18 +23,26 @@ func (r *repository) AddEvent(ctx context.Context, mod *model.Event) (uuid.UUID,
 		slog.String("request_id", middleware.GetReqID(ctx)),
 	)
 
-	builder := sq.Insert(t.EventTable).
-		Columns(t.OwnerID, t.SuiteID, t.StartDate, t.EndDate, t.CreatedAt).
-		Values(mod.UserID, mod.SuiteID, mod.StartDate, mod.EndDate, time.Now()).
-		Suffix("returning id").
-		PlaceholderFormat(sq.Dollar)
+	var builder sq.InsertBuilder
 
-	if mod.NotifyAt.Valid {
-		builder = builder.Columns("notify_at", t.NotifyAt).
-			Values(mod.NotifyAt.Time)
+	newID, err := uuid.NewV4()
+	if err != nil {
+		r.log.Error("failed to generate uuid", err)
+		return uuid.Nil, ErrUuid
 	}
 
-	query, args, err := builder.ToSql()
+	if mod.NotifyAt.Valid {
+		builder = sq.Insert(t.EventTable).
+			Columns(t.ID, t.OwnerID, t.SuiteID, t.StartDate, t.EndDate, t.CreatedAt, t.NotifyAt).
+			Values(newID, mod.UserID, mod.SuiteID, mod.StartDate, mod.EndDate, time.Now(), mod.NotifyAt.Time)
+	} else {
+		builder = sq.Insert(t.EventTable).
+			Columns(t.ID, t.OwnerID, t.SuiteID, t.StartDate, t.EndDate, t.CreatedAt).
+			Values(newID, mod.UserID, mod.SuiteID, mod.StartDate, mod.EndDate, time.Now())
+	}
+
+	query, args, err := builder.Suffix("returning id").
+		PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
 		r.log.Error("failed to build a query", err)
 		return uuid.Nil, ErrQueryBuild

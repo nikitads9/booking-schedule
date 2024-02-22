@@ -11,7 +11,7 @@ import (
 
 const (
 	dbPassEscSeq = "{password}"
-	password     = "schedule_pass"
+	password     = "event_pass"
 )
 
 type Database struct {
