@@ -55,7 +55,6 @@ require (
 	github.com/georgysavva/scany v1.2.1
 	github.com/go-chi/chi v1.5.5
 	github.com/gofrs/uuid v4.4.0+incompatible
-	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/jackc/pgx/v5 v5.5.2
 	gopkg.in/yaml.v3 v3.0.1
 )

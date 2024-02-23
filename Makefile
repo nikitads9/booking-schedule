@@ -1,5 +1,5 @@
-BIN_SCHEDULER := "./bin/scheduler"
-BIN_NOTIFIER := "./bin/notifier"
+BIN_SCHEDULER := "./bin/events"
+BIN_NOTIFIER := "./bin/scheduler"
 BIN_SENDER := "./bin/sender"
 
 DOCKER_IMG="schedule:develop"
@@ -9,11 +9,11 @@ DOCKER_IMG="schedule:develop"
 
 build: build-calendar build-scheduler build-sender
 build-scheduler:
-	go build -v -o $(BIN_SCHEDULER) ./cmd/server/schedule.go
+	go build -v -o $(BIN_SCHEDULER) ./cmd/events/events.go
 build-notifier:
-	go build -v -o $(BIN_NOTIFIER) ./cmd/server/notifier.go
+	go build -v -o $(BIN_NOTIFIER) ./cmd/scheduler/scheduler.go
 build-sender:
-	go build -v -o $(BIN_SENDER) ./cmd/server/sender.go
+	go build -v -o $(BIN_SENDER) ./cmd/sender/sender.go
 
 .PHONY: deps
 deps: install-go-deps
