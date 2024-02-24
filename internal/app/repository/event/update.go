@@ -29,8 +29,8 @@ func (r *repository) UpdateEvent(ctx context.Context, mod *model.Event) error {
 		Where(sq.Eq{"id": mod.EventID}).
 		PlaceholderFormat(sq.Dollar)
 
-	if mod.NotifyAt.Valid {
-		builder = builder.Set("notify_at", mod.NotifyAt.Time)
+	if mod.GetNotifyAt() != 0 {
+		builder = builder.Set("notify_at", mod.GetNotifyAt())
 	}
 
 	query, args, err := builder.ToSql()

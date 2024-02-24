@@ -10,7 +10,6 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/georgysavva/scany/pgxscan"
 	"github.com/go-chi/chi/middleware"
 )
 
@@ -66,11 +65,6 @@ func (r *repository) GetVacantDates(ctx context.Context, suiteID int64) ([]*mode
 		if errors.As(err, pgNoConnection) {
 			r.log.Error("no connection to database host", err)
 			return nil, ErrNoConnection
-		}
-		//TODO: check if this works
-		if pgxscan.NotFound(err) {
-			r.log.Error("no vacant dates within month for this room", err)
-			return nil, ErrNotFound
 		}
 		r.log.Error("query execution error", err)
 		return nil, ErrQuery

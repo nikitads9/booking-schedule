@@ -16,7 +16,7 @@ create table events (
     id uuid primary key,
     start_date timestamp with time zone not null,
     end_date timestamp with time zone not null,
-    notify_at timestamp with time zone,
+    notify_at interval,
     created_at timestamp with time zone not null,
     updated_at timestamp with time zone,
     suite_id bigint not null,

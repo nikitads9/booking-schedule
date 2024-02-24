@@ -9,9 +9,10 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// TODO: move to env
 const (
 	dbPassEscSeq = "{password}"
-	password     = "event_pass"
+	password     = "events_pass"
 )
 
 type Database struct {

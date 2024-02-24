@@ -31,10 +31,10 @@ func (r *repository) AddEvent(ctx context.Context, mod *model.Event) (uuid.UUID,
 		return uuid.Nil, ErrUuid
 	}
 
-	if mod.NotifyAt.Valid {
+	if mod.GetNotifyAt() != 0 {
 		builder = sq.Insert(t.EventTable).
 			Columns(t.ID, t.OwnerID, t.SuiteID, t.StartDate, t.EndDate, t.CreatedAt, t.NotifyAt).
-			Values(newID, mod.UserID, mod.SuiteID, mod.StartDate, mod.EndDate, time.Now(), mod.NotifyAt.Time)
+			Values(newID, mod.UserID, mod.SuiteID, mod.StartDate, mod.EndDate, time.Now(), mod.GetNotifyAt())
 	} else {
 		builder = sq.Insert(t.EventTable).
 			Columns(t.ID, t.OwnerID, t.SuiteID, t.StartDate, t.EndDate, t.CreatedAt).

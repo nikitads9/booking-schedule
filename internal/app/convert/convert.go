@@ -56,7 +56,7 @@ func ToEvent(r *http.Request, req *api.Request) (*model.Event, error) {
 		if err != nil {
 			return nil, err
 		}
-		res.SetNotifyAt(req.StartDate.Add(-dur))
+		res.SetNotifyAt(dur)
 	}
 
 	return res, nil
@@ -200,36 +200,41 @@ func ToGetRoomsInfo(r *http.Request) (*model.Interval, error) {
 	}, nil
 }
 
+// Эта функция преобразует массив занятых интервалов к виду свободных
 func ToFreeIntervals(mod []*model.Interval) []*model.Interval {
-	//TODO почему значения даже после окончания месяца появляются?
-	if mod == nil {
-		return nil
-	}
-	if len(mod) == 0 {
-		return nil
-	}
+	now := time.Now().UTC()
+	month := now.Add(720 * time.Hour)
 	var res []*model.Interval
-	if time.Now().UTC().Before(mod[0].StartDate.UTC()) {
+
+	if mod == nil {
 		res = append(res, &model.Interval{
-			StartDate: time.Now(),
+			StartDate: now,
+			EndDate:   month,
+		})
+		return res
+	}
+
+	if now.Before(mod[0].StartDate.UTC()) {
+		res = append(res, &model.Interval{
+			StartDate: now,
 			EndDate:   mod[0].StartDate,
 		})
 	}
 
-	if len(mod) == 1 && mod[0].EndDate.After(time.Now().UTC().Add(720*time.Hour)) {
+	if len(mod) == 1 && mod[0].EndDate.After(month) {
 		return res
 	}
 
 	if len(mod) == 1 {
 		res = append(res, &model.Interval{
 			StartDate: mod[0].EndDate,
-			EndDate:   time.Now().Add(720 * time.Hour),
+			EndDate:   month,
 		})
 		return res
 	}
 
 	for i := 1; i < len(mod); i++ {
-		if mod[i].EndDate.UTC().Before(time.Now().Add(720 * time.Hour).UTC()) {
+		if mod[i].EndDate.UTC().Before(month) {
 			res = append(res, &model.Interval{
 				StartDate: mod[i-1].EndDate,
 				EndDate:   mod[i].StartDate,
@@ -244,10 +249,10 @@ func ToFreeIntervals(mod []*model.Interval) []*model.Interval {
 
 	}
 
-	if mod[len(mod)-1].EndDate.UTC().Before(time.Now().Add(720 * time.Hour).UTC()) {
+	if mod[len(mod)-1].EndDate.UTC().Before(month) {
 		res = append(res, &model.Interval{
 			StartDate: mod[len(mod)-1].EndDate,
-			EndDate:   time.Now().Add(720 * time.Hour),
+			EndDate:   month,
 		})
 	}
 

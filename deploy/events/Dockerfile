@@ -20,6 +20,6 @@ FROM alpine:latest
 WORKDIR /root/
 
 COPY --from=builder /github.com/nikitads9/event-schedule/bin .
-COPY --from=builder /github.com/nikitads9/event-schedule/config.yml .
+COPY --from=builder /github.com/nikitads9/event-schedule/cmd/events/config.yml .
 
 CMD ["./events", "-config", "config.yml"]

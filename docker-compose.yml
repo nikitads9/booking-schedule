@@ -13,23 +13,26 @@ services:
     container_name: 'event_storage'
     environment:
       - "POSTGRES_DB=events_db"
-      - "POSTGRES_PASSWORD=event_pass"
+      - "POSTGRES_PASSWORD=events_pass"
       - "POSTGRES_USER=postgres"
       - "PGDATA=/var/lib/postgresql/data/notification"
+    expose:
+    - "5433" 
     volumes: 
       - postgres-volume:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "5432:5432"
+      - "5433:5433"
+    command: -p 5433
     networks:
       - app_net
 
-  app:
+  events:
     build:
       context: .
-      dockerfile: ./deploy/scheduler/Dockerfile
-    image: nikitads9/event-schedule:scheduler
-    container_name: 'scheduler'
+      dockerfile: ./deploy/events/Dockerfile
+    image: nikitads9/event-schedule:events
+    container_name: 'events'
     ports:
       - "3000:3000"
     depends_on:

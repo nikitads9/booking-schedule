@@ -7,10 +7,10 @@ DOCKER_IMG="schedule:develop"
 #GIT_HASH := $(shell git log --format="%h" -n 1)
 #LDFLAGS := -X main.release="develop" -X main.buildDate=$(shell date -u +%Y-%m-%dT%H:%M:%S) -X main.gitHash=$(GIT_HASH)
 
-build: build-calendar build-scheduler build-sender
-build-scheduler:
+build: build-events build-scheduler build-sender
+build-events:
 	go build -v -o $(BIN_SCHEDULER) ./cmd/events/events.go
-build-notifier:
+build-scheduler:
 	go build -v -o $(BIN_NOTIFIER) ./cmd/scheduler/scheduler.go
 build-sender:
 	go build -v -o $(BIN_SENDER) ./cmd/sender/sender.go
@@ -27,12 +27,13 @@ install-go-deps: .install-go-deps
 			go install -v golang.org/x/tools/gopls@latest
 			go get -u github.com/go-chi/chi/v5
 			go get -u github.com/go-chi/render
+			go get -u github.com/sanyokbig/pqinterval
 			go install github.com/swaggo/swag/cmd/swag@latest
 			go mod tidy
 
 .PHONY: generate-swag
 generate-swag:
-	swag init --generalInfo cmd/server/schedule.go --parseDependency --parseInternal
+	swag init --generalInfo cmd/server/events.go --parseDependency --parseInternal
 
 .PHONY: coverage
 coverage:

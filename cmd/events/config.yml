@@ -6,7 +6,7 @@ server:
 
 database:
   host: "localhost"
-  port: "5432"
+  port: "5433"
   user: "postgres"
   database: "events_db"
   ssl: "disable"

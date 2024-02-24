@@ -104,6 +104,7 @@ func GetEventResponseAPI(event *model.EventInfo) *GetEventResponse {
 	return resp
 }
 
+// TODO: add model for inner logic and convert time.Dur notifyAt to string (optional)
 func (rd *GetEventResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }

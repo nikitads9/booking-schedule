@@ -18,7 +18,7 @@ type Event struct {
 	// Дата и время окончания бронировании
 	EndDate time.Time
 	// Интервал времени для уведомления о бронировании
-	NotifyAt null.Time
+	NotifyAt time.Duration
 }
 
 func (e *Event) GetEventID() uuid.UUID {
@@ -35,19 +35,17 @@ func (e *Event) SetEventID(id uuid.UUID) {
 	}
 }
 
-func (e *Event) GetNotifyAt() null.Time {
+func (e *Event) GetNotifyAt() time.Duration {
 	if e != nil {
 		return e.NotifyAt
 	}
-	return null.Time{}
+
+	return 0
 }
 
-func (e *Event) SetNotifyAt(t time.Time) {
+func (e *Event) SetNotifyAt(notifyAt time.Duration) {
 	if e != nil {
-		e.NotifyAt = null.Time{
-			Time:  t,
-			Valid: true,
-		}
+		e.NotifyAt = notifyAt
 	}
 }
 
@@ -76,7 +74,7 @@ type EventInfo struct {
 	// Дата и время окончания бронировании
 	EndDate time.Time `json:"endDate" db:"end_date"`
 	// Интервал времени для уведомления о бронировании
-	NotifyAt time.Time `json:"notifyAt,omitempty" db:"notify_at"`
+	NotifyAt time.Duration `json:"notifyAt,omitempty" db:"notify_at"`
 	// Дата и время создания
 	CreatedAt time.Time `json:"createdAt" db:"created_at"`
 	// Дата и время обновления
