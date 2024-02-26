@@ -22,9 +22,9 @@ func (r *repository) GetEvent(ctx context.Context, eventID uuid.UUID) (*model.Ev
 		slog.String("request_id", middleware.GetReqID(ctx)),
 	)
 
-	builder := sq.Select("id", t.SuiteID, t.StartDate, t.EndDate, t.NotifyAt, t.CreatedAt, t.UpdatedAt).
+	builder := sq.Select(t.ID, t.SuiteID, t.StartDate, t.EndDate, t.NotifyAt, t.CreatedAt, t.UpdatedAt, t.OwnerID).
 		From(t.EventTable).
-		Where(sq.Eq{"id": eventID}).
+		Where(sq.Eq{t.ID: eventID}).
 		PlaceholderFormat(sq.Dollar)
 
 	query, args, err := builder.ToSql()

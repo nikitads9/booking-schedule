@@ -77,7 +77,7 @@ func (s *serviceProvider) GetEventRepository(ctx context.Context) eventRepositor
 func (s *serviceProvider) GetSchedulerService(ctx context.Context) *schedulerService.Service {
 	if s.schedulerService == nil {
 		eventRepository := s.GetEventRepository(ctx)
-		s.schedulerService = schedulerService.NewSchedulerService(eventRepository, s.GetLogger(), s.GetRabbitProducer(), time.Duration(s.GetConfig().GetSchedulerConfig().CheckPeriodSec)*time.Second)
+		s.schedulerService = schedulerService.NewSchedulerService(eventRepository, s.GetLogger(), s.GetRabbitProducer(), time.Duration(s.GetConfig().GetSchedulerConfig().CheckPeriodSec), time.Duration(s.GetConfig().GetSchedulerConfig().EventTTL))
 	}
 
 	return s.schedulerService

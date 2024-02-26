@@ -65,7 +65,7 @@ func (e *EventConfig) GetServerConfig() *Server {
 	return e.Server
 }
 
-// GetServerConfig ...
+// GetLoggerConfig ...
 func (e *EventConfig) GetLoggerConfig() *Logger {
 	return e.Logger
 }

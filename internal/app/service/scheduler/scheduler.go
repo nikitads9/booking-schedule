@@ -12,13 +12,15 @@ type Service struct {
 	log             *slog.Logger
 	rabbitProducer  rabbit.Producer
 	checkPeriod     time.Duration
+	eventTTL        time.Duration
 }
 
-func NewSchedulerService(eventRepository event.Repository, log *slog.Logger, rabbitProducer rabbit.Producer, checkPeriod time.Duration) *Service {
+func NewSchedulerService(eventRepository event.Repository, log *slog.Logger, rabbitProducer rabbit.Producer, checkPeriod time.Duration, eventTTL time.Duration) *Service {
 	return &Service{
 		eventRepository: eventRepository,
 		log:             log,
 		rabbitProducer:  rabbitProducer,
 		checkPeriod:     checkPeriod,
+		eventTTL:        eventTTL * 60 * 60 * 24,
 	}
 }

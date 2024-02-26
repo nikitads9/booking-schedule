@@ -12,6 +12,7 @@ rabbit_producer:
 
 scheduler: 
     check_period_sec: 60
+    event_ttl_days: 365
 
 logger:
   env: "dev"

@@ -64,8 +64,7 @@ func (a *App) Run(ctx context.Context) error {
 func (a *App) runSchedulerService(ctx context.Context, wg *sync.WaitGroup) error {
 	go func() {
 		defer wg.Done()
-		//TODO: implement Run method
-		//a.serviceProvider.GetSchedulerService(ctx).Run(ctx)
+		a.serviceProvider.GetSchedulerService(ctx).Run(ctx)
 	}()
 
 	a.serviceProvider.log.Info("Run scheduler service ...")

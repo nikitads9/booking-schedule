@@ -6,6 +6,7 @@ import (
 	"event-schedule/internal/app/model"
 	"event-schedule/internal/pkg/db"
 	"log/slog"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -19,6 +20,8 @@ type Repository interface {
 	DeleteEvent(ctx context.Context, eventID uuid.UUID) error
 	GetVacantRooms(ctx context.Context, mod *model.Interval) ([]*model.Suite, error)
 	GetVacantDates(ctx context.Context, suiteID int64) ([]*model.Interval, error)
+	GetEventListByDate(ctx context.Context, start time.Time, end time.Time) ([]*model.EventInfo, error)
+	DeleteEventsBeforeDate(ctx context.Context, end time.Time) error
 	CheckAvailibility(ctx context.Context, mod *model.Event) (*model.Availibility, error)
 }
 

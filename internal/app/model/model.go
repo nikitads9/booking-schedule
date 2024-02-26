@@ -49,21 +49,6 @@ func (e *Event) SetNotifyAt(notifyAt time.Duration) {
 	}
 }
 
-/* // Содержимое Update/Modify запроса
-type UpdateEventInfo struct {
-	EventID uuid.UUID
-	// Идентификатор пользователя в системе
-	UserID int64
-	// Номер апартаментов
-	SuiteID int64
-	// Дата и время начала бронировании
-	StartDate time.Time
-	// Дата и время окончания бронировании
-	EndDate time.Time
-	// Интервал времени для уведомления о бронировании
-	NotifyAt null.Time
-} */
-
 type EventInfo struct {
 	// Уникальный идентификатор бронирования
 	EventID uuid.UUID `json:"EventID" example:"550e8400-e29b-41d4-a716-446655440000" format:"uuid" db:"id"`
@@ -74,11 +59,13 @@ type EventInfo struct {
 	// Дата и время окончания бронировании
 	EndDate time.Time `json:"endDate" db:"end_date"`
 	// Интервал времени для уведомления о бронировании
-	NotifyAt time.Duration `json:"notifyAt,omitempty" db:"notify_at"`
+	NotifyAt string `json:"notifyAt,omitempty" db:"notify_at"`
 	// Дата и время создания
 	CreatedAt time.Time `json:"createdAt" db:"created_at"`
 	// Дата и время обновления
 	UpdatedAt null.Time `json:"updatedAt,omitempty" db:"updated_at"`
+	// Идентификатор владельца бронирования
+	OwnerID int64 `json:"ownerID,omitempty" db:"owner_id"`
 }
 
 type GetEventsInfo struct {
