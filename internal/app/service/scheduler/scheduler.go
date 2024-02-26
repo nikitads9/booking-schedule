@@ -21,6 +21,6 @@ func NewSchedulerService(eventRepository event.Repository, log *slog.Logger, rab
 		log:             log,
 		rabbitProducer:  rabbitProducer,
 		checkPeriod:     checkPeriod,
-		eventTTL:        eventTTL * 60 * 60 * 24,
+		eventTTL:        eventTTL,
 	}
 }

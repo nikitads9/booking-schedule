@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"os"
+
 	//_ "event-schedule/cmd/server/docs"
 	"event-schedule/internal/pkg/events"
 	"flag"
@@ -32,6 +34,13 @@ func init() {
 func main() {
 	flag.Parse()
 	ctx := context.Background()
+	go func() {
+		file, err := os.Open(pathConfig)
+		if err != nil {
+			return
+		}
+		file.Close()
+	}()
 	app, err := events.NewApp(ctx, pathConfig)
 	if err != nil {
 		log.Fatalf("failed to create app err:%s\n", err.Error())

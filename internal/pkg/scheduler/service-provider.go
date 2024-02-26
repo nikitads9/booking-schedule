@@ -40,10 +40,12 @@ func (s *serviceProvider) GetDB(ctx context.Context) db.Client {
 		cfg, err := s.GetConfig().GetDBConfig()
 		if err != nil {
 			s.log.Error("could not get config err: %s", err)
+			os.Exit(1)
 		}
 		dbc, err := db.NewClient(ctx, cfg)
 		if err != nil {
 			s.log.Error("could not connect to db err: %s", err)
+			os.Exit(1)
 		}
 		s.db = dbc
 	}
@@ -76,8 +78,12 @@ func (s *serviceProvider) GetEventRepository(ctx context.Context) eventRepositor
 
 func (s *serviceProvider) GetSchedulerService(ctx context.Context) *schedulerService.Service {
 	if s.schedulerService == nil {
-		eventRepository := s.GetEventRepository(ctx)
-		s.schedulerService = schedulerService.NewSchedulerService(eventRepository, s.GetLogger(), s.GetRabbitProducer(), time.Duration(s.GetConfig().GetSchedulerConfig().CheckPeriodSec), time.Duration(s.GetConfig().GetSchedulerConfig().EventTTL))
+		s.schedulerService = schedulerService.NewSchedulerService(
+			s.GetEventRepository(ctx),
+			s.GetLogger(),
+			s.GetRabbitProducer(),
+			time.Duration(s.GetConfig().GetSchedulerConfig().CheckPeriodSec)*time.Second,
+			time.Duration(s.GetConfig().GetSchedulerConfig().EventTTL)*time.Hour*24)
 	}
 
 	return s.schedulerService

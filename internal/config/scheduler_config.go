@@ -10,14 +10,14 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type RabbitProducer struct {
-	DSN       string `yaml:"dsn"`
-	QueueName string `yaml:"queue_name"`
-}
-
 type Scheduler struct {
 	CheckPeriodSec int64 `yaml:"check_period_sec"`
 	EventTTL       int64 `yaml:"event_ttl_days"`
+}
+
+type RabbitProducer struct {
+	DSN       string `yaml:"dsn"`
+	QueueName string `yaml:"queue_name"`
 }
 
 type SchedulerConfig struct {
@@ -28,7 +28,12 @@ type SchedulerConfig struct {
 }
 
 func ReadSchedulerConfig(path string) (*SchedulerConfig, error) {
-	config := &SchedulerConfig{}
+	config := &SchedulerConfig{
+		Scheduler:      &Scheduler{},
+		Database:       &Database{},
+		RabbitProducer: &RabbitProducer{},
+		Logger:         &Logger{},
+	}
 
 	file, err := os.Open(path)
 	if err != nil {

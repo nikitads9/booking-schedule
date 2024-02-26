@@ -28,13 +28,13 @@ ORDER BY start_date;
 func (r *repository) GetVacantDates(ctx context.Context, suiteID int64) ([]*model.Interval, error) {
 	const op = "events.repository.GetVacantDates"
 
-	now := "'" + time.Now().Format("01-02-2006") + "'"
-	month := "'" + time.Now().Add(720*time.Hour).Format("01-02-2006") + "'"
-
 	r.log = r.log.With(
 		slog.String("op", op),
 		slog.String("request_id", middleware.GetReqID(ctx)),
 	)
+
+	now := "'" + time.Now().Format("01-02-2006") + "'"
+	month := "'" + time.Now().Add(720*time.Hour).Format("01-02-2006") + "'"
 
 	builder := sq.Select(t.StartDate+` as start`, t.EndDate+` as end`).
 		From(t.EventTable).

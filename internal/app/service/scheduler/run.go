@@ -25,12 +25,13 @@ func (s *Service) Run(ctx context.Context) {
 		case <-ticker.C:
 			err := s.handleEvents(ctx)
 			if err != nil {
-				s.log.Error("failed to handle events: %s", err.Error())
+				s.log.Error("failed to handle events:", err)
 			}
 		}
 	}
 
 }
+
 func (s *Service) handleEvents(ctx context.Context) error {
 	const op = "scheduler.service.handleEvents"
 
