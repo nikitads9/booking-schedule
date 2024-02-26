@@ -9,21 +9,21 @@ volumes:
 
 services:
   db:
-    image: postgres:14-alpine3.19
+    image: postgres:16-alpine3.19
     container_name: 'event_storage'
     environment:
-      - "POSTGRES_DB=events_db"
-      - "POSTGRES_PASSWORD=events_pass"
-      - "POSTGRES_USER=postgres"
-      - "PGDATA=/var/lib/postgresql/data/notification"
+      - "POSTGRES_DB=${DB_NAME}"
+      - "POSTGRES_USER=${DB_USER}"
+      - "POSTGRES_PASSWORD=${DB_PASSWORD}"
+      - "PGDATA=${PGDATA}"
     expose:
-    - "5433" 
+    - "${DB_PORT}" 
     volumes: 
       - postgres-volume:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    #  - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql 
     ports:
-      - "5433:5433"
-    command: -p 5433
+      - "${DB_PORT}:${DB_PORT}"
+    command: -p ${DB_PORT}
     networks:
       - app_net
 
@@ -34,7 +34,22 @@ services:
     image: nikitads9/event-schedule:events
     container_name: 'events'
     ports:
-      - "3000:3000"
+      - "${EVENTS_PORT}:${EVENTS_PORT}"
+    depends_on:
+      - db
+    networks:
+      - app_net
+
+  goose:
+    container_name: 'goose'
+    build: ./deploy/migrations/
+    restart: on-failure
+    environment:
+      - "GOOSE_DRIVER=postgres"
+      - "GOOSE_DBSTRING=host=${DB_HOST} port=${DB_PORT} dbname=${DB_NAME} user=${DB_USER} password=${DB_PASSWORD} sslmode=${DB_SSL}"
+      - "MIGRATION_DIR=${MIGRATION_DIR}"
+    ports:
+      - "5446:5433"
     depends_on:
       - db
     networks:

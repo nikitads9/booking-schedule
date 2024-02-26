@@ -19,6 +19,7 @@
 
 # IDE environment
 .vscode/
+*.env
 
 # Go workspace file
 go.work

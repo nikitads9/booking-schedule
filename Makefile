@@ -1,11 +1,23 @@
+include .env
 BIN_SCHEDULER := "./bin/events"
 BIN_NOTIFIER := "./bin/scheduler"
 BIN_SENDER := "./bin/sender"
 
 DOCKER_IMG="schedule:develop"
 
+testing:
+	source .env
 #GIT_HASH := $(shell git log --format="%h" -n 1)
 #LDFLAGS := -X main.release="develop" -X main.buildDate=$(shell date -u +%Y-%m-%dT%H:%M:%S) -X main.gitHash=$(GIT_HASH)
+prepare-env:
+	set -o allexport && source ./.env && set +o allexport
+
+migrate-up:
+	export PG_DSN="host=${DB_HOST} port=${DB_PORT} dbname=${DB_NAME} user=${DB_USER} password=${DB_PASSWORD} sslmode=${DB_SSL}"
+	sleep 2 && goose -dir ${MIGRATION_DIR} postgres "${PG_DSN}" up -v
+migrate-down:
+	export PG_DSN="host=${DB_HOST} port=${DB_PORT} dbname=${DB_NAME} user=${DB_USER} password=${DB_PASSWORD} sslmode=${DB_SSL}"
+	sleep 2 && goose -dir ${MIGRATION_DIR} postgres "${PG_DSN}" up -v
 
 build: build-events build-scheduler build-sender
 build-events:
@@ -25,11 +37,8 @@ install-go-deps: .install-go-deps
 .install-go-deps:
 		ls go.mod || go mod init
 			go install -v golang.org/x/tools/gopls@latest
-			go get -u github.com/go-chi/chi/v5
-			go get -u github.com/go-chi/render
-			go get -u github.com/sanyokbig/pqinterval
-			go get -u github.com/streadway/amqp
-			go install github.com/swaggo/swag/cmd/swag@latest
+			go install -v github.com/swaggo/swag/cmd/swag@latest
+#go install github.com/joho/godotenv/cmd/godotenv@latest TODO: move all configs to env
 			go mod tidy
 
 .PHONY: generate-swag
