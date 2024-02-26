@@ -28,6 +28,7 @@ install-go-deps: .install-go-deps
 			go get -u github.com/go-chi/chi/v5
 			go get -u github.com/go-chi/render
 			go get -u github.com/sanyokbig/pqinterval
+			go get -u github.com/streadway/amqp
 			go install github.com/swaggo/swag/cmd/swag@latest
 			go mod tidy
 

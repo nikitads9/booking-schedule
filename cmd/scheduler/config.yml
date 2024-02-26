@@ -1,8 +1,3 @@
-server:
-  port: ":3000"
-  timeout: 6s
-  idle_timeout: 30s
-
 database:
   host: "localhost"
   port: "5433"
@@ -10,6 +5,13 @@ database:
   database: "events_db"
   ssl: "disable"
   max_opened_connections: 10
+
+rabbit_producer:
+  dsn: "amqp://guest:guest@queue:5672/"
+  queue_name": "events"
+
+scheduler: 
+    check_period_sec: 60
 
 logger:
   env: "dev"

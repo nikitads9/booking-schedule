@@ -16,8 +16,8 @@ type client struct {
 	closeFunc context.CancelFunc
 }
 
-func NewClient(ctx context.Context, connString string) (Client, error) {
-	dbc, err := pgxpool.New(ctx, connString)
+func NewClient(ctx context.Context, config *pgxpool.Config) (Client, error) {
+	dbc, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
 		return nil, err
 	}

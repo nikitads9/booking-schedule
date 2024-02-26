@@ -1,12 +1,12 @@
-package app
+package events
 
 import (
 	"context"
+	"errors"
 	"event-schedule/internal/app/api/handlers"
 	"event-schedule/internal/logger/sl"
 	mwLogger "event-schedule/internal/middleware/logger"
 	"log/slog"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -16,23 +16,23 @@ import (
 	"github.com/go-chi/chi/middleware"
 )
 
-const (
-	envLocal = "local"
-	envDev   = "dev"
-	envProd  = "prod"
-)
-
 type App struct {
 	pathConfig      string
 	serviceProvider *serviceProvider
-	//server
-	router *chi.Mux
+	router          *chi.Mux
 }
 
-func Start(ctx context.Context, pathConfig string) error {
+// NewApp ...
+func NewApp(ctx context.Context, pathConfig string) (*App, error) {
 	a := &App{
 		pathConfig: pathConfig,
 	}
+	err := a.initDeps(ctx)
+
+	return a, err
+}
+
+func (a *App) initDeps(ctx context.Context) error {
 
 	inits := []func(context.Context) error{
 		a.initServiceProvider,
@@ -55,21 +55,13 @@ func (a *App) initServiceProvider(_ context.Context) error {
 	return nil
 }
 
-func (a *App) initServer(ctx context.Context) error {
-	impl := a.serviceProvider.GetEventImpl(ctx)
-	defer a.serviceProvider.db.Close()
+// Run ...
+func (a *App) Run() error {
+	defer func() {
+		a.serviceProvider.db.Close()
+	}()
 
-	address, err := a.serviceProvider.config.GetAddress()
-	if err != nil {
-		return err
-	}
-	a.serviceProvider.log.Info("initializing server", slog.String("address", address)) // Вывод параметра с адресом
-	a.serviceProvider.log.Debug("logger debug mode enabled")
-
-	a.setupRouter(impl, ctx)
-
-	srv := a.serviceProvider.getServer(a.router)
-	err = a.startServer(srv)
+	err := a.startServer()
 	if err != nil {
 		a.serviceProvider.log.Error("failed to start server %s", err)
 		return err
@@ -78,32 +70,47 @@ func (a *App) initServer(ctx context.Context) error {
 	return nil
 }
 
-func (a *App) setupRouter(impl *handlers.Implementation, ctx context.Context) {
+func (a *App) initServer(ctx context.Context) error {
+	impl := a.serviceProvider.GetEventImpl(ctx)
+
+	address, err := a.serviceProvider.GetConfig().GetAddress()
+	if err != nil {
+		return err
+	}
+	a.serviceProvider.log.Info("initializing server", slog.String("address", address)) // Вывод параметра с адресом
+	a.serviceProvider.log.Debug("logger debug mode enabled")
+
+	a.setupRouter(impl)
+
+	return nil
+}
+
+func (a *App) setupRouter(impl *handlers.Implementation) {
 	a.router = chi.NewRouter()
 	a.router.Use(middleware.RequestID) // Добавляет request_id в каждый запрос, для трейсинга
 	a.router.Use(middleware.Logger)    // Логирование всех запросов
 	a.router.Use(middleware.Recoverer) // Если где-то внутри сервера (обработчика запроса) произойдет паника, приложение не должно упасть
 	a.router.Use(mwLogger.New(a.serviceProvider.log))
-	//r.Use(middleware.URLFormat) // Парсер URLов поступающих запросов
 
-	// RESTy routes for "events" resource
 	a.router.Route("/events/{user_id}", func(r chi.Router) {
-		r.Post("/add", impl.AddEvent(a.serviceProvider.log))                              // POST /events/u123
-		r.Get("/get-events", impl.GetEvents(a.serviceProvider.log))                       // GET /events/u123/get/{interval}
-		r.Get("/get-vacant-rooms", impl.GetVacantRooms(a.serviceProvider.log))            // GET /events/u123/get-vacant-rooms
-		r.Get("/{suite_id}/get-vacant-dates", impl.GetVacantDates(a.serviceProvider.log)) // GET /events/u123/get-vacant-dates
+		r.Post("/add", impl.AddEvent(a.serviceProvider.log))
+		r.Get("/get-events", impl.GetEvents(a.serviceProvider.log))
+		r.Get("/get-vacant-rooms", impl.GetVacantRooms(a.serviceProvider.log))
+		r.Get("/{suite_id}/get-vacant-dates", impl.GetVacantDates(a.serviceProvider.log))
 		r.Route("/{event_id}", func(r chi.Router) {
 			r.Get("/get", impl.GetEvent(a.serviceProvider.log))
 			r.Patch("/update", impl.UpdateEvent(a.serviceProvider.log))
-			r.Delete("/delete", impl.DeleteEvent(a.serviceProvider.log)) // DELETE /event/123/delete
+			r.Delete("/delete", impl.DeleteEvent(a.serviceProvider.log))
 		})
-
-		// GET /articles/whats-up
-		//r.With(ArticleCtx).Get("/{articleSlug:[a-z-]+}", GetArticle) */
 	})
 }
 
-func (a *App) startServer(srv *http.Server) error {
+func (a *App) startServer() error {
+	srv := a.serviceProvider.getServer(a.router)
+	if srv == nil {
+		a.serviceProvider.log.Error("server was not initialized")
+		return errors.New("server was not initialized")
+	}
 	a.serviceProvider.log.Info("starting server", slog.String("address", srv.Addr))
 
 	done := make(chan os.Signal, 1)
@@ -132,8 +139,6 @@ func (a *App) startServer(srv *http.Server) error {
 
 		return err
 	}
-
-	// TODO: close storage
 
 	a.serviceProvider.log.Info("server stopped")
 

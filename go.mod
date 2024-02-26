@@ -56,6 +56,6 @@ require (
 	github.com/go-chi/chi v1.5.5
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/jackc/pgx/v5 v5.5.2
-	github.com/sanyokbig/pqinterval v1.1.2
+	github.com/streadway/amqp v1.1.0
 	gopkg.in/yaml.v3 v3.0.1
 )

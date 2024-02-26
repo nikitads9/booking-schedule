@@ -1,17 +1,15 @@
-package events
+package scheduler
 
 import (
 	"context"
-	"log/slog"
-	"net/http"
-	"os"
-
-	"event-schedule/internal/app/api/handlers"
 	eventRepository "event-schedule/internal/app/repository/event"
-	eventService "event-schedule/internal/app/service/event"
+	schedulerService "event-schedule/internal/app/service/scheduler"
 	"event-schedule/internal/config"
 	"event-schedule/internal/pkg/db"
-	"event-schedule/internal/pkg/db/transaction"
+	"event-schedule/internal/pkg/rabbit"
+	"log/slog"
+	"os"
+	"time"
 )
 
 const (
@@ -22,17 +20,13 @@ const (
 
 type serviceProvider struct {
 	db         db.Client
-	txManager  db.TxManager
 	configPath string
-	config     *config.EventConfig
+	config     *config.SchedulerConfig
 
-	server *http.Server
-	log    *slog.Logger
-
-	eventRepository eventRepository.Repository
-	eventService    *eventService.Service
-
-	eventImpl *handlers.Implementation
+	log              *slog.Logger
+	rabbitProducer   rabbit.Producer
+	eventRepository  eventRepository.Repository
+	schedulerService *schedulerService.Service
 }
 
 func newServiceProvider(configPath string) *serviceProvider {
@@ -49,7 +43,7 @@ func (s *serviceProvider) GetDB(ctx context.Context) db.Client {
 		}
 		dbc, err := db.NewClient(ctx, cfg)
 		if err != nil {
-			s.log.Error("coud not connect to db err: %s", err)
+			s.log.Error("could not connect to db err: %s", err)
 		}
 		s.db = dbc
 	}
@@ -57,11 +51,11 @@ func (s *serviceProvider) GetDB(ctx context.Context) db.Client {
 	return s.db
 }
 
-func (s *serviceProvider) GetConfig() *config.EventConfig {
+func (s *serviceProvider) GetConfig() *config.SchedulerConfig {
 	if s.config == nil {
-		cfg, err := config.ReadEventConfig(s.configPath)
+		cfg, err := config.ReadSchedulerConfig(s.configPath)
 		if err != nil {
-			s.log.Error("coud not get config: %s", err)
+			s.log.Error("could not get config: %s", err)
 			os.Exit(1)
 		}
 
@@ -80,40 +74,13 @@ func (s *serviceProvider) GetEventRepository(ctx context.Context) eventRepositor
 	return s.eventRepository
 }
 
-func (s *serviceProvider) GetEventService(ctx context.Context) *eventService.Service {
-	if s.eventService == nil {
+func (s *serviceProvider) GetSchedulerService(ctx context.Context) *schedulerService.Service {
+	if s.schedulerService == nil {
 		eventRepository := s.GetEventRepository(ctx)
-		s.eventService = eventService.NewEventService(eventRepository, s.GetLogger(), s.TxManager(ctx))
+		s.schedulerService = schedulerService.NewSchedulerService(eventRepository, s.GetLogger(), s.GetRabbitProducer(), time.Duration(s.GetConfig().GetSchedulerConfig().CheckPeriodSec)*time.Second)
 	}
 
-	return s.eventService
-}
-
-func (s *serviceProvider) GetEventImpl(ctx context.Context) *handlers.Implementation {
-	if s.eventImpl == nil {
-		s.eventImpl = handlers.NewImplementation(s.GetEventService(ctx))
-	}
-
-	return s.eventImpl
-}
-
-func (s *serviceProvider) getServer(router http.Handler) *http.Server {
-	if s.server == nil {
-		address, err := s.GetConfig().GetAddress()
-		if err != nil {
-			s.log.Error("could not get server address err: %s", err)
-			return nil
-		}
-		s.server = &http.Server{
-			Addr:         address,
-			Handler:      router,
-			ReadTimeout:  s.GetConfig().GetServerConfig().Timeout,
-			WriteTimeout: s.GetConfig().GetServerConfig().Timeout,
-			IdleTimeout:  s.GetConfig().GetServerConfig().IdleTimeout,
-		}
-	}
-
-	return s.server
+	return s.schedulerService
 }
 
 func (s *serviceProvider) GetLogger() *slog.Logger {
@@ -135,10 +102,16 @@ func (s *serviceProvider) GetLogger() *slog.Logger {
 	return s.log
 }
 
-func (s *serviceProvider) TxManager(ctx context.Context) db.TxManager {
-	if s.txManager == nil {
-		s.txManager = transaction.NewTransactionManager(s.GetDB(ctx).DB())
+// GetRabbitProducer ...
+func (s *serviceProvider) GetRabbitProducer() rabbit.Producer {
+	if s.rabbitProducer == nil {
+		rp, err := rabbit.NewProducer(s.GetConfig().GetRabbitProducerConfig())
+		if err != nil {
+			s.log.Error("could not connect to rabbit producer err: %s", err)
+			os.Exit(1)
+		}
+		s.rabbitProducer = rp
 	}
 
-	return s.txManager
+	return s.rabbitProducer
 }

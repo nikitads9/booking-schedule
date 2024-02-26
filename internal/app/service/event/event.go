@@ -17,10 +17,8 @@ type Service struct {
 
 // TODO: clean up spare errors
 var (
-	ErrNoModel = errors.New("received no model")
-	//ErrAvailibility  = errors.New("could not scan for availibility")
-	ErrNotAvailible = errors.New("this period is not availible for booking")
-	//ErrAddition      = errors.New("failed to add event")
+	ErrNoModel       = errors.New("received no model")
+	ErrNotAvailible  = errors.New("this period is not availible for booking")
 	ErrEmptyUpdate   = errors.New("no parameters for update received")
 	ErrNoTransaction = errors.New("can't begin transaction, no connection to database")
 	pgNoConnection   = new(*pgconn.ConnectError)
