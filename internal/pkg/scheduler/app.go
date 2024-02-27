@@ -55,8 +55,8 @@ func (a *App) Run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-
 	wg.Wait()
+
 	return nil
 }
 
@@ -65,8 +65,9 @@ func (a *App) runSchedulerService(ctx context.Context, wg *sync.WaitGroup) error
 		defer wg.Done()
 
 		a.serviceProvider.GetSchedulerService(ctx).Run(ctx)
+
 	}()
 
-	a.serviceProvider.log.Info("attempting to runscheduler service")
+	a.serviceProvider.GetLogger().Info("attempting to run scheduler service")
 	return nil
 }

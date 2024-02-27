@@ -15,11 +15,11 @@ create table rooms (
 
 create table events (
     id uuid primary key,
-    start_date timestamp with time zone not null,
-    end_date timestamp with time zone not null,
+    start_date timestamp not null,
+    end_date timestamp not null,
     notify_at interval,
-    created_at timestamp with time zone not null,
-    updated_at timestamp with time zone,
+    created_at timestamp not null,
+    updated_at timestamp,
     suite_id bigint not null,
     owner_id bigint not null,
     constraint fk_rooms

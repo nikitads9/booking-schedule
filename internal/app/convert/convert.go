@@ -149,12 +149,12 @@ func ToGetEventsInfo(r *http.Request) (*model.GetEventsInfo, error) {
 	}
 
 	// Проверка, что обе даты еще не прошли
-	if (startDate.UTC().Before(time.Now().UTC())) || (endDate.UTC().Before(time.Now().UTC())) {
+	if (startDate.Before(time.Now())) || (endDate.Before(time.Now())) {
 		return nil, api.ErrExpiredDate
 	}
 
 	//проверка, что дата окончания не находится перед датой начала и не совпадает с ней
-	if endDate.UTC().Sub(startDate.UTC()) <= 0 {
+	if endDate.Sub(startDate) <= 0 {
 		return nil, api.ErrInvalidInterval
 	}
 
@@ -185,12 +185,12 @@ func ToGetRoomsInfo(r *http.Request) (*model.Interval, error) {
 	}
 
 	// Проверка, что обе даты еще не прошли
-	if (startDate.UTC().Before(time.Now().UTC())) || (endDate.UTC().Before(time.Now().UTC())) {
+	if (startDate.Before(time.Now())) || (endDate.Before(time.Now())) {
 		return nil, api.ErrExpiredDate
 	}
 
 	//проверка, что дата окончания не находится перед датой начала и не совпадает с ней
-	if endDate.UTC().Sub(startDate.UTC()) <= 0 {
+	if endDate.Sub(startDate) <= 0 {
 		return nil, api.ErrInvalidInterval
 	}
 
@@ -202,7 +202,7 @@ func ToGetRoomsInfo(r *http.Request) (*model.Interval, error) {
 
 // Эта функция преобразует массив занятых интервалов к виду свободных
 func ToFreeIntervals(mod []*model.Interval) []*model.Interval {
-	now := time.Now().UTC()
+	now := time.Now()
 	month := now.Add(720 * time.Hour)
 	var res []*model.Interval
 
@@ -214,7 +214,7 @@ func ToFreeIntervals(mod []*model.Interval) []*model.Interval {
 		return res
 	}
 
-	if now.Before(mod[0].StartDate.UTC()) {
+	if now.Before(mod[0].StartDate) {
 		res = append(res, &model.Interval{
 			StartDate: now,
 			EndDate:   mod[0].StartDate,
@@ -234,7 +234,7 @@ func ToFreeIntervals(mod []*model.Interval) []*model.Interval {
 	}
 
 	for i := 1; i < len(mod); i++ {
-		if mod[i].EndDate.UTC().Before(month) {
+		if mod[i].EndDate.Before(month) {
 			res = append(res, &model.Interval{
 				StartDate: mod[i-1].EndDate,
 				EndDate:   mod[i].StartDate,
@@ -249,7 +249,7 @@ func ToFreeIntervals(mod []*model.Interval) []*model.Interval {
 
 	}
 
-	if mod[len(mod)-1].EndDate.UTC().Before(month) {
+	if mod[len(mod)-1].EndDate.Before(month) {
 		res = append(res, &model.Interval{
 			StartDate: mod[len(mod)-1].EndDate,
 			EndDate:   month,

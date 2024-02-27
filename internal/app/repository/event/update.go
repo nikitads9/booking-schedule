@@ -22,7 +22,7 @@ func (r *repository) UpdateEvent(ctx context.Context, mod *model.Event) error {
 	)
 
 	builder := sq.Update(t.EventTable).
-		Set(t.UpdatedAt, time.Now().UTC()).
+		Set(t.UpdatedAt, time.Now()).
 		Set("start_date", mod.StartDate).
 		Set("end_date", mod.EndDate).
 		Set("suite_id", mod.SuiteID).

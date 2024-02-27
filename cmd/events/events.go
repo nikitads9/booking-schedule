@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"os"
+	"time"
 
 	//_ "event-schedule/cmd/server/docs"
 	"event-schedule/internal/pkg/events"
@@ -14,6 +14,7 @@ var pathConfig string
 
 func init() {
 	flag.StringVar(&pathConfig, "config", "config.yml", "path to config file")
+	time.Local = time.UTC
 }
 
 //	@title			event-schedule API
@@ -33,14 +34,9 @@ func init() {
 //		@Tags			events
 func main() {
 	flag.Parse()
+
 	ctx := context.Background()
-	go func() {
-		file, err := os.Open(pathConfig)
-		if err != nil {
-			return
-		}
-		file.Close()
-	}()
+
 	app, err := events.NewApp(ctx, pathConfig)
 	if err != nil {
 		log.Fatalf("failed to create app err:%s\n", err.Error())

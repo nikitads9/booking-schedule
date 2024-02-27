@@ -28,21 +28,15 @@ type SchedulerConfig struct {
 }
 
 func ReadSchedulerConfig(path string) (*SchedulerConfig, error) {
-	config := &SchedulerConfig{
-		Scheduler:      &Scheduler{},
-		Database:       &Database{},
-		RabbitProducer: &RabbitProducer{},
-		Logger:         &Logger{},
-	}
+	config := &SchedulerConfig{}
 
-	file, err := os.Open(path)
+	file, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
 
-	decoder := yaml.NewDecoder(file)
-	if err = decoder.Decode(&config); err != nil {
+	err = yaml.Unmarshal(file, &config)
+	if err != nil {
 		return nil, err
 	}
 

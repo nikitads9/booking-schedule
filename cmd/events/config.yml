@@ -4,7 +4,7 @@ server:
   idle_timeout: 30s
 
 database:
-  host: "localhost"
+  host: "db"
   port: "5433"
   user: "postgres"
   database: "events_db"

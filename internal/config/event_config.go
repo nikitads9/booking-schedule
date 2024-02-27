@@ -46,14 +46,13 @@ type EventConfig struct {
 func ReadEventConfig(path string) (*EventConfig, error) {
 	config := &EventConfig{}
 
-	file, err := os.Open(path)
+	file, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
 
-	decoder := yaml.NewDecoder(file)
-	if err = decoder.Decode(&config); err != nil {
+	err = yaml.Unmarshal(file, &config)
+	if err != nil {
 		return nil, err
 	}
 

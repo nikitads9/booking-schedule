@@ -59,11 +59,11 @@ func (r *Request) Bind(req *http.Request) error {
 		return err
 	}
 
-	if r.StartDate.UTC().Before(time.Now().UTC()) || r.EndDate.UTC().Before(time.Now().UTC()) {
+	if r.StartDate.Before(time.Now()) || r.EndDate.Before(time.Now()) {
 		return ErrExpiredDate
 	}
 
-	if r.EndDate.UTC().Sub(r.StartDate.UTC()) <= 0 {
+	if r.EndDate.Sub(r.StartDate) <= 0 {
 		return ErrInvalidInterval
 	}
 

@@ -24,7 +24,6 @@ func (r *repository) GetEventListByDate(ctx context.Context, startDate time.Time
 				sq.LtOrEq{t.StartDate: endDate},
 			},
 			sq.And{
-				//TODO: maybe brackets are required
 				sq.Gt{t.StartDate + "-" + t.NotifyAt: startDate},
 				sq.LtOrEq{t.StartDate + "-" + t.NotifyAt: endDate},
 			},

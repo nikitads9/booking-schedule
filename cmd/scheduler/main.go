@@ -2,29 +2,22 @@ package main
 
 import (
 	"context"
-	"flag"
-	"log"
-	"os"
 
 	"event-schedule/internal/pkg/scheduler"
+	"flag"
+	"log"
 )
 
 var pathConfig string
 
 func init() {
 	flag.StringVar(&pathConfig, "config", "config.yml", "path to config file")
+	//time.Local = time.UTC
 }
 
 func main() {
 	flag.Parse()
 	ctx := context.Background()
-	go func() {
-		file, err := os.Open(pathConfig)
-		if err != nil {
-			return
-		}
-		file.Close()
-	}()
 	app, err := scheduler.NewApp(ctx, pathConfig)
 	if err != nil {
 		log.Fatalf("failed to create app err:%s\n", err.Error())
