@@ -12,7 +12,7 @@ import (
 var pathConfig string
 
 func init() {
-	flag.StringVar(&pathConfig, "config", "config.yml", "path to config file")
+	flag.StringVar(&pathConfig, "config", "./configs/scheduler_config.yml", "path to scheduler config file")
 	time.Local = time.UTC
 }
 
@@ -21,11 +21,11 @@ func main() {
 	ctx := context.Background()
 	app, err := scheduler.NewApp(ctx, pathConfig)
 	if err != nil {
-		log.Fatalf("failed to create app err:%s\n", err.Error())
+		log.Fatalf("failed to create scheduler app object:%s\n", err.Error())
 	}
 
 	err = app.Run(ctx)
 	if err != nil {
-		log.Fatalf("failed to run app: %s", err.Error())
+		log.Fatalf("failed to run scheduler app: %s", err.Error())
 	}
 }

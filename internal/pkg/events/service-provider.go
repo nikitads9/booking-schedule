@@ -45,11 +45,11 @@ func (s *serviceProvider) GetDB(ctx context.Context) db.Client {
 	if s.db == nil {
 		cfg, err := s.GetConfig().GetDBConfig()
 		if err != nil {
-			s.log.Error("could not get config err: %s", err)
+			s.log.Error("could not get db config: %s", err)
 		}
 		dbc, err := db.NewClient(ctx, cfg)
 		if err != nil {
-			s.log.Error("coud not connect to db err: %s", err)
+			s.log.Error("coud not connect to db: %s", err)
 		}
 		s.db = dbc
 	}
@@ -61,7 +61,7 @@ func (s *serviceProvider) GetConfig() *config.EventConfig {
 	if s.config == nil {
 		cfg, err := config.ReadEventConfig(s.configPath)
 		if err != nil {
-			s.log.Error("coud not get config: %s", err)
+			s.log.Error("coud not get events-api config: %s", err)
 			os.Exit(1)
 		}
 
@@ -101,7 +101,7 @@ func (s *serviceProvider) getServer(router http.Handler) *http.Server {
 	if s.server == nil {
 		address, err := s.GetConfig().GetAddress()
 		if err != nil {
-			s.log.Error("could not get server address err: %s", err)
+			s.log.Error("could not get server address: %s", err)
 			return nil
 		}
 		s.server = &http.Server{

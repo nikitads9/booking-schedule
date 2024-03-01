@@ -51,7 +51,7 @@ func (e *Event) SetNotifyAt(notifyAt time.Duration) {
 
 type EventInfo struct {
 	// Уникальный идентификатор бронирования
-	EventID uuid.UUID `json:"EventID" example:"550e8400-e29b-41d4-a716-446655440000" format:"uuid" db:"id"`
+	ID uuid.UUID `json:"EventID" example:"550e8400-e29b-41d4-a716-446655440000" format:"uuid" db:"id"`
 	// Номер апартаментов
 	SuiteID int64 `json:"suiteID" db:"suite_id"`
 	//Дата и время начала бронировании

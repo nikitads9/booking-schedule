@@ -11,10 +11,10 @@ import (
 func (s *Service) Run(ctx context.Context) {
 	const op = "scheduler.service.Run"
 
-	s.log = s.log.With(
+	log := s.log.With(
 		slog.String("op", op),
 	)
-	s.log.Info("scheduler initiated")
+	log.Info("scheduler initiated")
 
 	ticker := time.NewTicker(s.checkPeriod)
 
@@ -25,7 +25,7 @@ func (s *Service) Run(ctx context.Context) {
 		case <-ticker.C:
 			err := s.handleEvents(ctx)
 			if err != nil {
-				s.log.Error("failed to handle events:", err)
+				log.Error("failed to handle events:", err)
 			}
 		}
 	}
@@ -39,7 +39,7 @@ func (s *Service) handleEvents(ctx context.Context) error {
 		slog.String("op", op),
 	)
 
-	log.Info("started handling")
+	log.Debug("started handling")
 
 	events, err := s.getEvents(ctx)
 	if err != nil {
@@ -60,7 +60,7 @@ func (s *Service) handleEvents(ctx context.Context) error {
 		return err
 	}
 
-	log.Info("successfully handled events")
+	log.Debug("successfully handled events")
 
 	return nil
 }

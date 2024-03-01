@@ -40,12 +40,12 @@ func (s *serviceProvider) GetDB(ctx context.Context) db.Client {
 	if s.db == nil {
 		cfg, err := s.GetConfig().GetDBConfig()
 		if err != nil {
-			s.GetLogger().Error("could not get config err: %s", err)
+			s.GetLogger().Error("could not get db config: %s", err)
 			os.Exit(1)
 		}
 		dbc, err := db.NewClient(ctx, cfg)
 		if err != nil {
-			s.GetLogger().Error("could not connect to db err: %s", err)
+			s.GetLogger().Error("could not connect to db: %s", err)
 			os.Exit(1)
 		}
 		s.db = dbc
@@ -58,7 +58,7 @@ func (s *serviceProvider) GetConfig() *config.SchedulerConfig {
 	if s.config == nil {
 		cfg, err := config.ReadSchedulerConfig(s.configPath)
 		if err != nil {
-			log.Fatalf("could not get config: %s", err)
+			log.Fatalf("could not get scheduler config: %s", err)
 		}
 
 		s.config = cfg
@@ -112,7 +112,7 @@ func (s *serviceProvider) GetRabbitProducer() rabbit.Producer {
 	if s.rabbitProducer == nil {
 		rp, err := rabbit.NewProducer(s.GetConfig().GetRabbitProducerConfig())
 		if err != nil {
-			s.log.Error("could not connect to rabbit producer err: %s", err)
+			s.log.Error("could not connect to rabbit producer: %s", err)
 			os.Exit(1)
 		}
 		s.rabbitProducer = rp

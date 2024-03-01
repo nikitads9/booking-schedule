@@ -13,7 +13,7 @@ import (
 var pathConfig string
 
 func init() {
-	flag.StringVar(&pathConfig, "config", "config.yml", "path to config file")
+	flag.StringVar(&pathConfig, "config", "./configs/config.yml", "path to config file")
 	time.Local = time.UTC
 }
 
@@ -39,11 +39,11 @@ func main() {
 
 	app, err := events.NewApp(ctx, pathConfig)
 	if err != nil {
-		log.Fatalf("failed to create app err:%s\n", err.Error())
+		log.Fatalf("failed to create events-api app object:%s\n", err.Error())
 	}
 
 	err = app.Run()
 	if err != nil {
-		log.Fatalf("failed to run app: %s", err.Error())
+		log.Fatalf("failed to run events-api app: %s", err.Error())
 	}
 }

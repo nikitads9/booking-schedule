@@ -5,8 +5,6 @@ BIN_SENDER := "./bin/sender"
 
 DOCKER_IMG="schedule:develop"
 
-testing:
-	source .env
 #GIT_HASH := $(shell git log --format="%h" -n 1)
 #LDFLAGS := -X main.release="develop" -X main.buildDate=$(shell date -u +%Y-%m-%dT%H:%M:%S) -X main.gitHash=$(GIT_HASH)
 prepare-env:

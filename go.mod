@@ -4,7 +4,6 @@ go 1.21.0
 
 require (
 	github.com/georgysavva/scany/v2 v2.1.0
-	github.com/go-chi/chi/v5 v5.0.11
 	github.com/go-chi/render v1.0.3
 	github.com/go-playground/validator/v10 v10.17.0
 	github.com/pkg/errors v0.9.1
@@ -56,6 +55,7 @@ require (
 	github.com/go-chi/chi v1.5.5
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/jackc/pgx/v5 v5.5.2
+	github.com/rabbitmq/amqp091-go v1.9.0
 	github.com/streadway/amqp v1.1.0
 	gopkg.in/yaml.v3 v3.0.1
 )

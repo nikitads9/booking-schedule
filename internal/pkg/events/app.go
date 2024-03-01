@@ -63,7 +63,7 @@ func (a *App) Run() error {
 
 	err := a.startServer()
 	if err != nil {
-		a.serviceProvider.log.Error("failed to start server %s", err)
+		a.serviceProvider.log.Error("failed to start server: %s", err)
 		return err
 	}
 
@@ -77,8 +77,8 @@ func (a *App) initServer(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	a.serviceProvider.log.Info("initializing server", slog.String("address", address)) // Вывод параметра с адресом
-	a.serviceProvider.log.Debug("logger debug mode enabled")
+	a.serviceProvider.GetLogger().Info("initializing server", slog.String("address", address)) // Вывод параметра с адресом
+	a.serviceProvider.GetLogger().Debug("logger debug mode enabled")
 
 	a.setupRouter(impl)
 

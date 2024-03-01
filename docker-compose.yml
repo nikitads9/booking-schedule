@@ -20,7 +20,7 @@ services:
     - "${DB_PORT}" 
     volumes: 
       - postgres-volume:/var/lib/postgresql/data
-    #  - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql 
+    #  - ./deploy/database/init.sql:/docker-entrypoint-initdb.d/init.sql 
     ports:
       - "${DB_PORT}:${DB_PORT}"
     command: -p ${DB_PORT}
@@ -42,7 +42,7 @@ services:
 
   goose:
     container_name: 'goose'
-    build: ./deploy/migrations/
+    build: $MIGRATION_DIR
     restart: on-failure
     environment:
       - "GOOSE_DRIVER=postgres"

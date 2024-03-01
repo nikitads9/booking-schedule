@@ -1,4 +1,4 @@
-package scheduler
+package sender
 
 import (
 	"context"
@@ -45,28 +45,30 @@ func (a *App) initServiceProvider(_ context.Context) error {
 // Run ...
 func (a *App) Run(ctx context.Context) error {
 	defer func() {
-		a.serviceProvider.db.Close()
-		a.serviceProvider.rabbitProducer.Close()
+		a.serviceProvider.rabbitConsumer.Close()
 	}()
 
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
-	err := a.runSchedulerService(ctx, wg)
+	err := a.runSenderService(ctx, wg)
 	if err != nil {
 		return err
 	}
 	wg.Wait()
-	a.serviceProvider.GetLogger().Info("scheduler service stopped")
-
+	a.serviceProvider.GetLogger().Info("sender service stopped")
 	return nil
 }
 
-func (a *App) runSchedulerService(ctx context.Context, wg *sync.WaitGroup) error {
+func (a *App) runSenderService(ctx context.Context, wg *sync.WaitGroup) error {
 	go func() {
 		defer wg.Done()
 
-		a.serviceProvider.GetLogger().Info("attempting to run scheduler service")
-		a.serviceProvider.GetSchedulerService(ctx).Run(ctx)
+		a.serviceProvider.GetLogger().Info("attempting to run sender service")
+		err := a.serviceProvider.GetSenderService(ctx).Run(ctx)
+		if err != nil {
+			a.serviceProvider.GetLogger().Error("failed to run sender service", err)
+		}
+
 	}()
 
 	return nil
