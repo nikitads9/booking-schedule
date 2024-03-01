@@ -64,10 +64,7 @@ func (a *App) runSenderService(ctx context.Context, wg *sync.WaitGroup) error {
 		defer wg.Done()
 
 		a.serviceProvider.GetLogger().Info("attempting to run sender service")
-		err := a.serviceProvider.GetSenderService(ctx).Run(ctx)
-		if err != nil {
-			a.serviceProvider.GetLogger().Error("failed to run sender service", err)
-		}
+		a.serviceProvider.GetSenderService(ctx).Run(ctx)
 
 	}()
 

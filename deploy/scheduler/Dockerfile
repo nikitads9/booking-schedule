@@ -12,14 +12,14 @@ COPY . /github.com/nikitads9/event-schedule/
 
 WORKDIR /github.com/nikitads9/event-schedule/
 
-RUN make build-events
-RUN chown -R root ./bin/events
+RUN make build-scheduler
+RUN chown -R root ./bin/scheduler
 
 FROM alpine:latest
 
 WORKDIR /root/
 
 COPY --from=builder /github.com/nikitads9/event-schedule/bin .
-COPY --from=builder /github.com/nikitads9/event-schedule/configs/events_config.yml .
+COPY --from=builder /github.com/nikitads9/event-schedule/configs/scheduler_config.yml .
 
-CMD ["./events", "-config", "events_config.yml"]
+CMD ["./scheduler", "-config", "scheduler_config.yml"]

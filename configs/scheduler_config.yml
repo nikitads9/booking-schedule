@@ -3,7 +3,7 @@ scheduler:
     event_ttl_days: 365
     
 database:
-  host: "localhost"
+  host: "db"
   port: "5433"
   user: "postgres"
   database: "events_db"
@@ -11,7 +11,7 @@ database:
   max_opened_connections: 10
 
 rabbit_producer:
-  dsn: "amqp://guest:guest@localhost:5672/"
+  dsn: "amqp://guest:guest@queue:5672/"
   queue_name: "events"
 
 logger:

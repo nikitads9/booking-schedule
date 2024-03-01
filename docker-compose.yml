@@ -9,8 +9,8 @@ volumes:
 
 services:
   db:
+    container_name: event_storage
     image: postgres:16-alpine3.19
-    container_name: 'event_storage'
     environment:
       - "POSTGRES_DB=${DB_NAME}"
       - "POSTGRES_USER=${DB_USER}"
@@ -28,11 +28,11 @@ services:
       - app_net
 
   events:
+    container_name: events
     build:
       context: .
       dockerfile: ./deploy/events/Dockerfile
     image: nikitads9/event-schedule:events
-    container_name: 'events'
     ports:
       - "${EVENTS_PORT}:${EVENTS_PORT}"
     depends_on:
@@ -40,8 +40,8 @@ services:
     networks:
       - app_net
 
-  goose:
-    container_name: 'goose'
+  migrator:
+    container_name: migrator
     build: $MIGRATION_DIR
     restart: on-failure
     environment:
@@ -52,5 +52,42 @@ services:
       - "5446:5433"
     depends_on:
       - db
+    networks:
+      - app_net
+
+  scheduler:
+    container_name: scheduler
+    build:
+      context: .
+      dockerfile: ./deploy/scheduler/Dockerfile
+    restart: on-failure
+    environment:
+      - "DB_NAME=${DB_NAME}"
+      - "DB_USERNAME=${DB_USERNAME}"
+      - "DB_PASSWORD=${DB_PASSWORD}"
+      - "DB_HOST=${DB_HOST}"
+    depends_on:
+      - db
+      - queue
+    networks:
+      - app_net
+
+  sender:
+    container_name: sender
+    build:
+      context: .
+      dockerfile: ./deploy/sender/Dockerfile
+    restart: on-failure
+    depends_on:
+      - queue
+    networks:
+      - app_net
+
+  queue:
+    container_name: queue
+    image: rabbitmq:3-management-alpine
+    volumes:
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
     networks:
       - app_net

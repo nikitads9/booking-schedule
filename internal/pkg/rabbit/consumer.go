@@ -18,8 +18,7 @@ type consumer struct {
 	connection *amqp.Connection
 	channel    *amqp.Channel
 	queue      *amqp.Queue
-
-	queueName string
+	queueName  string
 
 	closeFuncs []io.Closer
 }

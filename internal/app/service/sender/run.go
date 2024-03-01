@@ -6,12 +6,12 @@ import (
 	"event-schedule/internal/app/model"
 	"fmt"
 	"log/slog"
-	"sync"
+	"os"
 
 	"github.com/streadway/amqp"
 )
 
-func (s *Service) Run(ctx context.Context) error {
+func (s *Service) Run(ctx context.Context) {
 	const op = "sender.service.Run"
 
 	log := s.log.With(
@@ -23,40 +23,23 @@ func (s *Service) Run(ctx context.Context) error {
 	msgChan, err := s.rabbitConsumer.Consume()
 	if err != nil {
 		log.Error("could not get channel to receive messages: ", err)
-		return err
+		os.Exit(1)
 	}
 
-	/* 	for {
+	for {
 		select {
 		case <-ctx.Done():
-			return nil
+			return
 		case msg := <-msgChan:
 			s.receiveEvents(msg)
-			if err != nil {
-				return err
-			}
-		}
 
-	} */
-
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
-	go func() error {
-		defer wg.Done()
-		for msg := range msgChan {
-			err := s.receiveEvents(msg)
 			if err != nil {
 				log.Error("could not receive messages: ", err)
-				return err
 			}
+			msg.Ack(false)
 		}
 
-		return nil
-	}()
-
-	wg.Wait()
-
-	return nil
+	}
 
 }
 
