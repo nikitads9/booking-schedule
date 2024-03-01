@@ -88,19 +88,19 @@ func (a *App) initServer(ctx context.Context) error {
 func (a *App) setupRouter(impl *handlers.Implementation) {
 	a.router = chi.NewRouter()
 	a.router.Use(middleware.RequestID) // Добавляет request_id в каждый запрос, для трейсинга
-	a.router.Use(middleware.Logger)    // Логирование всех запросов
+	//a.router.Use(middleware.Logger)    // Логирование всех запросов
+	a.router.Use(mwLogger.New(a.serviceProvider.GetLogger()))
 	a.router.Use(middleware.Recoverer) // Если где-то внутри сервера (обработчика запроса) произойдет паника, приложение не должно упасть
-	a.router.Use(mwLogger.New(a.serviceProvider.log))
 
 	a.router.Route("/events/{user_id}", func(r chi.Router) {
-		r.Post("/add", impl.AddEvent(a.serviceProvider.log))
-		r.Get("/get-events", impl.GetEvents(a.serviceProvider.log))
-		r.Get("/get-vacant-rooms", impl.GetVacantRooms(a.serviceProvider.log))
-		r.Get("/{suite_id}/get-vacant-dates", impl.GetVacantDates(a.serviceProvider.log))
+		r.Post("/add", impl.AddEvent(a.serviceProvider.GetLogger()))
+		r.Get("/get-events", impl.GetEvents(a.serviceProvider.GetLogger()))
+		r.Get("/get-vacant-rooms", impl.GetVacantRooms(a.serviceProvider.GetLogger()))
+		r.Get("/{suite_id}/get-vacant-dates", impl.GetVacantDates(a.serviceProvider.GetLogger()))
 		r.Route("/{event_id}", func(r chi.Router) {
-			r.Get("/get", impl.GetEvent(a.serviceProvider.log))
-			r.Patch("/update", impl.UpdateEvent(a.serviceProvider.log))
-			r.Delete("/delete", impl.DeleteEvent(a.serviceProvider.log))
+			r.Get("/get", impl.GetEvent(a.serviceProvider.GetLogger()))
+			r.Patch("/update", impl.UpdateEvent(a.serviceProvider.GetLogger()))
+			r.Delete("/delete", impl.DeleteEvent(a.serviceProvider.GetLogger()))
 		})
 	})
 }

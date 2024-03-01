@@ -43,7 +43,7 @@ install-go-deps: .install-go-deps
 
 .PHONY: generate-swag
 generate-swag:
-	swag init --generalInfo cmd/server/events.go --parseDependency --parseInternal
+	swag init --generalInfo cmd/events/events.go --parseDependency --parseInternal
 
 .PHONY: coverage
 coverage:

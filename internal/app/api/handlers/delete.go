@@ -19,7 +19,7 @@ import (
 //	@ID				removeByEventID
 //	@Tags			events
 //	@Produce		json
-//	@Param			user_id	path	int	true	"user_id"	Format(int64) default(1234)
+//	@Param			user_id	path	int	true	"user_id"	Format(int64) default(1)
 //	@Param			event_id path	string	true	"event_id"	Format(uuid) default(550e8400-e29b-41d4-a716-446655440000)
 //	@Success		200	{object}	api.DeleteEventResponse
 //	@Failure		400	{object}	api.DeleteEventResponse
@@ -27,13 +27,13 @@ import (
 //	@Failure		422	{object}	api.DeleteEventResponse
 //	@Failure		503	{object}	api.DeleteEventResponse
 //	@Router			/{user_id}/{event_id}/delete [delete]
-func (i *Implementation) DeleteEvent(log *slog.Logger) http.HandlerFunc {
+func (i *Implementation) DeleteEvent(logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "events.api.handlers.DeleteEvent"
 
 		ctx := r.Context()
 
-		log = log.With(
+		log := logger.With(
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(ctx)),
 		)
@@ -68,7 +68,6 @@ func (i *Implementation) DeleteEvent(log *slog.Logger) http.HandlerFunc {
 		}
 
 		log.Info("deleted event", slog.Any("id:", eventUUID))
-
 		render.Render(w, r, api.DeleteEventResponseAPI())
 	}
 }

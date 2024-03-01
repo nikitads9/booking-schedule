@@ -20,21 +20,21 @@ import (
 //	@Tags			events
 //	@Produce		json
 //	@Param			user_id	path	int	true	"user_id"	Format(int64) default(1234)
-//	@Param			start query		string	true	"start" Format(time.Time) default(2024-03-28T17:43:00-03:00)
-//	@Param			end query		string	true	"end" Format(time.Time) default(2024-03-29T17:43:00-03:00)
+//	@Param			start query		string	true	"start" Format(time.Time) default(2024-03-28T17:43:00Z)
+//	@Param			end query		string	true	"end" Format(time.Time) default(2024-03-29T17:43:00Z)
 //	@Success		200	{object}	api.GetEventsResponse
 //	@Failure		400	{object}	api.GetEventsResponse
 //	@Failure		404	{object}	api.GetEventsResponse
 //	@Failure		422	{object}	api.GetEventsResponse
 //	@Failure		503	{object}	api.GetEventsResponse
 //	@Router			/{user_id}/get-events [get]
-func (i *Implementation) GetEvents(log *slog.Logger) http.HandlerFunc {
+func (i *Implementation) GetEvents(logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "events.api.handlers.GetEvents"
 
 		ctx := r.Context()
 
-		log = log.With(
+		log := logger.With(
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(ctx)),
 		)

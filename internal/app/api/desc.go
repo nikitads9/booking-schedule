@@ -29,9 +29,9 @@ type Request struct {
 	// номер апаратаментов
 	SuiteID int64 `json:"suiteID" validate:"required" example:"123"`
 	//Дата и время начала бронировании
-	StartDate time.Time `json:"startDate" validate:"required" example:"2024-03-28T17:43:00-03:00"`
+	StartDate time.Time `json:"startDate" validate:"required" example:"2024-03-28T17:43:00Z"`
 	// Дата и время окончания бронировании
-	EndDate time.Time `json:"endDate" validate:"required" example:"2024-03-29T17:43:00-03:00"`
+	EndDate time.Time `json:"endDate" validate:"required" example:"2024-03-29T17:43:00Z"`
 	// Интервал времени для предварительного уведомления о бронировании
 	NotificationPeriod null.String `json:"notificationPeriod,omitempty" swaggertype:"primitive,string" example:"24h"`
 }

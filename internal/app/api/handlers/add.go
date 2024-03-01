@@ -23,21 +23,21 @@ import (
 //	@Tags			events
 //	@Accept			json
 //	@Produce		json
-//	@Param			user_id	path	int	true	"user_id"	Format(int64) default(1234)
-//	@Param          event	body	api.AddEventRequest	true	"AddEventRequest"
+//	@Param			user_id	path	int	true	"user_id"	Format(int64) default(1)
+//	@Param          event	body	api.Request	true	"AddEventRequest"
 //	@Success		200	{object}	api.AddEventResponse
 //	@Failure		400	{object}	api.AddEventResponse
 //	@Failure		404	{object}	api.AddEventResponse
 //	@Failure		422	{object}	api.AddEventResponse
 //	@Failure		503	{object}	api.AddEventResponse
 //	@Router			/{user_id}/add [post]
-func (i *Implementation) AddEvent(log *slog.Logger) http.HandlerFunc {
+func (i *Implementation) AddEvent(logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "events.api.handlers.AddEvent"
 
 		ctx := r.Context()
 
-		log = log.With(
+		log := logger.With(
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(ctx)),
 		)

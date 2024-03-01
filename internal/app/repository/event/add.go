@@ -18,7 +18,7 @@ import (
 func (r *repository) AddEvent(ctx context.Context, mod *model.Event) (uuid.UUID, error) {
 	const op = "events.repository.AddEvent"
 
-	r.log = r.log.With(
+	log := r.log.With(
 		slog.String("op", op),
 		slog.String("request_id", middleware.GetReqID(ctx)),
 	)
@@ -27,7 +27,7 @@ func (r *repository) AddEvent(ctx context.Context, mod *model.Event) (uuid.UUID,
 
 	newID, err := uuid.NewV4()
 	if err != nil {
-		r.log.Error("failed to generate uuid", err)
+		log.Error("failed to generate uuid", err)
 		return uuid.Nil, ErrUuid
 	}
 
@@ -44,7 +44,7 @@ func (r *repository) AddEvent(ctx context.Context, mod *model.Event) (uuid.UUID,
 	query, args, err := builder.Suffix("returning id").
 		PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
-		r.log.Error("failed to build a query", err)
+		log.Error("failed to build a query", err)
 		return uuid.Nil, ErrQueryBuild
 	}
 
@@ -56,10 +56,10 @@ func (r *repository) AddEvent(ctx context.Context, mod *model.Event) (uuid.UUID,
 	row, err := r.client.DB().QueryContext(ctx, q, args...)
 	if err != nil {
 		if errors.As(err, pgNoConnection) {
-			r.log.Error("no connection to database host", err)
+			log.Error("no connection to database host", err)
 			return uuid.Nil, ErrNoConnection
 		}
-		r.log.Error("query execution error", err)
+		log.Error("query execution error", err)
 		return uuid.Nil, ErrQuery
 	}
 
@@ -67,7 +67,7 @@ func (r *repository) AddEvent(ctx context.Context, mod *model.Event) (uuid.UUID,
 	row.Next()
 	err = row.Scan(&id)
 	if err != nil {
-		r.log.Error("failed to scan pgx row", err)
+		log.Error("failed to scan pgx row", err)
 		return uuid.Nil, ErrPgxScan
 
 	}

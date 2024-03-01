@@ -23,7 +23,7 @@
     "paths": {
         "/{user_id}/add": {
             "post": {
-                "description": "Adds an even with given parameters associated with user. NotificationPeriod is optional and must look like {number}s,{number}m or {number}h. Implemented with the use of transaction: first the availibility is checked. In case one's new booking request intersects with and old one(even if belongs to him), the request is considered erratic. startDate is to be before endDate and both should not be expired.",
+                "description": "Adds an  associated with user with given parameters. NotificationPeriod is optional and must look like {number}s,{number}m or {number}h. Implemented with the use of transaction: first rooms availibility is checked. In case one's new booking request intersects with and old one(even if belongs to him), the request is considered erratic. startDate is to be before endDate and both should not be expired.",
                 "consumes": [
                     "application/json"
                 ],
@@ -51,7 +51,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.AddEventRequest"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.Request"
                         }
                     }
                 ],
@@ -59,31 +59,31 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.AddEventResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.AddEventResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.AddEventResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.AddEventResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.AddEventResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.AddEventResponse"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.AddEventResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.AddEventResponse"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.AddEventResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.AddEventResponse"
                         }
                     }
                 }
@@ -91,7 +91,7 @@
         },
         "/{user_id}/get-events": {
             "get": {
-                "description": "Responds with series of event info objects within given time period. The query parameters are start date and end date (start date is to be before end date and both should not be expired).",
+                "description": "Responds with series of event info objects within given time period. The query parameters are start date and end date (start is to be before end and both should not be expired).",
                 "produces": [
                     "application/json"
                 ],
@@ -133,31 +133,31 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetEventsResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.GetEventsResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetEventsResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.GetEventsResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetEventsResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.GetEventsResponse"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetEventsResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.GetEventsResponse"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetEventsResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.GetEventsResponse"
                         }
                     }
                 }
@@ -207,31 +207,31 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetVacantRoomsResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.GetVacantRoomsResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetVacantRoomsResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.GetVacantRoomsResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetVacantRoomsResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.GetVacantRoomsResponse"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetVacantRoomsResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.GetVacantRoomsResponse"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetVacantRoomsResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.GetVacantRoomsResponse"
                         }
                     }
                 }
@@ -272,31 +272,31 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.DeleteEventResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.DeleteEventResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.DeleteEventResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.DeleteEventResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.DeleteEventResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.DeleteEventResponse"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.DeleteEventResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.DeleteEventResponse"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.DeleteEventResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.DeleteEventResponse"
                         }
                     }
                 }
@@ -304,7 +304,7 @@
         },
         "/{user_id}/{event_id}/get": {
             "get": {
-                "description": "Responds with event info with given EventID.",
+                "description": "Responds with booking info for booking with given EventID.",
                 "produces": [
                     "application/json"
                 ],
@@ -337,31 +337,31 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetEventResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.GetEventResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetEventResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.GetEventResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetEventResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.GetEventResponse"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetEventResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.GetEventResponse"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetEventResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.GetEventResponse"
                         }
                     }
                 }
@@ -369,7 +369,7 @@
         },
         "/{user_id}/{event_id}/update": {
             "patch": {
-                "description": "Updates an existing Event with given EventID, suiteID, startDate, endDate values (notificationPeriod being optional). Implemented with the use of transaction: first the availibility is checked. In case one attempts to alter his previous booking (i.e. widen or tighten its' limits) the booking is updated.  If it overlaps with smb else's booking the request is considered unsuccessful. startDate parameter  is to be before endDate and both should not be expired.",
+                "description": "Updates an existing event with given EventID, suiteID, startDate, endDate values (notificationPeriod being optional). Implemented with the use of transaction: first room availibility is checked. In case one attempts to alter his previous booking (i.e. widen or tighten its' limits) the booking is updated.  If it overlaps with smb else's booking or with clients' another booking the request is considered unsuccessful. startDate parameter  is to be before endDate and both should not be expired.",
                 "consumes": [
                     "application/json"
                 ],
@@ -406,7 +406,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.UpdateEventRequest"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.Request"
                         }
                     }
                 ],
@@ -414,31 +414,31 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.UpdateEventResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.UpdateEventResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.UpdateEventResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.UpdateEventResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.UpdateEventResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.UpdateEventResponse"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.UpdateEventResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.UpdateEventResponse"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.UpdateEventResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.UpdateEventResponse"
                         }
                     }
                 }
@@ -479,31 +479,31 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetVacantDatesResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.GetVacantDatesResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetVacantDatesResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.GetVacantDatesResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetVacantDatesResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.GetVacantDatesResponse"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetVacantDatesResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.GetVacantDatesResponse"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_api.GetVacantDatesResponse"
+                            "$ref": "#/definitions/event-schedule_internal_app_api.GetVacantDatesResponse"
                         }
                     }
                 }
@@ -511,7 +511,81 @@
         }
     },
     "definitions": {
-        "event-schedule_internal_api.AddEventRequest": {
+        "event-schedule_internal_app_api.AddEventResponse": {
+            "type": "object",
+            "properties": {
+                "eventID": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "response": {
+                    "$ref": "#/definitions/event-schedule_internal_app_api.Response"
+                }
+            }
+        },
+        "event-schedule_internal_app_api.DeleteEventResponse": {
+            "type": "object",
+            "properties": {
+                "response": {
+                    "$ref": "#/definitions/event-schedule_internal_app_api.Response"
+                }
+            }
+        },
+        "event-schedule_internal_app_api.GetEventResponse": {
+            "type": "object",
+            "properties": {
+                "event": {
+                    "$ref": "#/definitions/event-schedule_internal_app_model.EventInfo"
+                },
+                "response": {
+                    "$ref": "#/definitions/event-schedule_internal_app_api.Response"
+                }
+            }
+        },
+        "event-schedule_internal_app_api.GetEventsResponse": {
+            "type": "object",
+            "properties": {
+                "events": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/event-schedule_internal_app_model.EventInfo"
+                    }
+                },
+                "response": {
+                    "$ref": "#/definitions/event-schedule_internal_app_api.Response"
+                }
+            }
+        },
+        "event-schedule_internal_app_api.GetVacantDatesResponse": {
+            "type": "object",
+            "properties": {
+                "intervals": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/event-schedule_internal_app_model.Interval"
+                    }
+                },
+                "response": {
+                    "$ref": "#/definitions/event-schedule_internal_app_api.Response"
+                }
+            }
+        },
+        "event-schedule_internal_app_api.GetVacantRoomsResponse": {
+            "type": "object",
+            "properties": {
+                "response": {
+                    "$ref": "#/definitions/event-schedule_internal_app_api.Response"
+                },
+                "rooms": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/event-schedule_internal_app_model.Suite"
+                    }
+                }
+            }
+        },
+        "event-schedule_internal_app_api.Request": {
             "type": "object",
             "required": [
                 "endDate",
@@ -541,81 +615,7 @@
                 }
             }
         },
-        "event-schedule_internal_api.AddEventResponse": {
-            "type": "object",
-            "properties": {
-                "eventID": {
-                    "type": "string",
-                    "format": "uuid",
-                    "example": "550e8400-e29b-41d4-a716-446655440000"
-                },
-                "response": {
-                    "$ref": "#/definitions/event-schedule_internal_api.Response"
-                }
-            }
-        },
-        "event-schedule_internal_api.DeleteEventResponse": {
-            "type": "object",
-            "properties": {
-                "response": {
-                    "$ref": "#/definitions/event-schedule_internal_api.Response"
-                }
-            }
-        },
-        "event-schedule_internal_api.GetEventResponse": {
-            "type": "object",
-            "properties": {
-                "event": {
-                    "$ref": "#/definitions/event-schedule_internal_model.EventInfo"
-                },
-                "response": {
-                    "$ref": "#/definitions/event-schedule_internal_api.Response"
-                }
-            }
-        },
-        "event-schedule_internal_api.GetEventsResponse": {
-            "type": "object",
-            "properties": {
-                "events": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/event-schedule_internal_model.EventInfo"
-                    }
-                },
-                "response": {
-                    "$ref": "#/definitions/event-schedule_internal_api.Response"
-                }
-            }
-        },
-        "event-schedule_internal_api.GetVacantDatesResponse": {
-            "type": "object",
-            "properties": {
-                "intervals": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/event-schedule_internal_model.Interval"
-                    }
-                },
-                "response": {
-                    "$ref": "#/definitions/event-schedule_internal_api.Response"
-                }
-            }
-        },
-        "event-schedule_internal_api.GetVacantRoomsResponse": {
-            "type": "object",
-            "properties": {
-                "response": {
-                    "$ref": "#/definitions/event-schedule_internal_api.Response"
-                },
-                "rooms": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/event-schedule_internal_model.Suite"
-                    }
-                }
-            }
-        },
-        "event-schedule_internal_api.Response": {
+        "event-schedule_internal_app_api.Response": {
             "type": "object",
             "properties": {
                 "code": {
@@ -632,46 +632,15 @@
                 }
             }
         },
-        "event-schedule_internal_api.UpdateEventRequest": {
-            "type": "object",
-            "required": [
-                "endDate",
-                "startDate",
-                "suiteID"
-            ],
-            "properties": {
-                "endDate": {
-                    "description": "Дата и время окончания бронирования",
-                    "type": "string",
-                    "example": "2024-03-29T17:43:00-03:00"
-                },
-                "notificationPeriod": {
-                    "description": "Интервал времени для уведомления о бронировании",
-                    "type": "string",
-                    "example": "24h"
-                },
-                "startDate": {
-                    "description": "Дата и время начала бронировании",
-                    "type": "string",
-                    "example": "2024-03-28T17:43:00-03:00"
-                },
-                "suiteID": {
-                    "description": "Номер апартаментов",
-                    "type": "integer",
-                    "format": "int64",
-                    "example": 123
-                }
-            }
-        },
-        "event-schedule_internal_api.UpdateEventResponse": {
+        "event-schedule_internal_app_api.UpdateEventResponse": {
             "type": "object",
             "properties": {
                 "response": {
-                    "$ref": "#/definitions/event-schedule_internal_api.Response"
+                    "$ref": "#/definitions/event-schedule_internal_app_api.Response"
                 }
             }
         },
-        "event-schedule_internal_model.EventInfo": {
+        "event-schedule_internal_app_model.EventInfo": {
             "type": "object",
             "properties": {
                 "EventID": {
@@ -692,6 +661,10 @@
                     "description": "Интервал времени для уведомления о бронировании",
                     "type": "string"
                 },
+                "ownerID": {
+                    "description": "Идентификатор владельца бронирования",
+                    "type": "integer"
+                },
                 "startDate": {
                     "description": "Дата и время начала бронировании",
                     "type": "string"
@@ -706,19 +679,19 @@
                 }
             }
         },
-        "event-schedule_internal_model.Interval": {
+        "event-schedule_internal_app_model.Interval": {
             "type": "object",
             "properties": {
-                "endDate": {
+                "end": {
                     "type": "string"
                 },
-                "startDate": {
+                "start": {
                     "type": "string",
                     "example": "2024-03-02T15:04:05-07:00"
                 }
             }
         },
-        "event-schedule_internal_model.Suite": {
+        "event-schedule_internal_app_model.Suite": {
             "type": "object",
             "properties": {
                 "capacity": {

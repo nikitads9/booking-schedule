@@ -14,7 +14,7 @@ import (
 
 func (r *repository) GetEventListByDate(ctx context.Context, startDate time.Time, endDate time.Time) ([]*model.EventInfo, error) {
 	op := "events.repository.GetEventListByDate"
-	r.log = r.log.With(slog.String("op", op))
+	log := r.log.With(slog.String("op", op))
 
 	builder := sq.Select(t.ID, t.SuiteID, t.StartDate, t.EndDate, t.NotifyAt, t.OwnerID).
 		From(t.EventTable).
@@ -31,7 +31,7 @@ func (r *repository) GetEventListByDate(ctx context.Context, startDate time.Time
 
 	query, args, err := builder.ToSql()
 	if err != nil {
-		r.log.Error("failed to build a query", err)
+		log.Error("failed to build a query", err)
 		return nil, ErrQueryBuild
 	}
 
@@ -44,10 +44,10 @@ func (r *repository) GetEventListByDate(ctx context.Context, startDate time.Time
 	err = r.client.DB().SelectContext(ctx, &res, q, args...)
 	if err != nil {
 		if errors.As(err, pgNoConnection) {
-			r.log.Error("no connection to database host", err)
+			log.Error("no connection to database host", err)
 			return nil, ErrNoConnection
 		}
-		r.log.Error("query execution error", err)
+		log.Error("query execution error", err)
 		return nil, ErrQuery
 	}
 

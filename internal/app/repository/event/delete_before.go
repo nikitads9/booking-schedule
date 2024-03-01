@@ -14,7 +14,7 @@ import (
 func (r *repository) DeleteEventsBeforeDate(ctx context.Context, date time.Time) error {
 	const op = "events.repository.DeleteEventsBeforeDate"
 
-	r.log = r.log.With(
+	log := r.log.With(
 		slog.String("op", op),
 	)
 
@@ -24,7 +24,7 @@ func (r *repository) DeleteEventsBeforeDate(ctx context.Context, date time.Time)
 
 	query, args, err := builder.ToSql()
 	if err != nil {
-		r.log.Error("failed to build a query", err)
+		log.Error("failed to build a query", err)
 		return ErrQueryBuild
 	}
 
@@ -36,10 +36,10 @@ func (r *repository) DeleteEventsBeforeDate(ctx context.Context, date time.Time)
 	_, err = r.client.DB().ExecContext(ctx, q, args...)
 	if err != nil {
 		if errors.As(err, pgNoConnection) {
-			r.log.Error("no connection to database host", err)
+			log.Error("no connection to database host", err)
 			return ErrNoConnection
 		}
-		r.log.Error("query execution error", err)
+		log.Error("query execution error", err)
 		return ErrQuery
 	}
 

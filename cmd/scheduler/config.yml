@@ -3,7 +3,7 @@ scheduler:
     event_ttl_days: 365
     
 database:
-  host: "localhost"
+  host: "db"
   port: "5433"
   user: "postgres"
   database: "events_db"

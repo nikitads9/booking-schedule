@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"time"
 
 	"event-schedule/internal/pkg/scheduler"
 	"flag"
@@ -12,7 +13,7 @@ var pathConfig string
 
 func init() {
 	flag.StringVar(&pathConfig, "config", "config.yml", "path to config file")
-	//time.Local = time.UTC
+	time.Local = time.UTC
 }
 
 func main() {

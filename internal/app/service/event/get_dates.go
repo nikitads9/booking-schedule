@@ -12,13 +12,14 @@ import (
 func (s *Service) GetVacantDates(ctx context.Context, suiteID int64) ([]*model.Interval, error) {
 	const op = "events.service.GetVacantDates"
 
-	s.log = s.log.With(
+	log := s.log.With(
 		slog.String("op", op),
 		slog.String("request_id", middleware.GetReqID(ctx)),
 	)
 
 	res, err := s.eventRepository.GetVacantDates(ctx, suiteID)
 	if err != nil {
+		log.Error("could not get vacant dates:", err)
 		return nil, err
 	}
 

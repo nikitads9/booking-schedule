@@ -21,22 +21,22 @@ import (
 //	@Tags			events
 //	@Accept			json
 //	@Produce		json
-//	@Param			user_id	path	int	true	"user_id"	Format(int64) default(1234)
+//	@Param			user_id	path	int	true	"user_id"	Format(int64) default(1)
 //	@Param			event_id path	string	true	"event_id"	Format(uuid) default(550e8400-e29b-41d4-a716-446655440000)
-//	@Param          event body		api.UpdateEventRequest	true	"UpdateEventRequest"
+//	@Param          event body		api.Request	true	"UpdateEventRequest"
 //	@Success		200	{object}	api.UpdateEventResponse
 //	@Failure		400	{object}	api.UpdateEventResponse
 //	@Failure		404	{object}	api.UpdateEventResponse
 //	@Failure		422	{object}	api.UpdateEventResponse
 //	@Failure		503	{object}	api.UpdateEventResponse
 //	@Router			/{user_id}/{event_id}/update [patch]
-func (i *Implementation) UpdateEvent(log *slog.Logger) http.HandlerFunc {
+func (i *Implementation) UpdateEvent(logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "events.api.handlers.UpdateEvent"
 
 		ctx := r.Context()
 
-		log = log.With(
+		log := logger.With(
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(ctx)),
 		)

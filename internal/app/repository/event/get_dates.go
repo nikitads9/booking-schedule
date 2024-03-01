@@ -28,7 +28,7 @@ ORDER BY start_date;
 func (r *repository) GetVacantDates(ctx context.Context, suiteID int64) ([]*model.Interval, error) {
 	const op = "events.repository.GetVacantDates"
 
-	r.log = r.log.With(
+	log := r.log.With(
 		slog.String("op", op),
 		slog.String("request_id", middleware.GetReqID(ctx)),
 	)
@@ -50,7 +50,7 @@ func (r *repository) GetVacantDates(ctx context.Context, suiteID int64) ([]*mode
 
 	query, args, err := builder.ToSql()
 	if err != nil {
-		r.log.Error("failed to build a query", err)
+		log.Error("failed to build a query", err)
 		return nil, ErrQueryBuild
 	}
 
@@ -63,10 +63,10 @@ func (r *repository) GetVacantDates(ctx context.Context, suiteID int64) ([]*mode
 	err = r.client.DB().SelectContext(ctx, &res, q, args...)
 	if err != nil {
 		if errors.As(err, pgNoConnection) {
-			r.log.Error("no connection to database host", err)
+			log.Error("no connection to database host", err)
 			return nil, ErrNoConnection
 		}
-		r.log.Error("query execution error", err)
+		log.Error("query execution error", err)
 		return nil, ErrQuery
 	}
 

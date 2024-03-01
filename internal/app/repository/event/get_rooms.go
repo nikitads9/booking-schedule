@@ -16,7 +16,7 @@ import (
 func (r *repository) GetVacantRooms(ctx context.Context, mod *model.Interval) ([]*model.Suite, error) {
 	const op = "events.repository.GetVacantRooms"
 
-	r.log = r.log.With(
+	log := r.log.With(
 		slog.String("op", op),
 		slog.String("request_id", middleware.GetReqID(ctx)),
 	)
@@ -41,7 +41,7 @@ func (r *repository) GetVacantRooms(ctx context.Context, mod *model.Interval) ([
 		).
 		PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
-		r.log.Error("failed to build subquery", err)
+		log.Error("failed to build subquery", err)
 		return nil, ErrQueryBuild
 	}
 
@@ -49,7 +49,7 @@ func (r *repository) GetVacantRooms(ctx context.Context, mod *model.Interval) ([
 
 	query, args, err := builder.ToSql()
 	if err != nil {
-		r.log.Error("failed to build a query", err)
+		log.Error("failed to build a query", err)
 		return nil, ErrQueryBuild
 	}
 
@@ -62,14 +62,14 @@ func (r *repository) GetVacantRooms(ctx context.Context, mod *model.Interval) ([
 	err = r.client.DB().SelectContext(ctx, &res, q, args...)
 	if err != nil {
 		if errors.As(err, pgNoConnection) {
-			r.log.Error("no connection to database host", err)
+			log.Error("no connection to database host", err)
 			return nil, ErrNoConnection
 		}
 		if pgxscan.NotFound(err) {
-			r.log.Error("no vacant rooms within this period", err)
+			log.Error("no vacant rooms within this period", err)
 			return nil, ErrNotFound
 		}
-		r.log.Error("query execution error", err)
+		log.Error("query execution error", err)
 		return nil, ErrQuery
 	}
 

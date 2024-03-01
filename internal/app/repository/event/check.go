@@ -21,7 +21,7 @@ SELECT NOT EXISTS ( SELECT 1 FROM events WHERE ((suite_id = 1 AND ((start_date >
 func (r *repository) CheckAvailibility(ctx context.Context, mod *model.Event) (*model.Availibility, error) {
 	const op = "events.repository.CheckAvailibility"
 
-	r.log = r.log.With(
+	log := r.log.With(
 		slog.String("op", op),
 		slog.String("request_id", middleware.GetReqID(ctx)),
 	)
@@ -55,12 +55,12 @@ func (r *repository) CheckAvailibility(ctx context.Context, mod *model.Event) (*
 			sq.Eq{t.SuiteID: mod.SuiteID},
 			sq.Or{
 				sq.And{
-					sq.Gt{t.StartDate: mod.StartDate},
-					sq.Lt{t.StartDate: mod.EndDate},
+					sq.GtOrEq{t.StartDate: mod.StartDate},
+					sq.LtOrEq{t.StartDate: mod.EndDate},
 				},
 				sq.And{
-					sq.Gt{t.EndDate: mod.StartDate},
-					sq.Lt{t.EndDate: mod.EndDate},
+					sq.GtOrEq{t.EndDate: mod.StartDate},
+					sq.LtOrEq{t.EndDate: mod.EndDate},
 				},
 			},
 		},
@@ -71,7 +71,7 @@ func (r *repository) CheckAvailibility(ctx context.Context, mod *model.Event) (*
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
-		r.log.Error("failed to build query", err)
+		log.Error("failed to build query", err)
 		return nil, ErrQueryBuild
 	}
 
@@ -84,10 +84,10 @@ func (r *repository) CheckAvailibility(ctx context.Context, mod *model.Event) (*
 	err = r.client.DB().GetContext(ctx, res, q, args...)
 	if err != nil {
 		if errors.As(err, pgNoConnection) {
-			r.log.Error("no connection to database host", err)
+			log.Error("no connection to database host", err)
 			return nil, ErrNoConnection
 		}
-		r.log.Error("query execution error", err)
+		log.Error("query execution error", err)
 		return nil, ErrQuery
 	}
 

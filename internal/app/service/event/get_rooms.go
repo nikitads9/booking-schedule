@@ -11,13 +11,13 @@ import (
 func (s *Service) GetVacantRooms(ctx context.Context, mod *model.Interval) ([]*model.Suite, error) {
 	const op = "events.service.GetVacantRooms"
 
-	s.log = s.log.With(
+	log := s.log.With(
 		slog.String("op", op),
 		slog.String("request_id", middleware.GetReqID(ctx)),
 	)
 
 	if mod == nil {
-		s.log.Error(ErrNoModel.Error())
+		log.Error(ErrNoModel.Error())
 		return nil, ErrNoModel
 	}
 

@@ -19,21 +19,21 @@ import (
 //	@ID				getDatesBySuiteID
 //	@Tags			events
 //	@Produce		json
-//	@Param			user_id	path	int	true	"user_id"	Format(int64) default(1234)
-//	@Param			suite_id path	int	true	"suite_id"	Format(int64) default(1234)
+//	@Param			user_id	path	int	true	"user_id"	Format(int64) default(1)
+//	@Param			suite_id path	int	true	"suite_id"	Format(int64) default(1)
 //	@Success		200	{object}	api.GetVacantDatesResponse
 //	@Failure		400	{object}	api.GetVacantDatesResponse
 //	@Failure		404	{object}	api.GetVacantDatesResponse
 //	@Failure		422	{object}	api.GetVacantDatesResponse
 //	@Failure		503	{object}	api.GetVacantDatesResponse
 //	@Router			/{user_id}/{suite_id}/get-vacant-dates [get]
-func (i *Implementation) GetVacantDates(log *slog.Logger) http.HandlerFunc {
+func (i *Implementation) GetVacantDates(logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "events.api.handlers.GetVacantDates"
 
 		ctx := r.Context()
 
-		log = log.With(
+		log := logger.With(
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(ctx)),
 		)

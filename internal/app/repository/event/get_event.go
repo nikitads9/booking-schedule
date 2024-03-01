@@ -17,7 +17,7 @@ import (
 func (r *repository) GetEvent(ctx context.Context, eventID uuid.UUID) (*model.EventInfo, error) {
 	const op = "events.repository.GetEvent"
 
-	r.log = r.log.With(
+	log := r.log.With(
 		slog.String("op", op),
 		slog.String("request_id", middleware.GetReqID(ctx)),
 	)
@@ -29,7 +29,7 @@ func (r *repository) GetEvent(ctx context.Context, eventID uuid.UUID) (*model.Ev
 
 	query, args, err := builder.ToSql()
 	if err != nil {
-		r.log.Error("failed to build a query", err)
+		log.Error("failed to build a query", err)
 		return nil, ErrQueryBuild
 	}
 
@@ -42,14 +42,14 @@ func (r *repository) GetEvent(ctx context.Context, eventID uuid.UUID) (*model.Ev
 	err = r.client.DB().GetContext(ctx, res, q, args...)
 	if err != nil {
 		if errors.As(err, pgNoConnection) {
-			r.log.Error("no connection to database host", err)
+			log.Error("no connection to database host", err)
 			return nil, ErrNoConnection
 		}
 		if errors.Is(err, pgx.ErrNoRows) {
-			r.log.Error("event with this id not found", err)
+			log.Error("event with this id not found", err)
 			return nil, ErrNotFound
 		}
-		r.log.Error("query execution error", err)
+		log.Error("query execution error", err)
 		return nil, ErrQuery
 	}
 

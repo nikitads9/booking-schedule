@@ -6,7 +6,7 @@ import (
 
 	"log/slog"
 
-	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/chi/middleware"
 )
 
 func New(logger *slog.Logger) func(next http.Handler) http.Handler {
@@ -38,7 +38,7 @@ func New(logger *slog.Logger) func(next http.Handler) http.Handler {
 			// Запись отправится в лог в defer
 			// в этот момент запрос уже будет обработан
 			defer func() {
-				entry.Info("request completed",
+				entry.Info("request processed",
 					slog.Int("status", ww.Status()),
 					slog.Int("bytes", ww.BytesWritten()),
 					slog.String("duration", time.Since(t1).String()),

@@ -35,17 +35,18 @@ func (s *Service) Run(ctx context.Context) {
 func (s *Service) handleEvents(ctx context.Context) error {
 	const op = "scheduler.service.handleEvents"
 
-	s.log = s.log.With(
+	log := s.log.With(
 		slog.String("op", op),
 	)
-	s.log.Info("started handling")
+
+	log.Info("started handling")
 
 	events, err := s.getEvents(ctx)
 	if err != nil {
 		return err
 	}
 	if len(events) == 0 {
-		s.log.Debug("No events.")
+		log.Debug("No events.")
 		return nil
 	}
 
@@ -59,7 +60,7 @@ func (s *Service) handleEvents(ctx context.Context) error {
 		return err
 	}
 
-	s.log.Info("successfully handled events")
+	log.Info("successfully handled events")
 
 	return nil
 }
@@ -67,7 +68,7 @@ func (s *Service) handleEvents(ctx context.Context) error {
 func (s *Service) getEvents(ctx context.Context) ([]*model.EventInfo, error) {
 	const op = "scheduler.service.getEvents"
 
-	s.log = s.log.With(
+	log := s.log.With(
 		slog.String("op", op),
 	)
 
@@ -77,7 +78,7 @@ func (s *Service) getEvents(ctx context.Context) ([]*model.EventInfo, error) {
 
 	events, err := s.eventRepository.GetEventListByDate(ctx, start, end)
 	if err != nil {
-		s.log.Error("failed to get list by date", err)
+		log.Error("failed to get list by date", err)
 		return nil, err
 	}
 
@@ -87,13 +88,13 @@ func (s *Service) getEvents(ctx context.Context) ([]*model.EventInfo, error) {
 func (s *Service) cleanUpOldEvents(ctx context.Context) error {
 	const op = "scheduler.service.cleanUpOldEvents"
 
-	s.log = s.log.With(
+	log := s.log.With(
 		slog.String("op", op),
 	)
 
 	err := s.eventRepository.DeleteEventsBeforeDate(ctx, time.Now().Add(-s.eventTTL))
 	if err != nil {
-		s.log.Error("failed to clean up old events", err)
+		log.Error("failed to clean up old events", err)
 		return err
 	}
 

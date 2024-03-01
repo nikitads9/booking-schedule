@@ -16,7 +16,7 @@ import (
 func (r *repository) UpdateEvent(ctx context.Context, mod *model.Event) error {
 	const op = "events.repository.UpdateEvent"
 
-	r.log = r.log.With(
+	log := r.log.With(
 		slog.String("op", op),
 		slog.String("request_id", middleware.GetReqID(ctx)),
 	)
@@ -35,7 +35,7 @@ func (r *repository) UpdateEvent(ctx context.Context, mod *model.Event) error {
 
 	query, args, err := builder.ToSql()
 	if err != nil {
-		r.log.Error("failed to build a query", err)
+		log.Error("failed to build a query", err)
 		return ErrQueryBuild
 	}
 
@@ -47,15 +47,15 @@ func (r *repository) UpdateEvent(ctx context.Context, mod *model.Event) error {
 	result, err := r.client.DB().ExecContext(ctx, q, args...)
 	if err != nil {
 		if errors.As(err, pgNoConnection) {
-			r.log.Error("no connection to database host", err)
+			log.Error("no connection to database host", err)
 			return ErrNoConnection
 		}
-		r.log.Error("query execution error", err)
+		log.Error("query execution error", err)
 		return ErrQuery
 	}
 
 	if result.RowsAffected() == 0 {
-		r.log.Error("unsuccessful update", ErrNoRowsAffected)
+		log.Error("unsuccessful update", ErrNoRowsAffected)
 		return ErrNotFound
 	}
 

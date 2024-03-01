@@ -19,7 +19,7 @@ import (
 //	@ID				getEventbyTag
 //	@Tags			events
 //	@Produce		json
-//	@Param			user_id	path	int	true	"user_id"	Format(int64) default(1234)
+//	@Param			user_id	path	int	true	"user_id"	Format(int64) default(1)
 //	@Param			event_id	path	string	true	"event_id"	Format(uuid) default(550e8400-e29b-41d4-a716-446655440000)
 //	@Success		200	{object}	api.GetEventResponse
 //	@Failure		400	{object}	api.GetEventResponse
@@ -27,13 +27,13 @@ import (
 //	@Failure		422	{object}	api.GetEventResponse
 //	@Failure		503	{object}	api.GetEventResponse
 //	@Router			/{user_id}/{event_id}/get [get]
-func (i *Implementation) GetEvent(log *slog.Logger) http.HandlerFunc {
+func (i *Implementation) GetEvent(logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "events.api.handlers.GetEvent"
 
 		ctx := r.Context()
 
-		log = log.With(
+		log := logger.With(
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(ctx)),
 		)

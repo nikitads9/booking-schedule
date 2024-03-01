@@ -78,8 +78,8 @@ type GetEventsInfo struct {
 }
 
 type Interval struct {
-	StartDate time.Time `json:"start" db:"start" example:"2024-03-02T15:04:05-07:00"`
-	EndDate   time.Time `json:"end" db:"end" exaple:"2024-04-02T15:04:05-07:00"`
+	StartDate time.Time `json:"start" db:"start" example:"2024-03-02T15:04:05Z"`
+	EndDate   time.Time `json:"end" db:"end" exaple:"2024-04-02T15:04:05Z"`
 }
 
 type Suite struct {

@@ -7,6 +7,7 @@ import (
 	"event-schedule/internal/config"
 	"event-schedule/internal/pkg/db"
 	"event-schedule/internal/pkg/rabbit"
+	"log"
 	"log/slog"
 	"os"
 	"time"
@@ -39,12 +40,12 @@ func (s *serviceProvider) GetDB(ctx context.Context) db.Client {
 	if s.db == nil {
 		cfg, err := s.GetConfig().GetDBConfig()
 		if err != nil {
-			s.log.Error("could not get config err: %s", err)
+			s.GetLogger().Error("could not get config err: %s", err)
 			os.Exit(1)
 		}
 		dbc, err := db.NewClient(ctx, cfg)
 		if err != nil {
-			s.log.Error("could not connect to db err: %s", err)
+			s.GetLogger().Error("could not connect to db err: %s", err)
 			os.Exit(1)
 		}
 		s.db = dbc
@@ -57,8 +58,7 @@ func (s *serviceProvider) GetConfig() *config.SchedulerConfig {
 	if s.config == nil {
 		cfg, err := config.ReadSchedulerConfig(s.configPath)
 		if err != nil {
-			s.log.Error("could not get config: %s", err)
-			os.Exit(1)
+			log.Fatalf("could not get config: %s", err)
 		}
 
 		s.config = cfg
@@ -91,7 +91,6 @@ func (s *serviceProvider) GetSchedulerService(ctx context.Context) *schedulerSer
 
 func (s *serviceProvider) GetLogger() *slog.Logger {
 	if s.log == nil {
-		//TODO: move env to logger config
 		env := s.GetConfig().GetLoggerConfig().Env
 		switch env {
 		case envLocal:
