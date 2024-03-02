@@ -13,7 +13,7 @@ import (
 	"github.com/go-chi/chi/middleware"
 )
 
-func (r *repository) UpdateEvent(ctx context.Context, mod *model.Event) error {
+func (r *repository) UpdateEvent(ctx context.Context, mod *model.EventInfo) error {
 	const op = "events.repository.UpdateEvent"
 
 	log := r.log.With(
@@ -26,11 +26,11 @@ func (r *repository) UpdateEvent(ctx context.Context, mod *model.Event) error {
 		Set("start_date", mod.StartDate).
 		Set("end_date", mod.EndDate).
 		Set("suite_id", mod.SuiteID).
-		Where(sq.Eq{"id": mod.EventID}).
+		Where(sq.Eq{"id": mod.ID}). //TODO only for USER with userID
 		PlaceholderFormat(sq.Dollar)
 
-	if mod.GetNotifyAt() != 0 {
-		builder = builder.Set("notify_at", mod.GetNotifyAt())
+	if mod.NotifyAt != 0 {
+		builder = builder.Set("notify_at", mod.NotifyAt)
 	}
 
 	query, args, err := builder.ToSql()

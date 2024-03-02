@@ -41,7 +41,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "format": "int64",
-                        "default": 1234,
+                        "default": 1,
                         "description": "user_id",
                         "name": "user_id",
                         "in": "path",
@@ -53,7 +53,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.Request"
+                            "$ref": "#/definitions/AddEventRequest"
                         }
                     }
                 ],
@@ -61,31 +61,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.AddEventResponse"
+                            "$ref": "#/definitions/AddEventResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.AddEventResponse"
+                            "$ref": "#/definitions/AddEventResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.AddEventResponse"
+                            "$ref": "#/definitions/AddEventResponse"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.AddEventResponse"
+                            "$ref": "#/definitions/AddEventResponse"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.AddEventResponse"
+                            "$ref": "#/definitions/AddEventResponse"
                         }
                     }
                 }
@@ -115,7 +115,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "format": "time.Time",
-                        "default": "2024-03-28T17:43:00-03:00",
+                        "default": "2024-03-28T17:43:00Z",
                         "description": "start",
                         "name": "start",
                         "in": "query",
@@ -124,7 +124,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "format": "time.Time",
-                        "default": "2024-03-29T17:43:00-03:00",
+                        "default": "2024-03-29T17:43:00Z",
                         "description": "end",
                         "name": "end",
                         "in": "query",
@@ -135,31 +135,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.GetEventsResponse"
+                            "$ref": "#/definitions/GetEventsResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.GetEventsResponse"
+                            "$ref": "#/definitions/GetEventsResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.GetEventsResponse"
+                            "$ref": "#/definitions/GetEventsResponse"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.GetEventsResponse"
+                            "$ref": "#/definitions/GetEventsResponse"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.GetEventsResponse"
+                            "$ref": "#/definitions/GetEventsResponse"
                         }
                     }
                 }
@@ -180,7 +180,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "format": "int64",
-                        "default": 1234,
+                        "default": 1,
                         "description": "user_id",
                         "name": "user_id",
                         "in": "path",
@@ -189,7 +189,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "format": "time.Time",
-                        "default": "2024-03-28T17:43:00-03:00",
+                        "default": "2024-03-28T17:43:00Z",
                         "description": "start",
                         "name": "start",
                         "in": "query",
@@ -198,7 +198,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "format": "time.Time",
-                        "default": "2024-03-29T17:43:00-03:00",
+                        "default": "2024-03-29T17:43:00Z",
                         "description": "end",
                         "name": "end",
                         "in": "query",
@@ -209,31 +209,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.GetVacantRoomsResponse"
+                            "$ref": "#/definitions/GetVacantRoomsResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.GetVacantRoomsResponse"
+                            "$ref": "#/definitions/GetVacantRoomsResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.GetVacantRoomsResponse"
+                            "$ref": "#/definitions/GetVacantRoomsResponse"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.GetVacantRoomsResponse"
+                            "$ref": "#/definitions/GetVacantRoomsResponse"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.GetVacantRoomsResponse"
+                            "$ref": "#/definitions/GetVacantRoomsResponse"
                         }
                     }
                 }
@@ -254,7 +254,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "format": "int64",
-                        "default": 1234,
+                        "default": 1,
                         "description": "user_id",
                         "name": "user_id",
                         "in": "path",
@@ -274,31 +274,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.DeleteEventResponse"
+                            "$ref": "#/definitions/DeleteEventResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.DeleteEventResponse"
+                            "$ref": "#/definitions/DeleteEventResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.DeleteEventResponse"
+                            "$ref": "#/definitions/DeleteEventResponse"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.DeleteEventResponse"
+                            "$ref": "#/definitions/DeleteEventResponse"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.DeleteEventResponse"
+                            "$ref": "#/definitions/DeleteEventResponse"
                         }
                     }
                 }
@@ -319,7 +319,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "format": "int64",
-                        "default": 1234,
+                        "default": 1,
                         "description": "user_id",
                         "name": "user_id",
                         "in": "path",
@@ -339,31 +339,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.GetEventResponse"
+                            "$ref": "#/definitions/GetEventResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.GetEventResponse"
+                            "$ref": "#/definitions/GetEventResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.GetEventResponse"
+                            "$ref": "#/definitions/GetEventResponse"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.GetEventResponse"
+                            "$ref": "#/definitions/GetEventResponse"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.GetEventResponse"
+                            "$ref": "#/definitions/GetEventResponse"
                         }
                     }
                 }
@@ -387,7 +387,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "format": "int64",
-                        "default": 1234,
+                        "default": 1,
                         "description": "user_id",
                         "name": "user_id",
                         "in": "path",
@@ -408,7 +408,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.Request"
+                            "$ref": "#/definitions/UpdateEventRequest"
                         }
                     }
                 ],
@@ -416,31 +416,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.UpdateEventResponse"
+                            "$ref": "#/definitions/UpdateEventResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.UpdateEventResponse"
+                            "$ref": "#/definitions/UpdateEventResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.UpdateEventResponse"
+                            "$ref": "#/definitions/UpdateEventResponse"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.UpdateEventResponse"
+                            "$ref": "#/definitions/UpdateEventResponse"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.UpdateEventResponse"
+                            "$ref": "#/definitions/UpdateEventResponse"
                         }
                     }
                 }
@@ -461,7 +461,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "format": "int64",
-                        "default": 1234,
+                        "default": 1,
                         "description": "user_id",
                         "name": "user_id",
                         "in": "path",
@@ -470,7 +470,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "format": "int64",
-                        "default": 1234,
+                        "default": 1,
                         "description": "suite_id",
                         "name": "suite_id",
                         "in": "path",
@@ -481,31 +481,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.GetVacantDatesResponse"
+                            "$ref": "#/definitions/GetVacantDateResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.GetVacantDatesResponse"
+                            "$ref": "#/definitions/GetVacantDateResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.GetVacantDatesResponse"
+                            "$ref": "#/definitions/GetVacantDateResponse"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.GetVacantDatesResponse"
+                            "$ref": "#/definitions/GetVacantDateResponse"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/event-schedule_internal_app_api.GetVacantDatesResponse"
+                            "$ref": "#/definitions/GetVacantDateResponse"
                         }
                     }
                 }
@@ -513,81 +513,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "event-schedule_internal_app_api.AddEventResponse": {
-            "type": "object",
-            "properties": {
-                "eventID": {
-                    "type": "string",
-                    "format": "uuid",
-                    "example": "550e8400-e29b-41d4-a716-446655440000"
-                },
-                "response": {
-                    "$ref": "#/definitions/event-schedule_internal_app_api.Response"
-                }
-            }
-        },
-        "event-schedule_internal_app_api.DeleteEventResponse": {
-            "type": "object",
-            "properties": {
-                "response": {
-                    "$ref": "#/definitions/event-schedule_internal_app_api.Response"
-                }
-            }
-        },
-        "event-schedule_internal_app_api.GetEventResponse": {
-            "type": "object",
-            "properties": {
-                "event": {
-                    "$ref": "#/definitions/event-schedule_internal_app_model.EventInfo"
-                },
-                "response": {
-                    "$ref": "#/definitions/event-schedule_internal_app_api.Response"
-                }
-            }
-        },
-        "event-schedule_internal_app_api.GetEventsResponse": {
-            "type": "object",
-            "properties": {
-                "events": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/event-schedule_internal_app_model.EventInfo"
-                    }
-                },
-                "response": {
-                    "$ref": "#/definitions/event-schedule_internal_app_api.Response"
-                }
-            }
-        },
-        "event-schedule_internal_app_api.GetVacantDatesResponse": {
-            "type": "object",
-            "properties": {
-                "intervals": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/event-schedule_internal_app_model.Interval"
-                    }
-                },
-                "response": {
-                    "$ref": "#/definitions/event-schedule_internal_app_api.Response"
-                }
-            }
-        },
-        "event-schedule_internal_app_api.GetVacantRoomsResponse": {
-            "type": "object",
-            "properties": {
-                "response": {
-                    "$ref": "#/definitions/event-schedule_internal_app_api.Response"
-                },
-                "rooms": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/event-schedule_internal_app_model.Suite"
-                    }
-                }
-            }
-        },
-        "event-schedule_internal_app_api.Request": {
+        "AddEventRequest": {
             "type": "object",
             "required": [
                 "endDate",
@@ -598,9 +524,9 @@ const docTemplate = `{
                 "endDate": {
                     "description": "Дата и время окончания бронировании",
                     "type": "string",
-                    "example": "2024-03-29T17:43:00-03:00"
+                    "example": "2024-03-29T17:43:00Z"
                 },
-                "notificationPeriod": {
+                "notifyAt": {
                     "description": "Интервал времени для предварительного уведомления о бронировании",
                     "type": "string",
                     "example": "24h"
@@ -608,16 +534,149 @@ const docTemplate = `{
                 "startDate": {
                     "description": "Дата и время начала бронировании",
                     "type": "string",
-                    "example": "2024-03-28T17:43:00-03:00"
+                    "example": "2024-03-28T17:43:00Z"
                 },
                 "suiteID": {
                     "description": "номер апаратаментов",
                     "type": "integer",
-                    "example": 123
+                    "example": 1
                 }
             }
         },
-        "event-schedule_internal_app_api.Response": {
+        "AddEventResponse": {
+            "type": "object",
+            "properties": {
+                "eventID": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "response": {
+                    "$ref": "#/definitions/Response"
+                }
+            }
+        },
+        "DeleteEventResponse": {
+            "type": "object",
+            "properties": {
+                "response": {
+                    "$ref": "#/definitions/Response"
+                }
+            }
+        },
+        "EventInfo": {
+            "type": "object",
+            "properties": {
+                "EventID": {
+                    "description": "Уникальный идентификатор бронирования",
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "createdAt": {
+                    "description": "Дата и время создания",
+                    "type": "string",
+                    "example": "2024-03-27T17:43:00Z"
+                },
+                "endDate": {
+                    "description": "Дата и время окончания бронировании",
+                    "type": "string",
+                    "example": "2024-03-29T17:43:00Z"
+                },
+                "notifyAt": {
+                    "description": "Интервал времени для уведомления о бронировании",
+                    "type": "string",
+                    "example": "24h00m00s"
+                },
+                "startDate": {
+                    "description": "Дата и время начала бронировании",
+                    "type": "string",
+                    "example": "2024-03-28T17:43:00Z"
+                },
+                "suiteID": {
+                    "description": "Номер апартаментов",
+                    "type": "integer",
+                    "example": 1
+                },
+                "updatedAt": {
+                    "description": "Дата и время обновления",
+                    "type": "string",
+                    "example": "2024-03-27T18:43:00Z"
+                },
+                "userID": {
+                    "description": "Идентификатор владельца бронирования",
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "GetEventResponse": {
+            "type": "object",
+            "properties": {
+                "event": {
+                    "$ref": "#/definitions/EventInfo"
+                },
+                "response": {
+                    "$ref": "#/definitions/Response"
+                }
+            }
+        },
+        "GetEventsResponse": {
+            "type": "object",
+            "properties": {
+                "events": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/EventInfo"
+                    }
+                },
+                "response": {
+                    "$ref": "#/definitions/Response"
+                }
+            }
+        },
+        "GetVacantDateResponse": {
+            "type": "object",
+            "properties": {
+                "intervals": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Interval"
+                    }
+                },
+                "response": {
+                    "$ref": "#/definitions/Response"
+                }
+            }
+        },
+        "GetVacantRoomsResponse": {
+            "type": "object",
+            "properties": {
+                "response": {
+                    "$ref": "#/definitions/Response"
+                },
+                "rooms": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Suite"
+                    }
+                }
+            }
+        },
+        "Interval": {
+            "type": "object",
+            "properties": {
+                "end": {
+                    "type": "string",
+                    "example": "2024-04-10T15:04:05Z"
+                },
+                "start": {
+                    "type": "string",
+                    "example": "2024-03-10T15:04:05Z"
+                }
+            }
+        },
+        "Response": {
             "type": "object",
             "properties": {
                 "code": {
@@ -634,66 +693,7 @@ const docTemplate = `{
                 }
             }
         },
-        "event-schedule_internal_app_api.UpdateEventResponse": {
-            "type": "object",
-            "properties": {
-                "response": {
-                    "$ref": "#/definitions/event-schedule_internal_app_api.Response"
-                }
-            }
-        },
-        "event-schedule_internal_app_model.EventInfo": {
-            "type": "object",
-            "properties": {
-                "EventID": {
-                    "description": "Уникальный идентификатор бронирования",
-                    "type": "string",
-                    "format": "uuid",
-                    "example": "550e8400-e29b-41d4-a716-446655440000"
-                },
-                "createdAt": {
-                    "description": "Дата и время создания",
-                    "type": "string"
-                },
-                "endDate": {
-                    "description": "Дата и время окончания бронировании",
-                    "type": "string"
-                },
-                "notifyAt": {
-                    "description": "Интервал времени для уведомления о бронировании",
-                    "type": "string"
-                },
-                "ownerID": {
-                    "description": "Идентификатор владельца бронирования",
-                    "type": "integer"
-                },
-                "startDate": {
-                    "description": "Дата и время начала бронировании",
-                    "type": "string"
-                },
-                "suiteID": {
-                    "description": "Номер апартаментов",
-                    "type": "integer"
-                },
-                "updatedAt": {
-                    "description": "Дата и время обновления",
-                    "type": "string"
-                }
-            }
-        },
-        "event-schedule_internal_app_model.Interval": {
-            "type": "object",
-            "properties": {
-                "end": {
-                    "type": "string"
-                },
-                "start": {
-                    "type": "string",
-                    "example": "2024-03-02T15:04:05-07:00"
-                }
-            }
-        },
-        "event-schedule_internal_app_model.Suite": {
+        "Suite": {
             "type": "object",
             "properties": {
                 "capacity": {
@@ -706,7 +706,46 @@ const docTemplate = `{
                 },
                 "suiteID": {
                     "type": "integer",
-                    "example": 123
+                    "example": 1
+                }
+            }
+        },
+        "UpdateEventRequest": {
+            "type": "object",
+            "required": [
+                "endDate",
+                "startDate",
+                "suiteID"
+            ],
+            "properties": {
+                "endDate": {
+                    "description": "Дата и время окончания бронирования",
+                    "type": "string",
+                    "example": "2024-03-29T17:43:00-03:00"
+                },
+                "notifyAt": {
+                    "description": "Интервал времени для уведомления о бронировании",
+                    "type": "string",
+                    "example": "24h"
+                },
+                "startDate": {
+                    "description": "Дата и время начала бронировании",
+                    "type": "string",
+                    "example": "2024-03-28T17:43:00-03:00"
+                },
+                "suiteID": {
+                    "description": "Номер апартаментов",
+                    "type": "integer",
+                    "format": "int64",
+                    "example": 1
+                }
+            }
+        },
+        "UpdateEventResponse": {
+            "type": "object",
+            "properties": {
+                "response": {
+                    "$ref": "#/definitions/Response"
                 }
             }
         }

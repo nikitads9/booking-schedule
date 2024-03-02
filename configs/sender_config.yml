@@ -1,5 +1,5 @@
 rabbit_consumer:
-  dsn: "amqp://guest:guest@queue:5672/"
+  dsn: "amqp://guest:guest@queue:5672/events"
   queue_name: "events"
 
 logger:

@@ -7,10 +7,13 @@ import (
 	"event-schedule/internal/logger/sl"
 	"log/slog"
 	"net/http"
+	"strconv"
 
+	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
 	validator "github.com/go-playground/validator/v10"
+	"github.com/gofrs/uuid"
 )
 
 // UpdateEvent godoc
@@ -23,7 +26,7 @@ import (
 //	@Produce		json
 //	@Param			user_id	path	int	true	"user_id"	Format(int64) default(1)
 //	@Param			event_id path	string	true	"event_id"	Format(uuid) default(550e8400-e29b-41d4-a716-446655440000)
-//	@Param          event body		api.Request	true	"UpdateEventRequest"
+//	@Param          event body		api.UpdateEventRequest	true	"UpdateEventRequest"
 //	@Success		200	{object}	api.UpdateEventResponse
 //	@Failure		400	{object}	api.UpdateEventResponse
 //	@Failure		404	{object}	api.UpdateEventResponse
@@ -41,11 +44,10 @@ func (i *Implementation) UpdateEvent(logger *slog.Logger) http.HandlerFunc {
 			slog.String("request_id", middleware.GetReqID(ctx)),
 		)
 
-		req := &api.Request{}
+		req := &api.UpdateEventRequest{}
 		err := render.Bind(r, req)
 		if err != nil {
 			if errors.As(err, api.ValidateErr) {
-				// Приводим ошибку к типу ошибки валидации
 				validateErr := err.(validator.ValidationErrors)
 				log.Error("some of the required values were not received", sl.Err(validateErr))
 				render.Render(w, r, api.ErrValidationError(validateErr))
@@ -57,9 +59,51 @@ func (i *Implementation) UpdateEvent(logger *slog.Logger) http.HandlerFunc {
 		}
 		log.Info("request body decoded", slog.Any("req", req))
 
-		mod, err := convert.ToEvent(r, req)
+		userID := chi.URLParam(r, "user_id")
+		if userID == "" {
+			log.Error("invalid request", sl.Err(api.ErrNoUserID))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoUserID))
+			return
+		}
+
+		id, err := strconv.ParseInt(userID, 10, 64)
 		if err != nil {
-			log.Error("invalid request", sl.Err(err)) //TODO: log real error
+			log.Error("invalid request", sl.Err(err))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
+			return
+		}
+
+		eventID := chi.URLParam(r, "event_id")
+		if eventID == "" {
+			log.Error("invalid request", sl.Err(api.ErrNoEventID))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoEventID))
+
+			return
+		}
+
+		eventUUID, err := uuid.FromString(eventID)
+		if err != nil {
+			log.Error("invalid request", sl.Err(err))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
+		}
+
+		if eventUUID == uuid.Nil {
+			log.Error("invalid request", sl.Err(api.ErrNoEventID))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoEventID))
+			return
+		}
+
+		//TODO: getters
+		mod, err := convert.ToEventInfo(&api.Event{
+			EventID:   eventUUID,
+			UserID:    id,
+			SuiteID:   req.SuiteID,
+			StartDate: req.StartDate,
+			EndDate:   req.EndDate,
+			NotifyAt:  req.NotifyAt,
+		})
+		if err != nil {
+			log.Error("invalid request", sl.Err(err))
 			render.Render(w, r, api.ErrInvalidRequest(err))
 		}
 
@@ -70,7 +114,7 @@ func (i *Implementation) UpdateEvent(logger *slog.Logger) http.HandlerFunc {
 			return
 		}
 
-		log.Info("event updated", slog.Any("id:", mod.EventID))
+		log.Info("event updated", slog.Any("id:", mod.ID))
 
 		render.Render(w, r, api.UpdateEventResponseAPI())
 	}

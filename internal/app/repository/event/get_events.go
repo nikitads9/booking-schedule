@@ -7,13 +7,14 @@ import (
 	t "event-schedule/internal/app/repository/table"
 	"event-schedule/internal/pkg/db"
 	"log/slog"
+	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/georgysavva/scany/pgxscan"
 	"github.com/go-chi/chi/middleware"
 )
 
-func (r *repository) GetEvents(ctx context.Context, mod *model.GetEventsInfo) ([]*model.EventInfo, error) {
+func (r *repository) GetEvents(ctx context.Context, startDate time.Time, endDate time.Time, userID int64) ([]*model.EventInfo, error) {
 	const op = "events.repository.GetEvents"
 
 	log := r.log.With(
@@ -21,12 +22,20 @@ func (r *repository) GetEvents(ctx context.Context, mod *model.GetEventsInfo) ([
 		slog.String("request_id", middleware.GetReqID(ctx)),
 	)
 
-	builder := sq.Select(t.ID, t.SuiteID, t.StartDate, t.EndDate, t.NotifyAt, t.CreatedAt, t.UpdatedAt, t.OwnerID).
+	builder := sq.Select(t.ID, t.SuiteID, t.StartDate, t.EndDate, t.NotifyAt, t.CreatedAt, t.UpdatedAt, t.UserID).
 		From(t.EventTable).
 		Where(sq.And{
-			sq.Eq{t.OwnerID: mod.UserID},
-			sq.GtOrEq{t.StartDate: mod.StartDate},
-			sq.LtOrEq{t.EndDate: mod.EndDate},
+			sq.Eq{t.UserID: userID},
+			sq.Or{
+				sq.And{
+					sq.GtOrEq{t.StartDate: startDate},
+					sq.LtOrEq{t.StartDate: endDate},
+				},
+				sq.And{
+					sq.GtOrEq{t.EndDate: startDate},
+					sq.LtOrEq{t.EndDate: endDate},
+				},
+			},
 		}).
 		PlaceholderFormat(sq.Dollar)
 

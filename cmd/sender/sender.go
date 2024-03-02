@@ -2,11 +2,12 @@ package main
 
 import (
 	"context"
-	"time"
-
 	"event-schedule/internal/pkg/sender"
 	"flag"
 	"log"
+	"time"
+
+	_ "go.uber.org/automaxprocs"
 )
 
 var pathConfig string

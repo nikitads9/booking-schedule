@@ -9,26 +9,26 @@ volumes:
 
 services:
   db:
-    container_name: event_storage
+    container_name: event-storage
     image: postgres:16-alpine3.19
     environment:
       - "POSTGRES_DB=${DB_NAME}"
       - "POSTGRES_USER=${DB_USER}"
       - "POSTGRES_PASSWORD=${DB_PASSWORD}"
       - "PGDATA=${PGDATA}"
-    expose:
-    - "${DB_PORT}" 
     volumes: 
       - postgres-volume:/var/lib/postgresql/data
     #  - ./deploy/database/init.sql:/docker-entrypoint-initdb.d/init.sql 
     ports:
       - "${DB_PORT}:${DB_PORT}"
+    expose:
+    - "${DB_PORT}" 
     command: -p ${DB_PORT}
     networks:
       - app_net
 
   events:
-    container_name: events
+    container_name: events-api
     build:
       context: .
       dockerfile: ./deploy/events/Dockerfile
@@ -39,17 +39,21 @@ services:
       - db
     networks:
       - app_net
+    deploy:
+      resources:
+        limits:
+          memory: 200m
+          cpus: "0.50"
 
   migrator:
     container_name: migrator
     build: $MIGRATION_DIR
     restart: on-failure
+    image: nikitads9/event-schedule:migrator
     environment:
       - "GOOSE_DRIVER=postgres"
       - "GOOSE_DBSTRING=host=${DB_HOST} port=${DB_PORT} dbname=${DB_NAME} user=${DB_USER} password=${DB_PASSWORD} sslmode=${DB_SSL}"
       - "MIGRATION_DIR=${MIGRATION_DIR}"
-    ports:
-      - "5446:5433"
     depends_on:
       - db
     networks:
@@ -60,10 +64,11 @@ services:
     build:
       context: .
       dockerfile: ./deploy/scheduler/Dockerfile
+    image: nikitads9/event-schedule:scheduler
     restart: on-failure
     environment:
       - "DB_NAME=${DB_NAME}"
-      - "DB_USERNAME=${DB_USERNAME}"
+      - "DB_USERNAME=${DB_USER}"
       - "DB_PASSWORD=${DB_PASSWORD}"
       - "DB_HOST=${DB_HOST}"
     depends_on:
@@ -71,23 +76,44 @@ services:
       - queue
     networks:
       - app_net
+    deploy:
+      resources:
+        limits:
+          memory: 200m
+          cpus: "0.30"
 
   sender:
     container_name: sender
     build:
       context: .
       dockerfile: ./deploy/sender/Dockerfile
+    image: nikitads9/event-schedule:sender
     restart: on-failure
     depends_on:
       - queue
     networks:
       - app_net
+    deploy:
+      resources:
+        limits:
+          memory: 200m
+          cpus: "0.30"
+
 
   queue:
     container_name: queue
-    image: rabbitmq:3-management-alpine
+    image: rabbitmq:3.13.0-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_PASS: ${AMQP_PASS}
+      RABBITMQ_DEFAULT_USER: ${AMQP_USER}
+      RABBITMQ_DEFAULT_VHOST: ${AMQP_VHOST}
     volumes:
       - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
       - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+    ports:
+      - "${AMQP_PORT}:${AMQP_PORT}"
+      - "15672"
+    expose:
+      - "${AMQP_PORT}"
     networks:
       - app_net

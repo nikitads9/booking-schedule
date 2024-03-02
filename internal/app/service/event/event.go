@@ -15,13 +15,11 @@ type Service struct {
 	txManager       db.TxManager
 }
 
-// TODO: clean up spare errors
 var (
-	ErrNoModel       = errors.New("received no model")
-	ErrNotAvailible  = errors.New("this period is not availible for booking")
-	ErrEmptyUpdate   = errors.New("no parameters for update received")
-	ErrNoTransaction = errors.New("can't begin transaction, no connection to database")
-	pgNoConnection   = new(*pgconn.ConnectError)
+	ErrNoModel      = errors.New("received no model")
+	ErrNotAvailible = errors.New("this period is not availible for booking")
+	ErrNoConnection = errors.New("can't begin transaction, no connection to database")
+	pgNoConnection  = new(*pgconn.ConnectError)
 )
 
 func NewEventService(eventRepository event.Repository, log *slog.Logger, txManager db.TxManager) *Service {

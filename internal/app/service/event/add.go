@@ -10,7 +10,7 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-func (s *Service) AddEvent(ctx context.Context, mod *model.Event) (uuid.UUID, error) {
+func (s *Service) AddEvent(ctx context.Context, mod *model.EventInfo) (uuid.UUID, error) {
 	const op = "events.service.AddEvent"
 
 	log := s.log.With(
@@ -49,7 +49,7 @@ func (s *Service) AddEvent(ctx context.Context, mod *model.Event) (uuid.UUID, er
 	if err != nil {
 		log.Error("transaction failed", err)
 		if errors.As(err, pgNoConnection) {
-			return uuid.Nil, ErrNoTransaction
+			return uuid.Nil, ErrNoConnection
 		}
 		return uuid.Nil, err
 	}

@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/render"
 )
 
+// TODO:
 // Response renderer type for handling all sorts of errors.
 //
 // In the best case scenario, the excellent github.com/pkg/errors package
@@ -23,7 +24,7 @@ type Response struct {
 	Status    string `json:"status"`          // user-level status message
 	AppCode   int64  `json:"code,omitempty"`  // application-specific error code
 	ErrorText string `json:"error,omitempty"` // application-level error message, for debugging
-}
+} //@name Response
 
 var (
 	ErrNoUserID           = errors.New(" received no user id")

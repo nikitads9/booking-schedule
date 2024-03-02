@@ -11,7 +11,7 @@ database:
   max_opened_connections: 10
 
 rabbit_producer:
-  dsn: "amqp://guest:guest@queue:5672/"
+  dsn: "amqp://guest:guest@queue:5672/events"
   queue_name: "events"
 
 logger:

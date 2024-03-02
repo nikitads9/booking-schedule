@@ -7,13 +7,14 @@ import (
 	t "event-schedule/internal/app/repository/table"
 	"event-schedule/internal/pkg/db"
 	"log/slog"
+	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/georgysavva/scany/pgxscan"
 	"github.com/go-chi/chi/middleware"
 )
 
-func (r *repository) GetVacantRooms(ctx context.Context, mod *model.Interval) ([]*model.Suite, error) {
+func (r *repository) GetVacantRooms(ctx context.Context, startDate time.Time, endDate time.Time) ([]*model.Suite, error) {
 	const op = "events.repository.GetVacantRooms"
 
 	log := r.log.With(
@@ -30,12 +31,12 @@ func (r *repository) GetVacantRooms(ctx context.Context, mod *model.Interval) ([
 		Where(sq.And{
 			sq.ConcatExpr("e."+t.SuiteID+"=", t.SuiteTable+".id"),
 			sq.Or{sq.And{
-				sq.Lt{"e." + t.StartDate: mod.StartDate},
-				sq.Gt{"e." + t.EndDate: mod.EndDate},
+				sq.Lt{"e." + t.StartDate: startDate},
+				sq.Gt{"e." + t.EndDate: endDate},
 			},
 				sq.And{
-					sq.Lt{"e." + t.StartDate: mod.EndDate},
-					sq.Gt{"e." + t.EndDate: mod.StartDate},
+					sq.Lt{"e." + t.StartDate: endDate},
+					sq.Gt{"e." + t.EndDate: startDate},
 				}},
 		},
 		).

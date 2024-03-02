@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"event-schedule/internal/app/api"
+	"event-schedule/internal/app/convert"
 	"event-schedule/internal/logger/sl"
 	"log/slog"
 	"net/http"
@@ -67,7 +68,7 @@ func (i *Implementation) GetEvent(logger *slog.Logger) http.HandlerFunc {
 			return
 		}
 
-		err = render.Render(w, r, api.GetEventResponseAPI(event))
+		err = render.Render(w, r, api.GetEventResponseAPI(convert.ToApiEventInfo(event)))
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
 			render.Render(w, r, api.ErrRender(err))

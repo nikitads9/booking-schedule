@@ -3,23 +3,9 @@ package event
 import (
 	"context"
 	"event-schedule/internal/app/model"
-	"log/slog"
-
-	"github.com/go-chi/chi/middleware"
+	"time"
 )
 
-func (s *Service) GetVacantRooms(ctx context.Context, mod *model.Interval) ([]*model.Suite, error) {
-	const op = "events.service.GetVacantRooms"
-
-	log := s.log.With(
-		slog.String("op", op),
-		slog.String("request_id", middleware.GetReqID(ctx)),
-	)
-
-	if mod == nil {
-		log.Error(ErrNoModel.Error())
-		return nil, ErrNoModel
-	}
-
-	return s.eventRepository.GetVacantRooms(ctx, mod)
+func (s *Service) GetVacantRooms(ctx context.Context, startDate time.Time, endDate time.Time) ([]*model.Suite, error) {
+	return s.eventRepository.GetVacantRooms(ctx, startDate, endDate)
 }

@@ -13,12 +13,11 @@ import (
 	"github.com/go-chi/chi/middleware"
 )
 
-//TODO: проверить а что будет еси комнаты забронированы гетерогенно: разными клиентами и приходит запрос на обновление одним из них, накладывающийся на второго (умозрительно вроже норм)
+//TODO: проверить а что будет еси комнаты забронированы гетерогенно: разными клиентами и приходит запрос на обновление одним из них, накладывающийся на второго (умозрительно вроде норм)
 /*
 SELECT NOT EXISTS ( SELECT 1 FROM events WHERE ((suite_id = 1 AND ((start_date > 3 AND start_date < 6) OR (end_date > 3 AND end_date < 6)))) ) as availible, (SELECT EXISTS ( SELECT 1 FROM events WHERE ((suite_id = 1 AND owner_id = 2) AND ((start_date > 3 AND start_date < 6) OR (end_date > 3 AND end_date < 6)))) ) as occupied_by_owner
 */
-//TODO: проверять занято ли автором именно та бронь, которую он хочет отредактировать?
-func (r *repository) CheckAvailibility(ctx context.Context, mod *model.Event) (*model.Availibility, error) {
+func (r *repository) CheckAvailibility(ctx context.Context, mod *model.EventInfo) (*model.Availibility, error) {
 	const op = "events.repository.CheckAvailibility"
 
 	log := r.log.With(
@@ -30,8 +29,8 @@ func (r *repository) CheckAvailibility(ctx context.Context, mod *model.Event) (*
 		sq.And{
 			sq.And{
 				sq.Eq{t.SuiteID: mod.SuiteID},
-				sq.And{sq.Eq{t.OwnerID: mod.UserID},
-					sq.Eq{t.ID: mod.GetEventID()},
+				sq.And{sq.Eq{t.UserID: mod.UserID},
+					sq.Eq{t.ID: mod.ID},
 				},
 			},
 			sq.Or{
@@ -79,7 +78,7 @@ func (r *repository) CheckAvailibility(ctx context.Context, mod *model.Event) (*
 		Name:     op,
 		QueryRaw: query,
 	}
-	//TODO: ensure that model is parsed correctly
+
 	var res = new(model.Availibility)
 	err = r.client.DB().GetContext(ctx, res, q, args...)
 	if err != nil {

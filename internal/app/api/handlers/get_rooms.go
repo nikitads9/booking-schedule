@@ -6,6 +6,7 @@ import (
 	"event-schedule/internal/logger/sl"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
@@ -38,14 +39,40 @@ func (i *Implementation) GetVacantRooms(logger *slog.Logger) http.HandlerFunc {
 			slog.String("request_id", middleware.GetReqID(ctx)),
 		)
 
-		mod, err := convert.ToGetRoomsInfo(r)
-		if err != nil {
-			log.Error("invalid request", sl.Err(err))
-			render.Render(w, r, api.ErrInvalidRequest(err))
+		start := r.URL.Query().Get("start")
+		if start == "" {
+			log.Error("invalid request", sl.Err(api.ErrNoInterval))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoInterval))
 			return
 		}
 
-		rooms, err := i.Service.GetVacantRooms(ctx, mod)
+		end := r.URL.Query().Get("end")
+		if end == "" {
+			log.Error("invalid request", sl.Err(api.ErrNoInterval))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoInterval))
+			return
+		}
+
+		startDate, err := time.Parse("2006-01-02T15:04:05Z", start)
+		if err != nil {
+			log.Error("invalid request", sl.Err(err))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
+			return
+		}
+		endDate, err := time.Parse("2006-01-02T15:04:05Z", end)
+		if err != nil {
+			log.Error("invalid request", sl.Err(err))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
+			return
+		}
+
+		err = api.CheckDates(startDate, endDate)
+		if err != nil {
+			log.Error("invalid request", sl.Err(err))
+			render.Render(w, r, api.ErrInvalidRequest(err))
+		}
+
+		rooms, err := i.Service.GetVacantRooms(ctx, startDate, endDate)
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
 			render.Render(w, r, api.ErrInternalError(err))
@@ -54,6 +81,6 @@ func (i *Implementation) GetVacantRooms(logger *slog.Logger) http.HandlerFunc {
 
 		log.Info("vacant rooms acquired", slog.Any("quantity:", len(rooms)))
 		render.Status(r, http.StatusCreated)
-		render.Render(w, r, api.GetVacantRoomsAPI(rooms))
+		render.Render(w, r, api.GetVacantRoomsAPI(convert.ToApiSuites(rooms)))
 	}
 }

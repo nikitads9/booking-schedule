@@ -15,7 +15,7 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-func (r *repository) AddEvent(ctx context.Context, mod *model.Event) (uuid.UUID, error) {
+func (r *repository) AddEvent(ctx context.Context, mod *model.EventInfo) (uuid.UUID, error) {
 	const op = "events.repository.AddEvent"
 
 	log := r.log.With(
@@ -31,13 +31,13 @@ func (r *repository) AddEvent(ctx context.Context, mod *model.Event) (uuid.UUID,
 		return uuid.Nil, ErrUuid
 	}
 
-	if mod.GetNotifyAt() != 0 {
+	if mod.NotifyAt != 0 {
 		builder = sq.Insert(t.EventTable).
-			Columns(t.ID, t.OwnerID, t.SuiteID, t.StartDate, t.EndDate, t.CreatedAt, t.NotifyAt).
-			Values(newID, mod.UserID, mod.SuiteID, mod.StartDate, mod.EndDate, time.Now(), mod.GetNotifyAt())
+			Columns(t.ID, t.UserID, t.SuiteID, t.StartDate, t.EndDate, t.CreatedAt, t.NotifyAt).
+			Values(newID, mod.UserID, mod.SuiteID, mod.StartDate, mod.EndDate, time.Now(), mod.NotifyAt)
 	} else {
 		builder = sq.Insert(t.EventTable).
-			Columns(t.ID, t.OwnerID, t.SuiteID, t.StartDate, t.EndDate, t.CreatedAt).
+			Columns(t.ID, t.UserID, t.SuiteID, t.StartDate, t.EndDate, t.CreatedAt).
 			Values(newID, mod.UserID, mod.SuiteID, mod.StartDate, mod.EndDate, time.Now())
 	}
 

@@ -6,11 +6,13 @@ import (
 	"event-schedule/internal/app/convert"
 	"event-schedule/internal/logger/sl"
 	"log/slog"
+	"strconv"
 
 	"net/http"
 
 	validator "github.com/go-playground/validator/v10"
 
+	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
 )
@@ -24,7 +26,7 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Param			user_id	path	int	true	"user_id"	Format(int64) default(1)
-//	@Param          event	body	api.Request	true	"AddEventRequest"
+//	@Param          event	body	api.AddEventRequest	true	"AddEventRequest"
 //	@Success		200	{object}	api.AddEventResponse
 //	@Failure		400	{object}	api.AddEventResponse
 //	@Failure		404	{object}	api.AddEventResponse
@@ -42,7 +44,7 @@ func (i *Implementation) AddEvent(logger *slog.Logger) http.HandlerFunc {
 			slog.String("request_id", middleware.GetReqID(ctx)),
 		)
 
-		req := &api.Request{}
+		req := &api.AddEventRequest{}
 		err := render.Bind(r, req)
 		if err != nil {
 			if errors.As(err, api.ValidateErr) {
@@ -58,9 +60,30 @@ func (i *Implementation) AddEvent(logger *slog.Logger) http.HandlerFunc {
 		}
 		log.Info("request body decoded", slog.Any("req", req))
 
-		mod, err := convert.ToEvent(r, req)
+		userID := chi.URLParam(r, "user_id")
+		if userID == "" {
+			log.Error("invalid request", sl.Err(api.ErrNoUserID))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoUserID))
+			return
+		}
+
+		id, err := strconv.ParseInt(userID, 10, 64)
 		if err != nil {
-			log.Error("invalid request", sl.Err(err)) //TODO: log real error
+			log.Error("invalid request", sl.Err(err))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
+			return
+		}
+		//TODO: getters
+		mod, err := convert.ToEventInfo(&api.Event{
+			UserID:    id,
+			SuiteID:   req.SuiteID,
+			StartDate: req.StartDate,
+			EndDate:   req.EndDate,
+			NotifyAt:  req.NotifyAt,
+		})
+
+		if err != nil {
+			log.Error("invalid request", sl.Err(err))
 			render.Render(w, r, api.ErrInvalidRequest(err))
 			return
 		}
@@ -80,6 +103,7 @@ func (i *Implementation) AddEvent(logger *slog.Logger) http.HandlerFunc {
 
 }
 
+//TODO:
 //для презентации времени в нормальном виде
 /* type CustomTime struct {
 	time.Time

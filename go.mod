@@ -8,6 +8,7 @@ require (
 	github.com/go-playground/validator/v10 v10.17.0
 	github.com/pkg/errors v0.9.1
 	github.com/swaggo/swag v1.16.2
+	go.uber.org/automaxprocs v1.5.3
 	gopkg.in/guregu/null.v3 v3.5.0
 )
 

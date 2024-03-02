@@ -5,9 +5,12 @@ import (
 	"event-schedule/internal/app/convert"
 	"event-schedule/internal/logger/sl"
 	"log/slog"
+	"strconv"
+	"time"
 
 	"net/http"
 
+	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
 )
@@ -39,15 +42,56 @@ func (i *Implementation) GetEvents(logger *slog.Logger) http.HandlerFunc {
 			slog.String("request_id", middleware.GetReqID(ctx)),
 		)
 
-		getEventsInfo, err := convert.ToGetEventsInfo(r)
-		if err != nil {
-			log.Error("invalid request", sl.Err(err)) //TODO: log real errors
-			render.Render(w, r, api.ErrInvalidRequest(err))
+		userID := chi.URLParam(r, "user_id")
+		if userID == "" {
+			log.Error("invalid request", sl.Err(api.ErrNoUserID))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoUserID))
 			return
 		}
-		log.Info("received request", slog.Any("params:", getEventsInfo))
 
-		events, err := i.Service.GetEvents(ctx, getEventsInfo)
+		id, err := strconv.ParseInt(userID, 10, 64)
+		if err != nil {
+			log.Error("invalid request", sl.Err(err))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
+			return
+		}
+
+		start := r.URL.Query().Get("start")
+		if start == "" {
+			log.Error("invalid request", sl.Err(api.ErrNoInterval))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoInterval))
+			return
+		}
+
+		end := r.URL.Query().Get("end")
+		if end == "" {
+			log.Error("invalid request", sl.Err(api.ErrNoInterval))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoInterval))
+			return
+		}
+
+		startDate, err := time.Parse("2006-01-02T15:04:05-07:00", start)
+		if err != nil {
+			log.Error("invalid request", sl.Err(err))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
+			return
+		}
+		endDate, err := time.Parse("2006-01-02T15:04:05-07:00", end)
+		if err != nil {
+			log.Error("invalid request", sl.Err(err))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
+			return
+		}
+
+		err = api.CheckDates(startDate, endDate)
+		if err != nil {
+			log.Error("invalid request", sl.Err(err))
+			render.Render(w, r, api.ErrInvalidRequest(err))
+		}
+
+		log.Info("received request", slog.Any("params:", start+" to "+end))
+
+		events, err := i.Service.GetEvents(ctx, startDate, endDate, id)
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
 			render.Render(w, r, api.ErrInternalError(err))
@@ -57,7 +101,7 @@ func (i *Implementation) GetEvents(logger *slog.Logger) http.HandlerFunc {
 		log.Info("events acquired", slog.Int("quantity:", len(events)))
 
 		render.Status(r, http.StatusCreated)
-		render.Render(w, r, api.GetEventsResponseAPI(events))
+		render.Render(w, r, api.GetEventsResponseAPI(convert.ToApiEventsInfo(events)))
 	}
 
 }

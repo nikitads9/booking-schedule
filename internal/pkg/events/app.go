@@ -118,7 +118,7 @@ func (a *App) startServer() error {
 
 	go func() error {
 		if err := srv.ListenAndServe(); err != nil {
-			a.serviceProvider.log.Error("failed to start listener")
+			a.serviceProvider.log.Error("", sl.Err(err))
 			return err
 		}
 

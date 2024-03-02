@@ -73,7 +73,7 @@ func (s *Service) receiveEvents(msg amqp.Delivery) error {
 			event.StartDate,
 			event.EndDate,
 			event.NotifyAt,
-			event.OwnerID,
+			event.UserID,
 			event.CreatedAt,
 			event.UpdatedAt,
 		))

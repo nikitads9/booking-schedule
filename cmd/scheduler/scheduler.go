@@ -7,6 +7,8 @@ import (
 	"event-schedule/internal/pkg/scheduler"
 	"flag"
 	"log"
+
+	_ "go.uber.org/automaxprocs"
 )
 
 var pathConfig string

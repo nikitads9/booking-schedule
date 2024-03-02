@@ -16,7 +16,7 @@ func (r *repository) GetEventListByDate(ctx context.Context, startDate time.Time
 	op := "events.repository.GetEventListByDate"
 	log := r.log.With(slog.String("op", op))
 
-	builder := sq.Select(t.ID, t.SuiteID, t.StartDate, t.EndDate, t.NotifyAt, t.CreatedAt, t.UpdatedAt, t.OwnerID).
+	builder := sq.Select(t.ID, t.SuiteID, t.StartDate, t.EndDate, t.NotifyAt, t.CreatedAt, t.UpdatedAt, t.UserID).
 		From(t.EventTable).
 		Where(sq.Or{
 			sq.And{

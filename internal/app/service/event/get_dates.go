@@ -2,7 +2,6 @@ package event
 
 import (
 	"context"
-	"event-schedule/internal/app/convert"
 	"event-schedule/internal/app/model"
 	"log/slog"
 
@@ -23,7 +22,5 @@ func (s *Service) GetVacantDates(ctx context.Context, suiteID int64) ([]*model.I
 		return nil, err
 	}
 
-	res = convert.ToFreeIntervals(res)
-	//TODO: ошибка и проверка на ошибку
 	return res, nil
 }

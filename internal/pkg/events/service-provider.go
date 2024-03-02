@@ -2,6 +2,7 @@ package events
 
 import (
 	"context"
+	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -61,8 +62,7 @@ func (s *serviceProvider) GetConfig() *config.EventConfig {
 	if s.config == nil {
 		cfg, err := config.ReadEventConfig(s.configPath)
 		if err != nil {
-			s.log.Error("coud not get events-api config: %s", err)
-			os.Exit(1)
+			log.Fatalf("could not get events-api config: %s", err)
 		}
 
 		s.config = cfg
@@ -118,7 +118,6 @@ func (s *serviceProvider) getServer(router http.Handler) *http.Server {
 
 func (s *serviceProvider) GetLogger() *slog.Logger {
 	if s.log == nil {
-		//TODO: move env to logger config
 		env := s.GetConfig().GetLoggerConfig().Env
 		switch env {
 		case envLocal:

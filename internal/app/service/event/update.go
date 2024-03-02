@@ -10,7 +10,7 @@ import (
 )
 
 // TODO: сделать единую модель дляupdate и add
-func (s *Service) UpdateEvent(ctx context.Context, mod *model.Event) error {
+func (s *Service) UpdateEvent(ctx context.Context, mod *model.EventInfo) error {
 	const op = "events.service.UpdateEvent"
 
 	log := s.log.With(
@@ -47,7 +47,7 @@ func (s *Service) UpdateEvent(ctx context.Context, mod *model.Event) error {
 	if err != nil {
 		log.Error("transaction failed", err)
 		if errors.As(err, pgNoConnection) {
-			return ErrNoTransaction
+			return ErrNoConnection
 		}
 		return err
 	}

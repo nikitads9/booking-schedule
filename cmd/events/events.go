@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	//_ "go.uber.org/automaxprocs"
+
 	//_ "event-schedule/cmd/server/docs"
 	"event-schedule/internal/pkg/events"
 	"flag"
@@ -13,7 +15,7 @@ import (
 var pathConfig string
 
 func init() {
-	flag.StringVar(&pathConfig, "config", "./configs/config.yml", "path to config file")
+	flag.StringVar(&pathConfig, "config", "./configs/events_config.yml", "path to config file")
 	time.Local = time.UTC
 }
 

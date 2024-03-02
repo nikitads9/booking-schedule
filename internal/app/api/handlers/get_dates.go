@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"event-schedule/internal/app/api"
+	"event-schedule/internal/app/convert"
 	"event-schedule/internal/logger/sl"
 	"log/slog"
 	"net/http"
@@ -68,6 +69,7 @@ func (i *Implementation) GetVacantDates(logger *slog.Logger) http.HandlerFunc {
 		log.Info("vacant dates acquired", slog.Any("quantity:", len(intervals)))
 
 		render.Status(r, http.StatusCreated)
-		render.Render(w, r, api.GetVacantDatesAPI(intervals))
+		render.Render(w, r, api.GetVacantDatesAPI(convert.ToFreeIntervals(intervals)))
+		//TODO: ошибка и проверка на ошибку
 	}
 }

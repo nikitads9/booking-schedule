@@ -13,16 +13,16 @@ import (
 )
 
 type Repository interface {
-	AddEvent(ctx context.Context, mod *model.Event) (uuid.UUID, error)
-	GetEvents(ctx context.Context, mod *model.GetEventsInfo) ([]*model.EventInfo, error)
+	AddEvent(ctx context.Context, mod *model.EventInfo) (uuid.UUID, error)
 	GetEvent(ctx context.Context, eventID uuid.UUID) (*model.EventInfo, error)
-	UpdateEvent(ctx context.Context, mod *model.Event) error
+	GetEvents(ctx context.Context, startDate time.Time, endDate time.Time, userID int64) ([]*model.EventInfo, error)
+	UpdateEvent(ctx context.Context, mod *model.EventInfo) error
 	DeleteEvent(ctx context.Context, eventID uuid.UUID) error
-	GetVacantRooms(ctx context.Context, mod *model.Interval) ([]*model.Suite, error)
+	GetVacantRooms(ctx context.Context, startDate time.Time, endDate time.Time) ([]*model.Suite, error)
 	GetVacantDates(ctx context.Context, suiteID int64) ([]*model.Interval, error)
 	GetEventListByDate(ctx context.Context, start time.Time, end time.Time) ([]*model.EventInfo, error)
 	DeleteEventsBeforeDate(ctx context.Context, end time.Time) error
-	CheckAvailibility(ctx context.Context, mod *model.Event) (*model.Availibility, error)
+	CheckAvailibility(ctx context.Context, mod *model.EventInfo) (*model.Availibility, error)
 }
 
 var (
