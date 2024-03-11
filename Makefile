@@ -17,11 +17,11 @@ migrate-down:
 
 build: build-bookings build-scheduler build-sender
 build-bookings:
-	go build -v -o $(BIN_SCHEDULER) ./cmd/bookings/booking.go
+	go build -v -ldflags "-w -s" -o $(BIN_SCHEDULER) ./cmd/bookings/booking.go
 build-scheduler:
-	go build -v -o $(BIN_NOTIFIER) ./cmd/scheduler/scheduler.go
+	go build -v -ldflags "-w -s" -o $(BIN_NOTIFIER) ./cmd/scheduler/scheduler.go
 build-sender:
-	go build -v -o $(BIN_SENDER) ./cmd/sender/sender.go
+	go build -v -ldflags "-w -s" -o $(BIN_SENDER) ./cmd/sender/sender.go
 
 .PHONY: deps
 deps: install-go-deps
