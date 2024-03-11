@@ -6,6 +6,6 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-func (s *Service) DeleteEvent(ctx context.Context, eventID uuid.UUID) error {
-	return s.eventRepository.DeleteEvent(ctx, eventID)
+func (s *Service) DeleteEvent(ctx context.Context, eventID uuid.UUID, userID int64) error {
+	return s.eventRepository.DeleteEvent(ctx, eventID, userID)
 }

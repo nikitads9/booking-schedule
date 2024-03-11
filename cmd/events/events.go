@@ -12,10 +12,12 @@ import (
 	"log"
 )
 
-var pathConfig string
+var pathConfig, pathCert, pathKey string
 
 func init() {
 	flag.StringVar(&pathConfig, "config", "./configs/events_config.yml", "path to config file")
+	flag.StringVar(&pathCert, "certfile", "cert.pem", "certificate PEM file")
+	flag.StringVar(&pathKey, "keyfile", "key.pem", "key PEM file")
 	time.Local = time.UTC
 }
 
@@ -30,16 +32,31 @@ func init() {
 //	@license.name	GNU 3.0
 //	@license.url	https://www.gnu.org/licenses/gpl-3.0.ru.html
 
-//		@host			127.0.0.1:3000
-//		@BasePath		/events
+// @host			127.0.0.1:3000
+// @BasePath		/events
+//
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
+
+// @securityDefinitions.basic BasicAuth
+// @in header
+// @name Authorization
+//
 //	 @Schemes 		http https
 //		@Tags			events
+//
+// @tag.name bookings
+// @tag.description operations with bookings, suites and intervals
+// @tag.name users
+// @tag.description operations with user profile such as sign in, sign up, getting profile editing it and deleting
 func main() {
 	flag.Parse()
 
 	ctx := context.Background()
 
-	app, err := events.NewApp(ctx, pathConfig)
+	app, err := events.NewApp(ctx, pathConfig, pathCert, pathKey)
 	if err != nil {
 		log.Fatalf("failed to create events-api app object:%s\n", err.Error())
 	}

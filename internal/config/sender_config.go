@@ -13,7 +13,7 @@ type RabbitConsumer struct {
 
 type SenderConfig struct {
 	RabbitConsumer *RabbitConsumer `yaml:"rabbit_consumer"`
-	Logger         *Logger         `yaml:"logger"`
+	Env            string          `yaml:"env"`
 }
 
 func ReadSenderConfig(path string) (*SenderConfig, error) {
@@ -37,7 +37,7 @@ func (s *SenderConfig) GetRabbitConsumerConfig() *RabbitConsumer {
 	return s.RabbitConsumer
 }
 
-// GetLoggerConfig ...
-func (s *SenderConfig) GetLoggerConfig() *Logger {
-	return s.Logger
+// GetEnv ...
+func (s *SenderConfig) GetEnv() string {
+	return s.Env
 }

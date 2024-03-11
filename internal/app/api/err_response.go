@@ -38,8 +38,10 @@ var (
 	ErrExpiredDate        = errors.New("date is expired")
 	ErrParse              = errors.New("failed to parse parameter")
 	ErrEmptyRequest       = errors.New("received empty request")
+	ErrNoAuth             = errors.New("received no auth info")
 	ErrIncompleteInterval = errors.New("received no start date or no end date")
 	ErrIncompleteRequest  = errors.New("received booking interval with no notification time")
+	ErrAuthFailed         = errors.New("failed to authenticate")
 	ValidateErr           = new(validator.ValidationErrors)
 )
 
@@ -61,7 +63,7 @@ func ErrInvalidRequest(err error) render.Renderer {
 	return &Response{
 		Err:            err,
 		HTTPStatusCode: 400,
-		Status:         "Invalid request.",
+		Status:         "Bad request.",
 		ErrorText:      err.Error(),
 	}
 }
@@ -80,6 +82,15 @@ func ErrRender(err error) render.Renderer {
 		Err:            err,
 		HTTPStatusCode: 422,
 		Status:         "Error rendering response.",
+		ErrorText:      err.Error(),
+	}
+}
+
+func ErrUnauthorized(err error) render.Renderer {
+	return &Response{
+		Err:            err,
+		HTTPStatusCode: 401,
+		Status:         "Unauthorized request.",
 		ErrorText:      err.Error(),
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"event-schedule/internal/app/api"
 	"event-schedule/internal/app/convert"
 	"event-schedule/internal/logger/sl"
+	"event-schedule/internal/middleware/auth"
 	"log/slog"
 	"net/http"
 
@@ -18,16 +19,19 @@ import (
 //	@Summary		Get event info
 //	@Description	Responds with booking info for booking with given EventID.
 //	@ID				getEventbyTag
-//	@Tags			events
+//	@Tags			bookings
 //	@Produce		json
-//	@Param			user_id	path	int	true	"user_id"	Format(int64) default(1)
+//
 //	@Param			event_id	path	string	true	"event_id"	Format(uuid) default(550e8400-e29b-41d4-a716-446655440000)
 //	@Success		200	{object}	api.GetEventResponse
 //	@Failure		400	{object}	api.GetEventResponse
+//	@Failure		401	{object}	api.GetEventResponse
 //	@Failure		404	{object}	api.GetEventResponse
 //	@Failure		422	{object}	api.GetEventResponse
 //	@Failure		503	{object}	api.GetEventResponse
-//	@Router			/{user_id}/{event_id}/get [get]
+//	@Router			/{event_id}/get [get]
+//
+// @Security Bearer
 func (i *Implementation) GetEvent(logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "events.api.handlers.GetEvent"
@@ -39,14 +43,21 @@ func (i *Implementation) GetEvent(logger *slog.Logger) http.HandlerFunc {
 			slog.String("request_id", middleware.GetReqID(ctx)),
 		)
 
-		id := chi.URLParam(r, "event_id")
-		if id == "" {
+		userID := auth.UserIDFromContext(ctx)
+		if userID == 0 {
+			log.Error("no user id in context", sl.Err(api.ErrNoUserID))
+			render.Render(w, r, api.ErrUnauthorized(api.ErrNoAuth))
+			return
+		}
+
+		eventID := chi.URLParam(r, "event_id")
+		if eventID == "" {
 			log.Error("invalid request", sl.Err(api.ErrNoEventID))
 			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoEventID))
 			return
 		}
 
-		eventUUID, err := uuid.FromString(id)
+		eventUUID, err := uuid.FromString(eventID)
 		if err != nil {
 			log.Error("invalid request", sl.Err(err))
 			render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
@@ -61,7 +72,7 @@ func (i *Implementation) GetEvent(logger *slog.Logger) http.HandlerFunc {
 
 		log.Info("decoded URL param", slog.Any("eventID:", eventUUID))
 
-		event, err := i.Service.GetEvent(ctx, eventUUID)
+		event, err := i.Booking.GetEvent(ctx, eventUUID, userID)
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
 			render.Render(w, r, api.ErrInternalError(err))

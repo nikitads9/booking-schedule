@@ -1,33 +1,31 @@
-package event
+package user
 
 import (
 	"context"
 	"errors"
 	"event-schedule/internal/app/model"
-	t "event-schedule/internal/app/repository/table"
 	"event-schedule/internal/pkg/db"
 	"log/slog"
 
-	sq "github.com/Masterminds/squirrel"
+	t "event-schedule/internal/app/repository/table"
+
 	"github.com/go-chi/chi/middleware"
-	"github.com/gofrs/uuid"
+
+	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
 )
 
-func (r *repository) GetEvent(ctx context.Context, eventID uuid.UUID, userID int64) (*model.EventInfo, error) {
-	const op = "events.repository.GetEvent"
+func (r *repository) GetUser(ctx context.Context, userID int64) (*model.User, error) {
+	const op = "users.repository.GetUser"
 
 	log := r.log.With(
 		slog.String("op", op),
 		slog.String("request_id", middleware.GetReqID(ctx)),
 	)
 
-	builder := sq.Select(t.ID, t.SuiteID, t.StartDate, t.EndDate, t.NotifyAt, t.CreatedAt, t.UpdatedAt, t.UserID).
-		From(t.EventTable).
-		Where(sq.And{
-			sq.Eq{t.ID: eventID},
-			sq.Eq{t.UserID: userID},
-		}).
+	builder := sq.Select("*").
+		From(t.UserTable).
+		Where(sq.Eq{t.ID: userID}).
 		PlaceholderFormat(sq.Dollar)
 
 	query, args, err := builder.ToSql()
@@ -41,7 +39,7 @@ func (r *repository) GetEvent(ctx context.Context, eventID uuid.UUID, userID int
 		QueryRaw: query,
 	}
 
-	var res = new(model.EventInfo)
+	var res = new(model.User)
 	err = r.client.DB().GetContext(ctx, res, q, args...)
 	if err != nil {
 		if errors.As(err, pgNoConnection) {

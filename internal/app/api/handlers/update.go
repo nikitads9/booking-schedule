@@ -5,9 +5,9 @@ import (
 	"event-schedule/internal/app/api"
 	"event-schedule/internal/app/convert"
 	"event-schedule/internal/logger/sl"
+	"event-schedule/internal/middleware/auth"
 	"log/slog"
 	"net/http"
-	"strconv"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -21,18 +21,21 @@ import (
 //	@Summary		Updates event info
 //	@Description	Updates an existing event with given EventID, suiteID, startDate, endDate values (notificationPeriod being optional). Implemented with the use of transaction: first room availibility is checked. In case one attempts to alter his previous booking (i.e. widen or tighten its' limits) the booking is updated.  If it overlaps with smb else's booking or with clients' another booking the request is considered unsuccessful. startDate parameter  is to be before endDate and both should not be expired.
 //	@ID				modifyEventByJSON
-//	@Tags			events
+//	@Tags			bookings
 //	@Accept			json
 //	@Produce		json
-//	@Param			user_id	path	int	true	"user_id"	Format(int64) default(1)
+//
 //	@Param			event_id path	string	true	"event_id"	Format(uuid) default(550e8400-e29b-41d4-a716-446655440000)
 //	@Param          event body		api.UpdateEventRequest	true	"UpdateEventRequest"
 //	@Success		200	{object}	api.UpdateEventResponse
 //	@Failure		400	{object}	api.UpdateEventResponse
+//	@Failure		401	{object}	api.UpdateEventResponse
 //	@Failure		404	{object}	api.UpdateEventResponse
 //	@Failure		422	{object}	api.UpdateEventResponse
 //	@Failure		503	{object}	api.UpdateEventResponse
-//	@Router			/{user_id}/{event_id}/update [patch]
+//	@Router			/{event_id}/update [patch]
+//
+// @Security Bearer
 func (i *Implementation) UpdateEvent(logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "events.api.handlers.UpdateEvent"
@@ -59,17 +62,11 @@ func (i *Implementation) UpdateEvent(logger *slog.Logger) http.HandlerFunc {
 		}
 		log.Info("request body decoded", slog.Any("req", req))
 
-		userID := chi.URLParam(r, "user_id")
-		if userID == "" {
-			log.Error("invalid request", sl.Err(api.ErrNoUserID))
-			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoUserID))
-			return
-		}
-
-		id, err := strconv.ParseInt(userID, 10, 64)
-		if err != nil {
-			log.Error("invalid request", sl.Err(err))
-			render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
+		id := auth.UserIDFromContext(ctx)
+		//id, err := strconv.ParseInt(userID, 10, 64)
+		if id == 0 {
+			log.Error("no user id in context", sl.Err(api.ErrNoUserID))
+			render.Render(w, r, api.ErrUnauthorized(api.ErrNoAuth))
 			return
 		}
 
@@ -107,7 +104,7 @@ func (i *Implementation) UpdateEvent(logger *slog.Logger) http.HandlerFunc {
 			render.Render(w, r, api.ErrInvalidRequest(err))
 		}
 
-		err = i.Service.UpdateEvent(ctx, mod)
+		err = i.Booking.UpdateEvent(ctx, mod)
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
 			render.Render(w, r, api.ErrInternalError(err))

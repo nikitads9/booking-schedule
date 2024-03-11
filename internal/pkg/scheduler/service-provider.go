@@ -91,7 +91,7 @@ func (s *serviceProvider) GetSchedulerService(ctx context.Context) *schedulerSer
 
 func (s *serviceProvider) GetLogger() *slog.Logger {
 	if s.log == nil {
-		env := s.GetConfig().GetLoggerConfig().Env
+		env := s.GetConfig().GetEnv()
 		switch env {
 		case envLocal:
 			s.log = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))

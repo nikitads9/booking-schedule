@@ -24,7 +24,7 @@ type SchedulerConfig struct {
 	Scheduler      *Scheduler      `yaml:"scheduler"`
 	Database       *Database       `yaml:"database"`
 	RabbitProducer *RabbitProducer `yaml:"rabbit_producer"`
-	Logger         *Logger         `yaml:"logger"`
+	Env            string          `yaml:"env"`
 }
 
 func ReadSchedulerConfig(path string) (*SchedulerConfig, error) {
@@ -53,9 +53,9 @@ func (s *SchedulerConfig) GetRabbitProducerConfig() *RabbitProducer {
 	return s.RabbitProducer
 }
 
-// GetLoggerConfig ...
-func (s *SchedulerConfig) GetLoggerConfig() *Logger {
-	return s.Logger
+// GetEnv ...
+func (s *SchedulerConfig) GetEnv() string {
+	return s.Env
 }
 
 func (s *SchedulerConfig) GetDBConfig() (*pgxpool.Config, error) {

@@ -26,7 +26,10 @@ func (r *repository) UpdateEvent(ctx context.Context, mod *model.EventInfo) erro
 		Set("start_date", mod.StartDate).
 		Set("end_date", mod.EndDate).
 		Set("suite_id", mod.SuiteID).
-		Where(sq.Eq{"id": mod.ID}). //TODO only for USER with userID
+		Where(sq.And{
+			sq.Eq{t.ID: mod.ID},
+			sq.Eq{t.UserID: mod.UserID},
+		}).
 		PlaceholderFormat(sq.Dollar)
 
 	if mod.NotifyAt != 0 {

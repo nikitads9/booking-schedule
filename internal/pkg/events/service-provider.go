@@ -2,6 +2,7 @@ package events
 
 import (
 	"context"
+	"crypto/tls"
 	"log"
 	"log/slog"
 	"net/http"
@@ -9,7 +10,10 @@ import (
 
 	"event-schedule/internal/app/api/handlers"
 	eventRepository "event-schedule/internal/app/repository/event"
+	userRepository "event-schedule/internal/app/repository/user"
 	eventService "event-schedule/internal/app/service/event"
+	"event-schedule/internal/app/service/jwt"
+	userService "event-schedule/internal/app/service/user"
 	"event-schedule/internal/config"
 	"event-schedule/internal/pkg/db"
 	"event-schedule/internal/pkg/db/transaction"
@@ -32,6 +36,10 @@ type serviceProvider struct {
 
 	eventRepository eventRepository.Repository
 	eventService    *eventService.Service
+
+	userRepository userRepository.Repository
+	userService    *userService.Service
+	jwtService     jwt.Service
 
 	eventImpl *handlers.Implementation
 }
@@ -80,18 +88,44 @@ func (s *serviceProvider) GetEventRepository(ctx context.Context) eventRepositor
 	return s.eventRepository
 }
 
+func (s *serviceProvider) GetUserRepository(ctx context.Context) userRepository.Repository {
+	if s.userRepository == nil {
+		s.userRepository = userRepository.NewUserRepository(s.GetDB(ctx), s.GetLogger())
+		return s.userRepository
+	}
+
+	return s.userRepository
+}
+
 func (s *serviceProvider) GetEventService(ctx context.Context) *eventService.Service {
 	if s.eventService == nil {
 		eventRepository := s.GetEventRepository(ctx)
-		s.eventService = eventService.NewEventService(eventRepository, s.GetLogger(), s.TxManager(ctx))
+		s.eventService = eventService.NewEventService(eventRepository, s.GetJWTService(), s.GetLogger(), s.TxManager(ctx))
 	}
 
 	return s.eventService
 }
 
+func (s *serviceProvider) GetUserService(ctx context.Context) *userService.Service {
+	if s.userService == nil {
+		userRepository := s.GetUserRepository(ctx)
+		s.userService = userService.NewUserService(userRepository, s.GetJWTService(), s.GetLogger())
+	}
+
+	return s.userService
+}
+
+func (s *serviceProvider) GetJWTService() jwt.Service {
+	if s.jwtService == nil {
+		s.jwtService = jwt.NewJWTService(s.GetConfig().GetJWTConfig().Secret, s.GetConfig().GetJWTConfig().Expiration, s.GetLogger())
+	}
+
+	return s.jwtService
+}
+
 func (s *serviceProvider) GetEventImpl(ctx context.Context) *handlers.Implementation {
 	if s.eventImpl == nil {
-		s.eventImpl = handlers.NewImplementation(s.GetEventService(ctx))
+		s.eventImpl = handlers.NewImplementation(s.GetEventService(ctx), s.GetUserService(ctx))
 	}
 
 	return s.eventImpl
@@ -110,6 +144,10 @@ func (s *serviceProvider) getServer(router http.Handler) *http.Server {
 			ReadTimeout:  s.GetConfig().GetServerConfig().Timeout,
 			WriteTimeout: s.GetConfig().GetServerConfig().Timeout,
 			IdleTimeout:  s.GetConfig().GetServerConfig().IdleTimeout,
+			TLSConfig: &tls.Config{
+				MinVersion:               tls.VersionTLS13,
+				PreferServerCipherSuites: true,
+			},
 		}
 	}
 
@@ -118,7 +156,7 @@ func (s *serviceProvider) getServer(router http.Handler) *http.Server {
 
 func (s *serviceProvider) GetLogger() *slog.Logger {
 	if s.log == nil {
-		env := s.GetConfig().GetLoggerConfig().Env
+		env := s.GetConfig().GetEnv()
 		switch env {
 		case envLocal:
 			s.log = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))

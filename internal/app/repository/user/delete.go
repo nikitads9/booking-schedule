@@ -1,30 +1,28 @@
-package event
+package user
 
 import (
 	"context"
 	"errors"
-	t "event-schedule/internal/app/repository/table"
 	"event-schedule/internal/pkg/db"
 	"log/slog"
 
-	sq "github.com/Masterminds/squirrel"
+	t "event-schedule/internal/app/repository/table"
+
 	"github.com/go-chi/chi/middleware"
-	"github.com/gofrs/uuid"
+
+	sq "github.com/Masterminds/squirrel"
 )
 
-func (r *repository) DeleteEvent(ctx context.Context, eventID uuid.UUID, userID int64) error {
-	const op = "events.repository.DeleteEvent"
+func (r *repository) DeleteUser(ctx context.Context, userID int64) error {
+	const op = "users.repository.DeleteUser"
 
 	log := r.log.With(
 		slog.String("op", op),
 		slog.String("request_id", middleware.GetReqID(ctx)),
 	)
 
-	builder := sq.Delete(t.EventTable).
-		Where(sq.And{
-			sq.Eq{t.ID: eventID},
-			sq.Eq{t.UserID: userID},
-		}).
+	builder := sq.Delete(t.UserTable).
+		Where(sq.Eq{t.ID: userID}).
 		PlaceholderFormat(sq.Dollar)
 
 	query, args, err := builder.ToSql()
@@ -54,4 +52,5 @@ func (r *repository) DeleteEvent(ctx context.Context, eventID uuid.UUID, userID 
 	}
 
 	return nil
+
 }

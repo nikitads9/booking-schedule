@@ -14,10 +14,10 @@ import (
 
 type Repository interface {
 	AddEvent(ctx context.Context, mod *model.EventInfo) (uuid.UUID, error)
-	GetEvent(ctx context.Context, eventID uuid.UUID) (*model.EventInfo, error)
+	GetEvent(ctx context.Context, eventID uuid.UUID, userID int64) (*model.EventInfo, error)
 	GetEvents(ctx context.Context, startDate time.Time, endDate time.Time, userID int64) ([]*model.EventInfo, error)
 	UpdateEvent(ctx context.Context, mod *model.EventInfo) error
-	DeleteEvent(ctx context.Context, eventID uuid.UUID) error
+	DeleteEvent(ctx context.Context, eventID uuid.UUID, userID int64) error
 	GetVacantRooms(ctx context.Context, startDate time.Time, endDate time.Time) ([]*model.Suite, error)
 	GetVacantDates(ctx context.Context, suiteID int64) ([]*model.Interval, error)
 	GetEventListByDate(ctx context.Context, start time.Time, end time.Time) ([]*model.EventInfo, error)

@@ -3,6 +3,7 @@ package event
 import (
 	"errors"
 	"event-schedule/internal/app/repository/event"
+	"event-schedule/internal/app/service/jwt"
 	"event-schedule/internal/pkg/db"
 	"log/slog"
 
@@ -11,6 +12,7 @@ import (
 
 type Service struct {
 	eventRepository event.Repository
+	jwtService      jwt.Service
 	log             *slog.Logger
 	txManager       db.TxManager
 }
@@ -22,9 +24,10 @@ var (
 	pgNoConnection  = new(*pgconn.ConnectError)
 )
 
-func NewEventService(eventRepository event.Repository, log *slog.Logger, txManager db.TxManager) *Service {
+func NewEventService(eventRepository event.Repository, jwtService jwt.Service, log *slog.Logger, txManager db.TxManager) *Service {
 	return &Service{
 		eventRepository: eventRepository,
+		jwtService:      jwtService,
 		log:             log,
 		txManager:       txManager,
 	}

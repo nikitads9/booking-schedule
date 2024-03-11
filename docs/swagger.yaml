@@ -15,7 +15,7 @@ definitions:
         example: "2024-03-28T17:43:00Z"
         type: string
       suiteID:
-        description: номер апаратаментов
+        description: Номер апаратаментов
         example: 1
         type: integer
     required:
@@ -110,9 +110,11 @@ definitions:
   Interval:
     properties:
       end:
+        description: Номер свободен по
         example: "2024-04-10T15:04:05Z"
         type: string
       start:
+        description: Номер свободен с
         example: "2024-03-10T15:04:05Z"
         type: string
     type: object
@@ -128,15 +130,26 @@ definitions:
         description: user-level status message
         type: string
     type: object
+  SignInResponse:
+    properties:
+      response:
+        $ref: '#/definitions/Response'
+      token:
+        description: JWT токен для доступа
+        type: string
+    type: object
   Suite:
     properties:
       capacity:
+        description: Вместимость в персонах
         example: 4
         type: integer
       name:
+        description: Название апартаментов
         example: Winston Churchill
         type: string
       suiteID:
+        description: Номер апартаментов
         example: 1
         type: integer
     type: object
@@ -169,6 +182,30 @@ definitions:
       response:
         $ref: '#/definitions/Response'
     type: object
+  User:
+    properties:
+      name:
+        description: Имя пользователя
+        example: Pavel Durov
+        type: string
+      password:
+        description: Пароль
+        example: "12345"
+        type: string
+      telegramID:
+        description: Телеграм ID пользователя
+        example: 1235678
+        type: integer
+      telegramNickname:
+        description: Никнейм пользователя в телеграме
+        example: pavel_durov
+        type: string
+    required:
+    - name
+    - password
+    - telegramID
+    - telegramNickname
+    type: object
 host: 127.0.0.1:3000
 info:
   contact:
@@ -182,18 +219,11 @@ info:
   title: event-schedule API
   version: "1.0"
 paths:
-  /{user_id}/{event_id}/delete:
+  /{event_id}/delete:
     delete:
       description: Deletes an event with given UUID.
       operationId: removeByEventID
       parameters:
-      - default: 1
-        description: user_id
-        format: int64
-        in: path
-        name: user_id
-        required: true
-        type: integer
       - default: 550e8400-e29b-41d4-a716-446655440000
         description: event_id
         format: uuid
@@ -212,6 +242,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/DeleteEventResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/DeleteEventResponse'
         "404":
           description: Not Found
           schema:
@@ -224,21 +258,16 @@ paths:
           description: Service Unavailable
           schema:
             $ref: '#/definitions/DeleteEventResponse'
+      security:
+      - Bearer: []
       summary: Deletes an event
       tags:
-      - events
-  /{user_id}/{event_id}/get:
+      - bookings
+  /{event_id}/get:
     get:
       description: Responds with booking info for booking with given EventID.
       operationId: getEventbyTag
       parameters:
-      - default: 1
-        description: user_id
-        format: int64
-        in: path
-        name: user_id
-        required: true
-        type: integer
       - default: 550e8400-e29b-41d4-a716-446655440000
         description: event_id
         format: uuid
@@ -257,6 +286,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/GetEventResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/GetEventResponse'
         "404":
           description: Not Found
           schema:
@@ -269,10 +302,12 @@ paths:
           description: Service Unavailable
           schema:
             $ref: '#/definitions/GetEventResponse'
+      security:
+      - Bearer: []
       summary: Get event info
       tags:
-      - events
-  /{user_id}/{event_id}/update:
+      - bookings
+  /{event_id}/update:
     patch:
       consumes:
       - application/json
@@ -285,13 +320,6 @@ paths:
         be before endDate and both should not be expired.'
       operationId: modifyEventByJSON
       parameters:
-      - default: 1
-        description: user_id
-        format: int64
-        in: path
-        name: user_id
-        required: true
-        type: integer
       - default: 550e8400-e29b-41d4-a716-446655440000
         description: event_id
         format: uuid
@@ -316,6 +344,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/UpdateEventResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/UpdateEventResponse'
         "404":
           description: Not Found
           schema:
@@ -328,22 +360,17 @@ paths:
           description: Service Unavailable
           schema:
             $ref: '#/definitions/UpdateEventResponse'
+      security:
+      - Bearer: []
       summary: Updates event info
       tags:
-      - events
-  /{user_id}/{suite_id}/get-vacant-dates:
+      - bookings
+  /{suite_id}/get-vacant-dates:
     get:
       description: Responds with list of vacant intervals within month for selected
         suite.
       operationId: getDatesBySuiteID
       parameters:
-      - default: 1
-        description: user_id
-        format: int64
-        in: path
-        name: user_id
-        required: true
-        type: integer
       - default: 1
         description: suite_id
         format: int64
@@ -376,8 +403,8 @@ paths:
             $ref: '#/definitions/GetVacantDateResponse'
       summary: Get vacant intervals
       tags:
-      - events
-  /{user_id}/add:
+      - bookings
+  /add:
     post:
       consumes:
       - application/json
@@ -389,13 +416,6 @@ paths:
         and both should not be expired.'
       operationId: addByEventJSON
       parameters:
-      - default: 1
-        description: user_id
-        format: int64
-        in: path
-        name: user_id
-        required: true
-        type: integer
       - description: AddEventRequest
         in: body
         name: event
@@ -413,6 +433,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/AddEventResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/AddEventResponse'
         "404":
           description: Not Found
           schema:
@@ -425,23 +449,18 @@ paths:
           description: Service Unavailable
           schema:
             $ref: '#/definitions/AddEventResponse'
+      security:
+      - Bearer: []
       summary: Adds event
       tags:
-      - events
-  /{user_id}/get-events:
+      - bookings
+  /get-events:
     get:
       description: Responds with series of event info objects within given time period.
         The query parameters are start date and end date (start is to be before end
         and both should not be expired).
       operationId: getMultipleEventsByTag
       parameters:
-      - default: 1234
-        description: user_id
-        format: int64
-        in: path
-        name: user_id
-        required: true
-        type: integer
       - default: "2024-03-28T17:43:00Z"
         description: start
         format: time.Time
@@ -467,6 +486,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/GetEventsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/GetEventsResponse'
         "404":
           description: Not Found
           schema:
@@ -479,23 +502,18 @@ paths:
           description: Service Unavailable
           schema:
             $ref: '#/definitions/GetEventsResponse'
+      security:
+      - Bearer: []
       summary: Get several events info
       tags:
-      - events
-  /{user_id}/get-vacant-rooms:
+      - bookings
+  /get-vacant-rooms:
     get:
       description: Receives two dates as query parameters. start is to be before end
         and both should not be expired. Responds with list of vacant rooms and their
         parameters for given interval.
       operationId: getRoomsByDates
       parameters:
-      - default: 1
-        description: user_id
-        format: int64
-        in: path
-        name: user_id
-        required: true
-        type: integer
       - default: "2024-03-28T17:43:00Z"
         description: start
         format: time.Time
@@ -535,8 +553,87 @@ paths:
             $ref: '#/definitions/GetVacantRoomsResponse'
       summary: Get list of vacant rooms
       tags:
-      - events
+      - bookings
+  /user/sign-in:
+    get:
+      description: Get auth token to access user restricted api methods. Requires
+        nickname and password passed via basic auth.
+      operationId: getOauthToken
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/SignInResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/SignInResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/SignInResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/SignInResponse'
+      security:
+      - BasicAuth: []
+      summary: Sign in
+      tags:
+      - users
+  /user/sign-up:
+    post:
+      consumes:
+      - application/json
+      description: Creates user with given tg id, nickname, name and password hashed
+        by bcrypto. Every parameter is required. Returns jwt token.
+      operationId: signUpUserJson
+      parameters:
+      - description: User
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/SignInResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/SignInResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/SignInResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/SignInResponse'
+      summary: Sign up
+      tags:
+      - users
 schemes:
 - http
 - https
+securityDefinitions:
+  BasicAuth:
+    type: basic
+  Bearer:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
+tags:
+- description: operations with bookings, suites and intervals
+  name: bookings
+- description: operations with user profile such as sign in, sign up, getting profile
+    editing it and deleting
+  name: users

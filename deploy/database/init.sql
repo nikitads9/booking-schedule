@@ -1,7 +1,11 @@
 create table users (
 	id bigserial primary key,
+    name text not null,
 	telegram_id bigint not null,
     telegram_nickname text not null,
+    password text not null,
+    created_at timestamp not null,
+    updated_at timestamp,
     unique(telegram_id),
     unique(telegram_nickname)
 );

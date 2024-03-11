@@ -140,3 +140,18 @@ func ToFreeIntervals(mod []*model.Interval) []*api.Interval {
 
 	return res
 }
+
+func ToUserInfo(user *api.User) (*model.User, error) {
+	if user == nil {
+		return nil, api.ErrEmptyRequest
+	}
+
+	mod := &model.User{
+		TelegramID: user.TelegramID,
+		Nickname:   user.Nickname,
+		Name:       user.Name,
+		Password:   &user.Password,
+		CreatedAt:  time.Now(),
+	}
+	return mod, nil
+}

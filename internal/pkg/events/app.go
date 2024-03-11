@@ -3,8 +3,8 @@ package events
 import (
 	"context"
 	"errors"
-	"event-schedule/internal/app/api/handlers"
 	"event-schedule/internal/logger/sl"
+	"event-schedule/internal/middleware/auth"
 	mwLogger "event-schedule/internal/middleware/logger"
 	"log/slog"
 	"os"
@@ -18,14 +18,18 @@ import (
 
 type App struct {
 	pathConfig      string
+	pathCert        string
+	pathKey         string
 	serviceProvider *serviceProvider
 	router          *chi.Mux
 }
 
 // NewApp ...
-func NewApp(ctx context.Context, pathConfig string) (*App, error) {
+func NewApp(ctx context.Context, pathConfig string, pathCert string, pathKey string) (*App, error) {
 	a := &App{
 		pathConfig: pathConfig,
+		pathCert:   pathCert,
+		pathKey:    pathKey,
 	}
 	err := a.initDeps(ctx)
 
@@ -80,29 +84,35 @@ func (a *App) initServer(ctx context.Context) error {
 	a.serviceProvider.GetLogger().Info("initializing server", slog.String("address", address)) // Вывод параметра с адресом
 	a.serviceProvider.GetLogger().Debug("logger debug mode enabled")
 
-	a.setupRouter(impl)
-
-	return nil
-}
-
-func (a *App) setupRouter(impl *handlers.Implementation) {
 	a.router = chi.NewRouter()
 	a.router.Use(middleware.RequestID) // Добавляет request_id в каждый запрос, для трейсинга
 	//a.router.Use(middleware.Logger)    // Логирование всех запросов
 	a.router.Use(mwLogger.New(a.serviceProvider.GetLogger()))
 	a.router.Use(middleware.Recoverer) // Если где-то внутри сервера (обработчика запроса) произойдет паника, приложение не должно упасть
 
-	a.router.Route("/events/{user_id}", func(r chi.Router) {
-		r.Post("/add", impl.AddEvent(a.serviceProvider.GetLogger()))
-		r.Get("/get-events", impl.GetEvents(a.serviceProvider.GetLogger()))
+	a.router.Route("/events", func(r chi.Router) {
+		r.Route("/user", func(r chi.Router) {
+			r.Post("/sign-up", impl.SignUp(a.serviceProvider.GetLogger()))
+			r.Get("/sign-in", impl.SignIn(a.serviceProvider.GetLogger()))
+			//r.Group(func(r chi.Router) {r.Use(authHandler) r.Get("/me", impl.GetMyUser(a.serviceProvider.GetLogger()))})
+
+		})
 		r.Get("/get-vacant-rooms", impl.GetVacantRooms(a.serviceProvider.GetLogger()))
 		r.Get("/{suite_id}/get-vacant-dates", impl.GetVacantDates(a.serviceProvider.GetLogger()))
-		r.Route("/{event_id}", func(r chi.Router) {
-			r.Get("/get", impl.GetEvent(a.serviceProvider.GetLogger()))
-			r.Patch("/update", impl.UpdateEvent(a.serviceProvider.GetLogger()))
-			r.Delete("/delete", impl.DeleteEvent(a.serviceProvider.GetLogger()))
+		r.Group(func(r chi.Router) {
+			r.Use(auth.Auth(a.serviceProvider.GetLogger(), a.serviceProvider.GetJWTService()))
+			r.Post("/add", impl.AddEvent(a.serviceProvider.GetLogger()))
+			r.Get("/get-events", impl.GetEvents(a.serviceProvider.GetLogger()))
+			r.Route("/{event_id}", func(r chi.Router) {
+				r.Get("/get", impl.GetEvent(a.serviceProvider.GetLogger()))
+				r.Patch("/update", impl.UpdateEvent(a.serviceProvider.GetLogger()))
+				r.Delete("/delete", impl.DeleteEvent(a.serviceProvider.GetLogger()))
+			})
 		})
+
 	})
+
+	return nil
 }
 
 func (a *App) startServer() error {
@@ -117,9 +127,18 @@ func (a *App) startServer() error {
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() error {
-		if err := srv.ListenAndServe(); err != nil {
-			a.serviceProvider.log.Error("", sl.Err(err))
-			return err
+		switch a.serviceProvider.GetConfig().GetEnv() {
+		case envProd:
+			a.initCertificates()
+			if err := srv.ListenAndServeTLS(a.pathCert, a.pathKey); err != nil {
+				a.serviceProvider.log.Error("", sl.Err(err))
+				return err
+			}
+		default:
+			if err := srv.ListenAndServe(); err != nil {
+				a.serviceProvider.log.Error("", sl.Err(err))
+				return err
+			}
 		}
 
 		return nil

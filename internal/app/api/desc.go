@@ -2,6 +2,8 @@ package api
 
 import (
 	"net/http"
+	"reflect"
+	"strings"
 	"time"
 
 	"gopkg.in/guregu/null.v3"
@@ -80,16 +82,16 @@ func CheckDates(start time.Time, end time.Time) error {
 	return nil
 }
 
-func (ar *AddEventRequest) Bind(req *http.Request) error {
-	err := validator.New().Struct(ar)
+func (arq *AddEventRequest) Bind(req *http.Request) error {
+	err := validator.New().Struct(arq)
 	if err != nil {
 		return err
 	}
 
-	return CheckDates(ar.StartDate, ar.EndDate)
+	return CheckDates(arq.StartDate, arq.EndDate)
 }
 
-func (rd *AddEventResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (ar *AddEventResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
@@ -107,7 +109,7 @@ func GetEventResponseAPI(event *EventInfo) *GetEventResponse {
 	return resp
 }
 
-func (rd *GetEventResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (ge *GetEventResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
@@ -125,7 +127,7 @@ func GetEventsResponseAPI(events []*EventInfo) *GetEventsResponse {
 	return resp
 }
 
-func (rd *GetEventsResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (ges *GetEventsResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
@@ -148,7 +150,7 @@ func GetVacantDatesAPI(intervals []*Interval) *GetVacantDatesResponse {
 	}
 }
 
-func (rd *GetVacantDatesResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (gd *GetVacantDatesResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
@@ -173,7 +175,7 @@ func GetVacantRoomsAPI(rooms []*Suite) *GetVacantRoomsResponse {
 	}
 }
 
-func (rd *GetVacantRoomsResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (gr *GetVacantRoomsResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
@@ -188,20 +190,20 @@ type UpdateEventRequest struct {
 	NotifyAt null.String `json:"notifyAt,omitempty" swaggertype:"primitive,string" example:"24h"`
 } //@name UpdateEventRequest
 
-func (ur *UpdateEventRequest) Bind(r *http.Request) error {
-	err := validator.New().Struct(ur)
+func (urq *UpdateEventRequest) Bind(r *http.Request) error {
+	err := validator.New().Struct(urq)
 	if err != nil {
 		return err
 	}
 
-	return CheckDates(ur.StartDate, ur.EndDate)
+	return CheckDates(urq.StartDate, urq.EndDate)
 }
 
 type UpdateEventResponse struct {
 	Response *Response `json:"response"`
 } //@name UpdateEventResponse
 
-func (rd *UpdateEventResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (ur *UpdateEventResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
@@ -221,6 +223,66 @@ func DeleteEventResponseAPI() *DeleteEventResponse {
 	}
 }
 
-func (rd *DeleteEventResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (dr *DeleteEventResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
+}
+
+type AuthResponse struct {
+	Response *Response `json:"response"`
+	// JWT токен для доступа
+	Token string `json:"token"`
+} //@name SignInResponse
+
+func AuthResponseAPI(token string) *AuthResponse {
+	return &AuthResponse{
+		Response: OK(),
+		Token:    token,
+	}
+}
+
+func (auth *AuthResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+type User struct {
+	// Телеграм ID пользователя
+	TelegramID int64 `json:"telegramID" validate:"required,notblank" example:"1235678"`
+	// Никнейм пользователя в телеграме
+	Nickname string `json:"telegramNickname" validate:"required,notblank" example:"pavel_durov"`
+	// Имя пользователя
+	Name string `json:"name" validate:"required,notblank" example:"Pavel Durov"`
+	// Пароль
+	Password string `json:"password" validate:"required,notblank" example:"12345"`
+} //@name User
+
+func (u *User) Bind(req *http.Request) error {
+	v := validator.New()
+	err := v.RegisterValidation("notblank", NotBlank)
+	if err != nil {
+		return err
+	}
+
+	err = v.Struct(u)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func NotBlank(fl validator.FieldLevel) bool {
+	field := fl.Field()
+
+	switch field.Kind() {
+	case reflect.String:
+		return len(strings.TrimSpace(field.String())) > 0
+	case reflect.Int64:
+		return !field.IsZero()
+	case reflect.Chan, reflect.Map, reflect.Slice, reflect.Array:
+		return field.Len() > 0
+	case reflect.Ptr, reflect.Interface, reflect.Func:
+		return !field.IsNil()
+	default:
+		return field.IsValid() && field.Interface() != reflect.Zero(field.Type()).Interface()
+	}
 }

@@ -33,14 +33,16 @@ type Database struct {
 	MaxOpenedConnections int32  `yaml:"max_opened_connections"`
 }
 
-type Logger struct {
-	Env string `yaml:"env"`
+type JWT struct {
+	Secret     string        `yaml:"secret"`
+	Expiration time.Duration `yaml:"expiration"`
 }
 
 type EventConfig struct {
 	Server   *Server   `yaml:"server"`
 	Database *Database `yaml:"database"`
-	Logger   *Logger   `yaml:"logger"`
+	Jwt      *JWT      `yaml:"jwt"`
+	Env      string    `yaml:"env"`
 }
 
 func ReadEventConfig(path string) (*EventConfig, error) {
@@ -64,9 +66,14 @@ func (e *EventConfig) GetServerConfig() *Server {
 	return e.Server
 }
 
-// GetLoggerConfig ...
-func (e *EventConfig) GetLoggerConfig() *Logger {
-	return e.Logger
+// GetJWTConfig
+func (e *EventConfig) GetJWTConfig() *JWT {
+	return e.Jwt
+}
+
+// GetEnv ...
+func (e *EventConfig) GetEnv() string {
+	return e.Env
 }
 
 func (e *EventConfig) GetDBConfig() (*pgxpool.Config, error) {

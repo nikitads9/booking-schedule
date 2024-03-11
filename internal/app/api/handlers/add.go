@@ -5,14 +5,13 @@ import (
 	"event-schedule/internal/app/api"
 	"event-schedule/internal/app/convert"
 	"event-schedule/internal/logger/sl"
+	"event-schedule/internal/middleware/auth"
 	"log/slog"
-	"strconv"
 
 	"net/http"
 
 	validator "github.com/go-playground/validator/v10"
 
-	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
 )
@@ -22,17 +21,20 @@ import (
 //	@Summary		Adds event
 //	@Description	Adds an  associated with user with given parameters. NotificationPeriod is optional and must look like {number}s,{number}m or {number}h. Implemented with the use of transaction: first rooms availibility is checked. In case one's new booking request intersects with and old one(even if belongs to him), the request is considered erratic. startDate is to be before endDate and both should not be expired.
 //	@ID				addByEventJSON
-//	@Tags			events
+//	@Tags			bookings
 //	@Accept			json
 //	@Produce		json
-//	@Param			user_id	path	int	true	"user_id"	Format(int64) default(1)
+//
 //	@Param          event	body	api.AddEventRequest	true	"AddEventRequest"
 //	@Success		200	{object}	api.AddEventResponse
 //	@Failure		400	{object}	api.AddEventResponse
+//	@Failure		401	{object}	api.AddEventResponse
 //	@Failure		404	{object}	api.AddEventResponse
 //	@Failure		422	{object}	api.AddEventResponse
 //	@Failure		503	{object}	api.AddEventResponse
-//	@Router			/{user_id}/add [post]
+//	@Router			/add [post]
+//
+// @Security Bearer
 func (i *Implementation) AddEvent(logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "events.api.handlers.AddEvent"
@@ -60,22 +62,16 @@ func (i *Implementation) AddEvent(logger *slog.Logger) http.HandlerFunc {
 		}
 		log.Info("request body decoded", slog.Any("req", req))
 
-		userID := chi.URLParam(r, "user_id")
-		if userID == "" {
-			log.Error("invalid request", sl.Err(api.ErrNoUserID))
-			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoUserID))
-			return
-		}
-
-		id, err := strconv.ParseInt(userID, 10, 64)
-		if err != nil {
-			log.Error("invalid request", sl.Err(err))
-			render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
+		userID := auth.UserIDFromContext(ctx)
+		//id, err := strconv.ParseInt(userID, 10, 64)
+		if userID == 0 {
+			log.Error("no user id in context", sl.Err(api.ErrNoUserID))
+			render.Render(w, r, api.ErrUnauthorized(api.ErrNoAuth))
 			return
 		}
 		//TODO: getters
 		mod, err := convert.ToEventInfo(&api.Event{
-			UserID:    id,
+			UserID:    userID,
 			SuiteID:   req.SuiteID,
 			StartDate: req.StartDate,
 			EndDate:   req.EndDate,
@@ -88,7 +84,7 @@ func (i *Implementation) AddEvent(logger *slog.Logger) http.HandlerFunc {
 			return
 		}
 
-		eventID, err := i.Service.AddEvent(ctx, mod)
+		eventID, err := i.Booking.AddEvent(ctx, mod)
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
 			render.Render(w, r, api.ErrInternalError(err))

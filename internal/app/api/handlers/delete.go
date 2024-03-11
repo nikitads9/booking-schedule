@@ -3,6 +3,7 @@ package handlers
 import (
 	"event-schedule/internal/app/api"
 	"event-schedule/internal/logger/sl"
+	"event-schedule/internal/middleware/auth"
 	"log/slog"
 	"net/http"
 
@@ -17,16 +18,19 @@ import (
 //	@Summary		Deletes an event
 //	@Description	Deletes an event with given UUID.
 //	@ID				removeByEventID
-//	@Tags			events
+//	@Tags			bookings
 //	@Produce		json
-//	@Param			user_id	path	int	true	"user_id"	Format(int64) default(1)
+//
 //	@Param			event_id path	string	true	"event_id"	Format(uuid) default(550e8400-e29b-41d4-a716-446655440000)
 //	@Success		200	{object}	api.DeleteEventResponse
 //	@Failure		400	{object}	api.DeleteEventResponse
+//	@Failure		401	{object}	api.DeleteEventResponse
 //	@Failure		404	{object}	api.DeleteEventResponse
 //	@Failure		422	{object}	api.DeleteEventResponse
 //	@Failure		503	{object}	api.DeleteEventResponse
-//	@Router			/{user_id}/{event_id}/delete [delete]
+//	@Router			/{event_id}/delete [delete]
+//
+// @Security Bearer
 func (i *Implementation) DeleteEvent(logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "events.api.handlers.DeleteEvent"
@@ -38,14 +42,23 @@ func (i *Implementation) DeleteEvent(logger *slog.Logger) http.HandlerFunc {
 			slog.String("request_id", middleware.GetReqID(ctx)),
 		)
 
-		id := chi.URLParam(r, "event_id")
-		if id == "" {
+		userID := auth.UserIDFromContext(ctx)
+
+		//id, err := strconv.ParseInt(userID, 10, 64)
+		if userID == 0 {
+			log.Error("no user id in context", sl.Err(api.ErrNoUserID))
+			render.Render(w, r, api.ErrUnauthorized(api.ErrNoAuth))
+			return
+		}
+
+		eventID := chi.URLParam(r, "event_id")
+		if eventID == "" {
 			log.Error("invalid request", sl.Err(api.ErrNoEventID))
 			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoEventID))
 			return
 		}
 
-		eventUUID, err := uuid.FromString(id)
+		eventUUID, err := uuid.FromString(eventID)
 		if err != nil {
 			log.Error("invalid request", sl.Err(err))
 			render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
@@ -60,7 +73,7 @@ func (i *Implementation) DeleteEvent(logger *slog.Logger) http.HandlerFunc {
 
 		log.Info("decoded URL param", slog.Any("eventID:", eventUUID))
 
-		err = i.Service.DeleteEvent(ctx, eventUUID)
+		err = i.Booking.DeleteEvent(ctx, eventUUID, userID)
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
 			render.Render(w, r, api.ErrInternalError(err))

@@ -41,8 +41,7 @@ func (r *repository) AddEvent(ctx context.Context, mod *model.EventInfo) (uuid.U
 			Values(newID, mod.UserID, mod.SuiteID, mod.StartDate, mod.EndDate, time.Now())
 	}
 
-	query, args, err := builder.Suffix("returning id").
-		PlaceholderFormat(sq.Dollar).ToSql()
+	query, args, err := builder.PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
 		log.Error("failed to build a query", err)
 		return uuid.Nil, ErrQueryBuild
@@ -53,7 +52,7 @@ func (r *repository) AddEvent(ctx context.Context, mod *model.EventInfo) (uuid.U
 		QueryRaw: query,
 	}
 
-	row, err := r.client.DB().QueryContext(ctx, q, args...)
+	_, err = r.client.DB().QueryContext(ctx, q, args...)
 	if err != nil {
 		if errors.As(err, pgNoConnection) {
 			log.Error("no connection to database host", err)
@@ -63,14 +62,5 @@ func (r *repository) AddEvent(ctx context.Context, mod *model.EventInfo) (uuid.U
 		return uuid.Nil, ErrQuery
 	}
 
-	var id uuid.UUID
-	row.Next()
-	err = row.Scan(&id)
-	if err != nil {
-		log.Error("failed to scan pgx row", err)
-		return uuid.Nil, ErrPgxScan
-
-	}
-
-	return id, nil
+	return newID, nil
 }
