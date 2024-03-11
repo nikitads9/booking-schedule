@@ -1,10 +1,10 @@
 package auth
 
 import (
+	"booking-schedule/internal/app/api"
+	"booking-schedule/internal/app/service/jwt"
 	"context"
 	"errors"
-	"event-schedule/internal/app/api"
-	"event-schedule/internal/app/service/jwt"
 	"log/slog"
 	"net/http"
 	"strings"

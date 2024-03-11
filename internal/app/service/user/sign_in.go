@@ -1,10 +1,10 @@
 package user
 
 import (
+	"booking-schedule/internal/app/repository/user"
+	"booking-schedule/internal/app/service/user/security"
 	"context"
 	"errors"
-	"event-schedule/internal/app/repository/user"
-	"event-schedule/internal/app/service/user/security"
 	"log/slog"
 
 	"github.com/go-chi/chi/middleware"

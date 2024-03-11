@@ -1,26 +1,26 @@
 package convert
 
 import (
-	"event-schedule/internal/app/api"
-	"event-schedule/internal/app/model"
+	"booking-schedule/internal/app/api"
+	"booking-schedule/internal/app/model"
 	"time"
 
 	"github.com/gofrs/uuid"
 )
 
-func ToEventInfo(req *api.Event) (*model.EventInfo, error) {
+func ToBookingInfo(req *api.Booking) (*model.BookingInfo, error) {
 	if req == nil {
 		return nil, api.ErrEmptyRequest
 	}
 
-	res := &model.EventInfo{
+	res := &model.BookingInfo{
 		UserID:    req.UserID,
 		SuiteID:   req.SuiteID,
 		StartDate: req.StartDate,
 		EndDate:   req.EndDate,
 	}
-	if req.EventID != uuid.Nil {
-		res.ID = req.EventID
+	if req.BookingID != uuid.Nil {
+		res.ID = req.BookingID
 	}
 
 	if req.NotifyAt.Valid {
@@ -34,9 +34,9 @@ func ToEventInfo(req *api.Event) (*model.EventInfo, error) {
 	return res, nil
 }
 
-func ToApiEventInfo(mod *model.EventInfo) *api.EventInfo {
+func ToApiBookingInfo(mod *model.BookingInfo) *api.BookingInfo {
 
-	res := &api.EventInfo{
+	res := &api.BookingInfo{
 		ID:        mod.ID,
 		SuiteID:   mod.SuiteID,
 		StartDate: mod.StartDate,
@@ -56,14 +56,14 @@ func ToApiEventInfo(mod *model.EventInfo) *api.EventInfo {
 	return res
 }
 
-func ToApiEventsInfo(events []*model.EventInfo) []*api.EventInfo {
-	if events == nil {
+func ToApiBookingsInfo(bookings []*model.BookingInfo) []*api.BookingInfo {
+	if bookings == nil {
 		return nil
 	}
 
-	res := make([]*api.EventInfo, 0, len(events))
-	for _, elem := range events {
-		res = append(res, ToApiEventInfo(elem))
+	res := make([]*api.BookingInfo, 0, len(bookings))
+	for _, elem := range bookings {
+		res = append(res, ToApiBookingInfo(elem))
 	}
 
 	return res

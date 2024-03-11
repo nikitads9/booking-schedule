@@ -1,10 +1,10 @@
 package sender
 
 import (
+	sender "booking-schedule/internal/app/service/sender"
+	"booking-schedule/internal/config"
+	"booking-schedule/internal/pkg/rabbit"
 	"context"
-	sender "event-schedule/internal/app/service/sender"
-	"event-schedule/internal/config"
-	"event-schedule/internal/pkg/rabbit"
 	"log"
 	"log/slog"
 	"os"

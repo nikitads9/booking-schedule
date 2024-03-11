@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	booking "event-schedule/internal/app/service/event"
-	"event-schedule/internal/app/service/user"
+	booking "booking-schedule/internal/app/service/booking"
+	"booking-schedule/internal/app/service/user"
 )
 
 type Implementation struct {

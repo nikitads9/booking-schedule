@@ -1,9 +1,9 @@
 package user
 
 import (
+	"booking-schedule/internal/app/repository/user"
+	"booking-schedule/internal/app/service/jwt"
 	"errors"
-	"event-schedule/internal/app/repository/user"
-	"event-schedule/internal/app/service/jwt"
 	"log/slog"
 )
 

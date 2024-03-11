@@ -40,16 +40,16 @@ const docTemplate = `{
                 "tags": [
                     "bookings"
                 ],
-                "summary": "Adds event",
-                "operationId": "addByEventJSON",
+                "summary": "Adds booking",
+                "operationId": "addByBookingJSON",
                 "parameters": [
                     {
-                        "description": "AddEventRequest",
-                        "name": "event",
+                        "description": "AddBookingRequest",
+                        "name": "booking",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/AddEventRequest"
+                            "$ref": "#/definitions/AddBookingRequest"
                         }
                     }
                 ],
@@ -57,63 +57,63 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/AddEventResponse"
+                            "$ref": "#/definitions/AddBookingResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/AddEventResponse"
+                            "$ref": "#/definitions/AddBookingResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/AddEventResponse"
+                            "$ref": "#/definitions/AddBookingResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/AddEventResponse"
+                            "$ref": "#/definitions/AddBookingResponse"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/AddEventResponse"
+                            "$ref": "#/definitions/AddBookingResponse"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/AddEventResponse"
+                            "$ref": "#/definitions/AddBookingResponse"
                         }
                     }
                 }
             }
         },
-        "/get-events": {
+        "/get-bookings": {
             "get": {
                 "security": [
                     {
                         "Bearer": []
                     }
                 ],
-                "description": "Responds with series of event info objects within given time period. The query parameters are start date and end date (start is to be before end and both should not be expired).",
+                "description": "Responds with series of booking info objects within given time period. The query parameters are start date and end date (start is to be before end and both should not be expired).",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "bookings"
                 ],
-                "summary": "Get several events info",
-                "operationId": "getMultipleEventsByTag",
+                "summary": "Get several bookings info",
+                "operationId": "getMultipleBookingsByTag",
                 "parameters": [
                     {
                         "type": "string",
                         "format": "time.Time",
-                        "default": "2024-03-28T17:43:00Z",
+                        "default": "2024-03-28T17:43:00",
                         "description": "start",
                         "name": "start",
                         "in": "query",
@@ -122,7 +122,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "format": "time.Time",
-                        "default": "2024-03-29T17:43:00Z",
+                        "default": "2024-03-29T17:43:00",
                         "description": "end",
                         "name": "end",
                         "in": "query",
@@ -133,37 +133,37 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/GetEventsResponse"
+                            "$ref": "#/definitions/GetBookingsResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/GetEventsResponse"
+                            "$ref": "#/definitions/GetBookingsResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/GetEventsResponse"
+                            "$ref": "#/definitions/GetBookingsResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/GetEventsResponse"
+                            "$ref": "#/definitions/GetBookingsResponse"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/GetEventsResponse"
+                            "$ref": "#/definitions/GetBookingsResponse"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/GetEventsResponse"
+                            "$ref": "#/definitions/GetBookingsResponse"
                         }
                     }
                 }
@@ -184,7 +184,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "format": "time.Time",
-                        "default": "2024-03-28T17:43:00Z",
+                        "default": "2024-03-28T17:43:00",
                         "description": "start",
                         "name": "start",
                         "in": "query",
@@ -193,7 +193,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "format": "time.Time",
-                        "default": "2024-03-29T17:43:00Z",
+                        "default": "2024-03-29T17:43:00",
                         "description": "end",
                         "name": "end",
                         "in": "query",
@@ -331,29 +331,29 @@ const docTemplate = `{
                 }
             }
         },
-        "/{event_id}/delete": {
+        "/{booking_id}/delete": {
             "delete": {
                 "security": [
                     {
                         "Bearer": []
                     }
                 ],
-                "description": "Deletes an event with given UUID.",
+                "description": "Deletes an booking with given UUID.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "bookings"
                 ],
-                "summary": "Deletes an event",
-                "operationId": "removeByEventID",
+                "summary": "Deletes an booking",
+                "operationId": "removeByBookingID",
                 "parameters": [
                     {
                         "type": "string",
                         "format": "uuid",
                         "default": "550e8400-e29b-41d4-a716-446655440000",
-                        "description": "event_id",
-                        "name": "event_id",
+                        "description": "booking_id",
+                        "name": "booking_id",
                         "in": "path",
                         "required": true
                     }
@@ -362,65 +362,65 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DeleteEventResponse"
+                            "$ref": "#/definitions/DeleteBookingResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/DeleteEventResponse"
+                            "$ref": "#/definitions/DeleteBookingResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/DeleteEventResponse"
+                            "$ref": "#/definitions/DeleteBookingResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/DeleteEventResponse"
+                            "$ref": "#/definitions/DeleteBookingResponse"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/DeleteEventResponse"
+                            "$ref": "#/definitions/DeleteBookingResponse"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/DeleteEventResponse"
+                            "$ref": "#/definitions/DeleteBookingResponse"
                         }
                     }
                 }
             }
         },
-        "/{event_id}/get": {
+        "/{booking_id}/get": {
             "get": {
                 "security": [
                     {
                         "Bearer": []
                     }
                 ],
-                "description": "Responds with booking info for booking with given EventID.",
+                "description": "Responds with booking info for booking with given BookingID.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "bookings"
                 ],
-                "summary": "Get event info",
-                "operationId": "getEventbyTag",
+                "summary": "Get booking info",
+                "operationId": "getBookingbyTag",
                 "parameters": [
                     {
                         "type": "string",
                         "format": "uuid",
                         "default": "550e8400-e29b-41d4-a716-446655440000",
-                        "description": "event_id",
-                        "name": "event_id",
+                        "description": "booking_id",
+                        "name": "booking_id",
                         "in": "path",
                         "required": true
                     }
@@ -429,50 +429,50 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/GetEventResponse"
+                            "$ref": "#/definitions/GetBookingResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/GetEventResponse"
+                            "$ref": "#/definitions/GetBookingResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/GetEventResponse"
+                            "$ref": "#/definitions/GetBookingResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/GetEventResponse"
+                            "$ref": "#/definitions/GetBookingResponse"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/GetEventResponse"
+                            "$ref": "#/definitions/GetBookingResponse"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/GetEventResponse"
+                            "$ref": "#/definitions/GetBookingResponse"
                         }
                     }
                 }
             }
         },
-        "/{event_id}/update": {
+        "/{booking_id}/update": {
             "patch": {
                 "security": [
                     {
                         "Bearer": []
                     }
                 ],
-                "description": "Updates an existing event with given EventID, suiteID, startDate, endDate values (notificationPeriod being optional). Implemented with the use of transaction: first room availibility is checked. In case one attempts to alter his previous booking (i.e. widen or tighten its' limits) the booking is updated.  If it overlaps with smb else's booking or with clients' another booking the request is considered unsuccessful. startDate parameter  is to be before endDate and both should not be expired.",
+                "description": "Updates an existing booking with given BookingID, suiteID, startDate, endDate values (notificationPeriod being optional). Implemented with the use of transaction: first room availibility is checked. In case one attempts to alter his previous booking (i.e. widen or tighten its' limits) the booking is updated.  If it overlaps with smb else's booking or with clients' another booking the request is considered unsuccessful. startDate parameter  is to be before endDate and both should not be expired.",
                 "consumes": [
                     "application/json"
                 ],
@@ -482,25 +482,25 @@ const docTemplate = `{
                 "tags": [
                     "bookings"
                 ],
-                "summary": "Updates event info",
-                "operationId": "modifyEventByJSON",
+                "summary": "Updates booking info",
+                "operationId": "modifyBookingByJSON",
                 "parameters": [
                     {
                         "type": "string",
                         "format": "uuid",
                         "default": "550e8400-e29b-41d4-a716-446655440000",
-                        "description": "event_id",
-                        "name": "event_id",
+                        "description": "booking_id",
+                        "name": "booking_id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "UpdateEventRequest",
-                        "name": "event",
+                        "description": "UpdateBookingRequest",
+                        "name": "booking",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/UpdateEventRequest"
+                            "$ref": "#/definitions/UpdateBookingRequest"
                         }
                     }
                 ],
@@ -508,37 +508,37 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/UpdateEventResponse"
+                            "$ref": "#/definitions/UpdateBookingResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/UpdateEventResponse"
+                            "$ref": "#/definitions/UpdateBookingResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/UpdateEventResponse"
+                            "$ref": "#/definitions/UpdateBookingResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/UpdateEventResponse"
+                            "$ref": "#/definitions/UpdateBookingResponse"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/UpdateEventResponse"
+                            "$ref": "#/definitions/UpdateBookingResponse"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/UpdateEventResponse"
+                            "$ref": "#/definitions/UpdateBookingResponse"
                         }
                     }
                 }
@@ -602,7 +602,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "AddEventRequest": {
+        "AddBookingRequest": {
             "type": "object",
             "required": [
                 "endDate",
@@ -632,10 +632,10 @@ const docTemplate = `{
                 }
             }
         },
-        "AddEventResponse": {
+        "AddBookingResponse": {
             "type": "object",
             "properties": {
-                "eventID": {
+                "bookingID": {
                     "type": "string",
                     "format": "uuid",
                     "example": "550e8400-e29b-41d4-a716-446655440000"
@@ -645,18 +645,10 @@ const docTemplate = `{
                 }
             }
         },
-        "DeleteEventResponse": {
+        "BookingInfo": {
             "type": "object",
             "properties": {
-                "response": {
-                    "$ref": "#/definitions/Response"
-                }
-            }
-        },
-        "EventInfo": {
-            "type": "object",
-            "properties": {
-                "EventID": {
+                "BookingID": {
                     "description": "Уникальный идентификатор бронирования",
                     "type": "string",
                     "format": "uuid",
@@ -699,24 +691,32 @@ const docTemplate = `{
                 }
             }
         },
-        "GetEventResponse": {
+        "DeleteBookingResponse": {
             "type": "object",
             "properties": {
-                "event": {
-                    "$ref": "#/definitions/EventInfo"
+                "response": {
+                    "$ref": "#/definitions/Response"
+                }
+            }
+        },
+        "GetBookingResponse": {
+            "type": "object",
+            "properties": {
+                "booking": {
+                    "$ref": "#/definitions/BookingInfo"
                 },
                 "response": {
                     "$ref": "#/definitions/Response"
                 }
             }
         },
-        "GetEventsResponse": {
+        "GetBookingsResponse": {
             "type": "object",
             "properties": {
-                "events": {
+                "bookings": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/EventInfo"
+                        "$ref": "#/definitions/BookingInfo"
                     }
                 },
                 "response": {
@@ -816,7 +816,7 @@ const docTemplate = `{
                 }
             }
         },
-        "UpdateEventRequest": {
+        "UpdateBookingRequest": {
             "type": "object",
             "required": [
                 "endDate",
@@ -827,7 +827,7 @@ const docTemplate = `{
                 "endDate": {
                     "description": "Дата и время окончания бронирования",
                     "type": "string",
-                    "example": "2024-03-29T17:43:00-03:00"
+                    "example": "2024-03-29T17:43:00Z"
                 },
                 "notifyAt": {
                     "description": "Интервал времени для уведомления о бронировании",
@@ -837,7 +837,7 @@ const docTemplate = `{
                 "startDate": {
                     "description": "Дата и время начала бронировании",
                     "type": "string",
-                    "example": "2024-03-28T17:43:00-03:00"
+                    "example": "2024-03-28T17:43:00Z"
                 },
                 "suiteID": {
                     "description": "Номер апартаментов",
@@ -847,7 +847,7 @@ const docTemplate = `{
                 }
             }
         },
-        "UpdateEventResponse": {
+        "UpdateBookingResponse": {
             "type": "object",
             "properties": {
                 "response": {
@@ -914,9 +914,9 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "127.0.0.1:3000",
-	BasePath:         "/events",
+	BasePath:         "/bookings",
 	Schemes:          []string{"http", "https"},
-	Title:            "event-schedule API",
+	Title:            "booking-schedule API",
 	Description:      "This is a service for writing and reading booking entries.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,

@@ -9,7 +9,7 @@ volumes:
 
 services:
   db:
-    container_name: event-storage
+    container_name: booking-storage
     image: postgres:16-alpine3.19
     environment:
       - "POSTGRES_DB=${DB_NAME}"
@@ -27,12 +27,12 @@ services:
     networks:
       - app_net
 
-  events:
-    container_name: events-api
+  bookings:
+    container_name: app
     build:
       context: .
-      dockerfile: ./deploy/events/Dockerfile
-    image: nikitads9/event-schedule:events
+      dockerfile: ./deploy/bookings/Dockerfile
+    image: nikitads9/booking-schedule:bookings
     ports:
       - "${EVENTS_PORT}:${EVENTS_PORT}"
     depends_on:
@@ -49,7 +49,7 @@ services:
     container_name: migrator
     build: $MIGRATION_DIR
     restart: on-failure
-    image: nikitads9/event-schedule:migrator
+    image: nikitads9/booking-schedule:migrator
     environment:
       - "GOOSE_DRIVER=postgres"
       - "GOOSE_DBSTRING=host=${DB_HOST} port=${DB_PORT} dbname=${DB_NAME} user=${DB_USER} password=${DB_PASSWORD} sslmode=${DB_SSL}"
@@ -64,7 +64,7 @@ services:
     build:
       context: .
       dockerfile: ./deploy/scheduler/Dockerfile
-    image: nikitads9/event-schedule:scheduler
+    image: nikitads9/booking-schedule:scheduler
     restart: on-failure
     environment:
       - "DB_NAME=${DB_NAME}"
@@ -87,7 +87,7 @@ services:
     build:
       context: .
       dockerfile: ./deploy/sender/Dockerfile
-    image: nikitads9/event-schedule:sender
+    image: nikitads9/booking-schedule:sender
     restart: on-failure
     depends_on:
       - queue

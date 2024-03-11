@@ -1,14 +1,14 @@
 package user
 
 import (
+	"booking-schedule/internal/app/model"
+	"booking-schedule/internal/pkg/db"
 	"context"
 	"errors"
-	"event-schedule/internal/app/model"
-	"event-schedule/internal/pkg/db"
 	"log/slog"
 	"time"
 
-	t "event-schedule/internal/app/repository/table"
+	t "booking-schedule/internal/app/repository/table"
 
 	"github.com/go-chi/chi/middleware"
 
@@ -43,6 +43,10 @@ func (r *repository) CreateUser(ctx context.Context, user *model.User) (int64, e
 		if errors.As(err, pgNoConnection) {
 			log.Error("no connection to database host", err)
 			return 0, ErrNoConnection
+		}
+		if errors.As(err, &ErrDuplicate) {
+			log.Error("this user already exists", err)
+			return 0, ErrAlreadyExists
 		}
 		log.Error("query execution error", err)
 		return 0, ErrQuery

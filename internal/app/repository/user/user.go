@@ -1,10 +1,10 @@
 package user
 
 import (
+	"booking-schedule/internal/app/model"
+	"booking-schedule/internal/pkg/db"
 	"context"
 	"errors"
-	"event-schedule/internal/app/model"
-	"event-schedule/internal/pkg/db"
 	"log/slog"
 
 	"github.com/jackc/pgx/v5/pgconn"
@@ -19,13 +19,19 @@ type Repository interface {
 
 var (
 	ErrNotFound       = errors.New("no user with this id")
-	ErrAlreadyExists  = errors.New("user with this nickname already exists")
+	ErrAlreadyExists  = errors.New("this user already exists")
 	ErrQuery          = errors.New("failed to execute query")
 	ErrQueryBuild     = errors.New("failed to build query")
 	ErrNoRowsAffected = errors.New("no database entries affected by this operation")
 	ErrPgxScan        = errors.New("failed to read database response")
-	ErrNoConnection   = errors.New("could not connect to database")
-	pgNoConnection    = new(*pgconn.ConnectError)
+	ErrDuplicate      = &pgconn.PgError{
+		Severity:       "ERROR",
+		Code:           "23505",
+		Message:        "duplicate key value violates unique constraint",
+		ConstraintName: "users_telegram_id_key",
+	}
+	ErrNoConnection = errors.New("could not connect to database")
+	pgNoConnection  = new(*pgconn.ConnectError)
 )
 
 type repository struct {

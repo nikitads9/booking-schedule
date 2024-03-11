@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"event-schedule/internal/pkg/scheduler"
+	"booking-schedule/internal/pkg/scheduler"
 	"flag"
 	"log"
 

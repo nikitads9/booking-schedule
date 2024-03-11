@@ -1,11 +1,11 @@
 package handlers
 
 import (
+	"booking-schedule/internal/app/api"
+	"booking-schedule/internal/app/convert"
+	"booking-schedule/internal/logger/sl"
+	"booking-schedule/internal/middleware/auth"
 	"errors"
-	"event-schedule/internal/app/api"
-	"event-schedule/internal/app/convert"
-	"event-schedule/internal/logger/sl"
-	"event-schedule/internal/middleware/auth"
 	"log/slog"
 
 	"net/http"
@@ -16,28 +16,28 @@ import (
 	"github.com/go-chi/render"
 )
 
-// AddEvent godoc
+// AddBooking godoc
 //
-//	@Summary		Adds event
+//	@Summary		Adds booking
 //	@Description	Adds an  associated with user with given parameters. NotificationPeriod is optional and must look like {number}s,{number}m or {number}h. Implemented with the use of transaction: first rooms availibility is checked. In case one's new booking request intersects with and old one(even if belongs to him), the request is considered erratic. startDate is to be before endDate and both should not be expired.
-//	@ID				addByEventJSON
+//	@ID				addByBookingJSON
 //	@Tags			bookings
 //	@Accept			json
 //	@Produce		json
 //
-//	@Param          event	body	api.AddEventRequest	true	"AddEventRequest"
-//	@Success		200	{object}	api.AddEventResponse
-//	@Failure		400	{object}	api.AddEventResponse
-//	@Failure		401	{object}	api.AddEventResponse
-//	@Failure		404	{object}	api.AddEventResponse
-//	@Failure		422	{object}	api.AddEventResponse
-//	@Failure		503	{object}	api.AddEventResponse
+//	@Param          booking	body	api.AddBookingRequest	true	"AddBookingRequest"
+//	@Success		200	{object}	api.AddBookingResponse
+//	@Failure		400	{object}	api.AddBookingResponse
+//	@Failure		401	{object}	api.AddBookingResponse
+//	@Failure		404	{object}	api.AddBookingResponse
+//	@Failure		422	{object}	api.AddBookingResponse
+//	@Failure		503	{object}	api.AddBookingResponse
 //	@Router			/add [post]
 //
 // @Security Bearer
-func (i *Implementation) AddEvent(logger *slog.Logger) http.HandlerFunc {
+func (i *Implementation) AddBooking(logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "events.api.handlers.AddEvent"
+		const op = "bookings.api.handlers.AddBooking"
 
 		ctx := r.Context()
 
@@ -46,7 +46,7 @@ func (i *Implementation) AddEvent(logger *slog.Logger) http.HandlerFunc {
 			slog.String("request_id", middleware.GetReqID(ctx)),
 		)
 
-		req := &api.AddEventRequest{}
+		req := &api.AddBookingRequest{}
 		err := render.Bind(r, req)
 		if err != nil {
 			if errors.As(err, api.ValidateErr) {
@@ -70,7 +70,7 @@ func (i *Implementation) AddEvent(logger *slog.Logger) http.HandlerFunc {
 			return
 		}
 		//TODO: getters
-		mod, err := convert.ToEventInfo(&api.Event{
+		mod, err := convert.ToBookingInfo(&api.Booking{
 			UserID:    userID,
 			SuiteID:   req.SuiteID,
 			StartDate: req.StartDate,
@@ -84,17 +84,17 @@ func (i *Implementation) AddEvent(logger *slog.Logger) http.HandlerFunc {
 			return
 		}
 
-		eventID, err := i.Booking.AddEvent(ctx, mod)
+		bookingID, err := i.Booking.AddBooking(ctx, mod)
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
 			render.Render(w, r, api.ErrInternalError(err))
 			return
 		}
 
-		log.Info("event added", slog.Any("id:", eventID))
+		log.Info("booking added", slog.Any("id:", bookingID))
 
 		render.Status(r, http.StatusCreated)
-		render.Render(w, r, api.AddEventResponseAPI(eventID))
+		render.Render(w, r, api.AddBookingResponseAPI(bookingID))
 	}
 
 }

@@ -1,13 +1,13 @@
 package user
 
 import (
+	"booking-schedule/internal/app/model"
+	"booking-schedule/internal/pkg/db"
 	"context"
 	"errors"
-	"event-schedule/internal/app/model"
-	"event-schedule/internal/pkg/db"
 	"log/slog"
 
-	t "event-schedule/internal/app/repository/table"
+	t "booking-schedule/internal/app/repository/table"
 
 	"github.com/go-chi/chi/middleware"
 
@@ -47,7 +47,7 @@ func (r *repository) GetUserByNickname(ctx context.Context, nickName string) (*m
 			return nil, ErrNoConnection
 		}
 		if errors.Is(err, pgx.ErrNoRows) {
-			log.Error("event with this id not found", err)
+			log.Error("booking with this id not found", err)
 			return nil, ErrNotFound
 		}
 		log.Error("query execution error", err)

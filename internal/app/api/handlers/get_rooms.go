@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"event-schedule/internal/app/api"
-	"event-schedule/internal/app/convert"
-	"event-schedule/internal/logger/sl"
+	"booking-schedule/internal/app/api"
+	"booking-schedule/internal/app/convert"
+	"booking-schedule/internal/logger/sl"
 	"log/slog"
 	"net/http"
 	"time"
@@ -19,8 +19,8 @@ import (
 //	@ID				getRoomsByDates
 //	@Tags			bookings
 //	@Produce		json
-//	@Param			start	query	string	true	"start"	Format(time.Time) default(2024-03-28T17:43:00Z)
-//	@Param			end	query	string	true	"end"	Format(time.Time) default(2024-03-29T17:43:00Z)
+//	@Param			start	query	string	true	"start"	Format(time.Time) default(2024-03-28T17:43:00)
+//	@Param			end	query	string	true	"end"	Format(time.Time) default(2024-03-29T17:43:00)
 //	@Success		200	{object}	api.GetVacantRoomsResponse
 //	@Failure		400	{object}	api.GetVacantRoomsResponse
 //	@Failure		404	{object}	api.GetVacantRoomsResponse
@@ -29,7 +29,7 @@ import (
 //	@Router			/get-vacant-rooms [get]
 func (i *Implementation) GetVacantRooms(logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "events.api.handlers.GetVacantRooms"
+		const op = "bookings.api.handlers.GetVacantRooms"
 
 		ctx := r.Context()
 
@@ -52,13 +52,13 @@ func (i *Implementation) GetVacantRooms(logger *slog.Logger) http.HandlerFunc {
 			return
 		}
 
-		startDate, err := time.Parse("2006-01-02T15:04:05Z", start)
+		startDate, err := time.Parse("2006-01-02T15:04:05", start)
 		if err != nil {
 			log.Error("invalid request", sl.Err(err))
 			render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
 			return
 		}
-		endDate, err := time.Parse("2006-01-02T15:04:05Z", end)
+		endDate, err := time.Parse("2006-01-02T15:04:05", end)
 		if err != nil {
 			log.Error("invalid request", sl.Err(err))
 			render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))

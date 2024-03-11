@@ -1,7 +1,7 @@
 package sender
 
 import (
-	"event-schedule/internal/pkg/rabbit"
+	"booking-schedule/internal/pkg/rabbit"
 	"log/slog"
 )
 

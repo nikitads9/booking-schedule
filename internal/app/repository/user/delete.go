@@ -1,12 +1,12 @@
 package user
 
 import (
+	"booking-schedule/internal/pkg/db"
 	"context"
 	"errors"
-	"event-schedule/internal/pkg/db"
 	"log/slog"
 
-	t "event-schedule/internal/app/repository/table"
+	t "booking-schedule/internal/app/repository/table"
 
 	"github.com/go-chi/chi/middleware"
 

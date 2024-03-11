@@ -1,10 +1,10 @@
 package handlers
 
 import (
-	"event-schedule/internal/app/api"
-	"event-schedule/internal/app/convert"
-	"event-schedule/internal/logger/sl"
-	"event-schedule/internal/middleware/auth"
+	"booking-schedule/internal/app/api"
+	"booking-schedule/internal/app/convert"
+	"booking-schedule/internal/logger/sl"
+	"booking-schedule/internal/middleware/auth"
 	"log/slog"
 	"time"
 
@@ -14,28 +14,28 @@ import (
 	"github.com/go-chi/render"
 )
 
-// GetEvents godoc
+// GetBookings godoc
 //
-//	@Summary		Get several events info
-//	@Description	Responds with series of event info objects within given time period. The query parameters are start date and end date (start is to be before end and both should not be expired).
-//	@ID				getMultipleEventsByTag
+//	@Summary		Get several bookings info
+//	@Description	Responds with series of booking info objects within given time period. The query parameters are start date and end date (start is to be before end and both should not be expired).
+//	@ID				getMultipleBookingsByTag
 //	@Tags			bookings
 //	@Produce		json
 //
-//	@Param			start query		string	true	"start" Format(time.Time) default(2024-03-28T17:43:00Z)
-//	@Param			end query		string	true	"end" Format(time.Time) default(2024-03-29T17:43:00Z)
-//	@Success		200	{object}	api.GetEventsResponse
-//	@Failure		400	{object}	api.GetEventsResponse
-//	@Failure		401	{object}	api.GetEventsResponse
-//	@Failure		404	{object}	api.GetEventsResponse
-//	@Failure		422	{object}	api.GetEventsResponse
-//	@Failure		503	{object}	api.GetEventsResponse
-//	@Router			/get-events [get]
+//	@Param			start query		string	true	"start" Format(time.Time) default(2024-03-28T17:43:00)
+//	@Param			end query		string	true	"end" Format(time.Time) default(2024-03-29T17:43:00)
+//	@Success		200	{object}	api.GetBookingsResponse
+//	@Failure		400	{object}	api.GetBookingsResponse
+//	@Failure		401	{object}	api.GetBookingsResponse
+//	@Failure		404	{object}	api.GetBookingsResponse
+//	@Failure		422	{object}	api.GetBookingsResponse
+//	@Failure		503	{object}	api.GetBookingsResponse
+//	@Router			/get-bookings [get]
 //
 // @Security Bearer
-func (i *Implementation) GetEvents(logger *slog.Logger) http.HandlerFunc {
+func (i *Implementation) GetBookings(logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "events.api.handlers.GetEvents"
+		const op = "bookings.api.handlers.GetBookings"
 
 		ctx := r.Context()
 
@@ -65,13 +65,13 @@ func (i *Implementation) GetEvents(logger *slog.Logger) http.HandlerFunc {
 			return
 		}
 
-		startDate, err := time.Parse("2006-01-02T15:04:05-07:00", start)
+		startDate, err := time.Parse("2006-01-02T15:04:05", start)
 		if err != nil {
 			log.Error("invalid request", sl.Err(err))
 			render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
 			return
 		}
-		endDate, err := time.Parse("2006-01-02T15:04:05-07:00", end)
+		endDate, err := time.Parse("2006-01-02T15:04:05", end)
 		if err != nil {
 			log.Error("invalid request", sl.Err(err))
 			render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
@@ -86,17 +86,17 @@ func (i *Implementation) GetEvents(logger *slog.Logger) http.HandlerFunc {
 
 		log.Info("received request", slog.Any("params:", start+" to "+end))
 
-		events, err := i.Booking.GetEvents(ctx, startDate, endDate, userID)
+		bookings, err := i.Booking.GetBookings(ctx, startDate, endDate, userID)
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
 			render.Render(w, r, api.ErrInternalError(err))
 			return
 		}
 
-		log.Info("events acquired", slog.Int("quantity:", len(events)))
+		log.Info("bookings acquired", slog.Int("quantity:", len(bookings)))
 
 		render.Status(r, http.StatusCreated)
-		render.Render(w, r, api.GetEventsResponseAPI(convert.ToApiEventsInfo(events)))
+		render.Render(w, r, api.GetBookingsResponseAPI(convert.ToApiBookingsInfo(bookings)))
 	}
 
 }

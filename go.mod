@@ -1,4 +1,4 @@
-module event-schedule
+module booking-schedule
 
 go 1.21.0
 

@@ -1,9 +1,7 @@
 include .env
-BIN_SCHEDULER := "./bin/events"
+BIN_SCHEDULER := "./bin/bookings"
 BIN_NOTIFIER := "./bin/scheduler"
 BIN_SENDER := "./bin/sender"
-
-DOCKER_IMG="schedule:develop"
 
 #GIT_HASH := $(shell git log --format="%h" -n 1)
 #LDFLAGS := -X main.release="develop" -X main.buildDate=$(shell date -u +%Y-%m-%dT%H:%M:%S) -X main.gitHash=$(GIT_HASH)
@@ -17,9 +15,9 @@ migrate-down:
 	export PG_DSN="host=${DB_HOST} port=${DB_PORT} dbname=${DB_NAME} user=${DB_USER} password=${DB_PASSWORD} sslmode=${DB_SSL}"
 	sleep 2 && goose -dir ${MIGRATION_DIR} postgres "${PG_DSN}" up -v
 
-build: build-events build-scheduler build-sender
-build-events:
-	go build -v -o $(BIN_SCHEDULER) ./cmd/events/events.go
+build: build-bookings build-scheduler build-sender
+build-bookings:
+	go build -v -o $(BIN_SCHEDULER) ./cmd/bookings/booking.go
 build-scheduler:
 	go build -v -o $(BIN_NOTIFIER) ./cmd/scheduler/scheduler.go
 build-sender:
@@ -41,7 +39,7 @@ install-go-deps: .install-go-deps
 
 .PHONY: generate-swag
 generate-swag:
-	swag init --generalInfo cmd/events/events.go --parseDependency --parseInternal
+	swag init --generalInfo cmd/bookings/booking.go --parseDependency --parseInternal
 
 .PHONY: coverage
 coverage:

@@ -1,9 +1,9 @@
 package scheduler
 
 import (
+	"booking-schedule/internal/app/model"
 	"context"
 	"encoding/json"
-	"event-schedule/internal/app/model"
 	"log/slog"
 	"time"
 )
@@ -23,17 +23,17 @@ func (s *Service) Run(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			err := s.handleEvents(ctx)
+			err := s.handleBookings(ctx)
 			if err != nil {
-				log.Error("failed to handle events:", err)
+				log.Error("failed to handle bookings:", err)
 			}
 		}
 	}
 
 }
 
-func (s *Service) handleEvents(ctx context.Context) error {
-	const op = "scheduler.service.handleEvents"
+func (s *Service) handleBookings(ctx context.Context) error {
+	const op = "scheduler.service.handleBookings"
 
 	log := s.log.With(
 		slog.String("op", op),
@@ -41,32 +41,34 @@ func (s *Service) handleEvents(ctx context.Context) error {
 
 	log.Debug("started handling")
 
-	events, err := s.getEvents(ctx)
+	bookings, err := s.getBookings(ctx)
 	if err != nil {
 		return err
 	}
-	if len(events) == 0 {
-		log.Debug("No events.")
+	if len(bookings) == 0 {
+		log.Debug("No bookings.")
 		return nil
 	}
 
-	err = s.sendEvent(events)
+	for _, val := range bookings {
+		err = s.sendBooking(val)
+		if err != nil {
+			log.Error("failed to send booking:", err)
+		}
+	}
+
+	err = s.cleanUpOldBookings(ctx)
 	if err != nil {
 		return err
 	}
 
-	err = s.cleanUpOldEvents(ctx)
-	if err != nil {
-		return err
-	}
-
-	log.Debug("successfully handled events")
+	log.Debug("successfully handled bookings")
 
 	return nil
 }
 
-func (s *Service) getEvents(ctx context.Context) ([]*model.EventInfo, error) {
-	const op = "scheduler.service.getEvents"
+func (s *Service) getBookings(ctx context.Context) ([]*model.BookingInfo, error) {
+	const op = "scheduler.service.getBookings"
 
 	log := s.log.With(
 		slog.String("op", op),
@@ -76,36 +78,40 @@ func (s *Service) getEvents(ctx context.Context) ([]*model.EventInfo, error) {
 	end = time.Date(end.Year(), end.Month(), end.Day(), end.Hour(), end.Minute(), 0, 0, end.Location())
 	start := end.Add(-s.checkPeriod)
 
-	events, err := s.eventRepository.GetEventListByDate(ctx, start, end)
+	bookings, err := s.bookingRepository.GetBookingListByDate(ctx, start, end)
 	if err != nil {
 		log.Error("failed to get list by date", err)
 		return nil, err
 	}
 
-	return events, nil
+	return bookings, nil
 }
 
-func (s *Service) cleanUpOldEvents(ctx context.Context) error {
-	const op = "scheduler.service.cleanUpOldEvents"
+func (s *Service) cleanUpOldBookings(ctx context.Context) error {
+	const op = "scheduler.service.cleanUpOldBookings"
 
 	log := s.log.With(
 		slog.String("op", op),
 	)
 
-	err := s.eventRepository.DeleteEventsBeforeDate(ctx, time.Now().Add(-s.eventTTL))
+	err := s.bookingRepository.DeleteBookingsBeforeDate(ctx, time.Now().Add(-s.bookingTTL))
 	if err != nil {
-		log.Error("failed to clean up old events", err)
+		log.Error("failed to clean up old bookings", err)
 		return err
 	}
 
 	return nil
 }
 
-func (s *Service) sendEvent(events []*model.EventInfo) error {
-	data, err := json.Marshal(events)
+func (s *Service) sendBooking(booking *model.BookingInfo) error {
+	data, err := json.Marshal(booking)
+	if err != nil {
+		return err
+	}
+	err = s.rabbitProducer.Publish(data)
 	if err != nil {
 		return err
 	}
 
-	return s.rabbitProducer.Publish(data)
+	return nil
 }

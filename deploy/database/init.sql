@@ -16,7 +16,7 @@ create table rooms (
     name text
 );
 
-create table events (
+create table bookings (
     id uuid primary key,
     start_date timestamp not null,
     end_date timestamp not null,
@@ -37,10 +37,10 @@ create table events (
             on update cascade
 );
 
-create index ix_uuid ON events using btree (id);
-create index ix_start ON events using brin (start_date);
+create index ix_uuid ON bookings using btree (id);
+create index ix_start ON bookings using brin (start_date);
 
-create index ix_end ON events using brin (end_date);
+create index ix_end ON bookings using brin (end_date);
 
-create index ix_suite ON events using btree (suite_id);
-create index ix_owner ON events using btree (user_id);
+create index ix_suite ON bookings using btree (suite_id);
+create index ix_owner ON bookings using btree (user_id);

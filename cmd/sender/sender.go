@@ -1,8 +1,8 @@
 package main
 
 import (
+	"booking-schedule/internal/pkg/sender"
 	"context"
-	"event-schedule/internal/pkg/sender"
 	"flag"
 	"log"
 	"time"

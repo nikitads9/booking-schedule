@@ -1,8 +1,8 @@
 package user
 
 import (
+	"booking-schedule/internal/app/model"
 	"context"
-	"event-schedule/internal/app/model"
 )
 
 func (s *Service) GetUser(ctx context.Context, userID int64) (*model.User, error) {

@@ -1,7 +1,7 @@
 package table
 
 const (
-	EventTable       = `events`
+	BookingTable     = `bookings`
 	UserTable        = `users`
 	SuiteTable       = `rooms`
 	ID               = `id`

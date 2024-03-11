@@ -1,9 +1,9 @@
 package user
 
 import (
+	"booking-schedule/internal/app/model"
+	"booking-schedule/internal/app/service/user/security"
 	"context"
-	"event-schedule/internal/app/model"
-	"event-schedule/internal/app/service/user/security"
 	"log/slog"
 
 	"github.com/go-chi/chi/middleware"

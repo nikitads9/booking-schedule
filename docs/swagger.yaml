@@ -1,6 +1,6 @@
-basePath: /events
+basePath: /bookings
 definitions:
-  AddEventRequest:
+  AddBookingRequest:
     properties:
       endDate:
         description: Дата и время окончания бронировании
@@ -23,23 +23,18 @@ definitions:
     - startDate
     - suiteID
     type: object
-  AddEventResponse:
+  AddBookingResponse:
     properties:
-      eventID:
+      bookingID:
         example: 550e8400-e29b-41d4-a716-446655440000
         format: uuid
         type: string
       response:
         $ref: '#/definitions/Response'
     type: object
-  DeleteEventResponse:
+  BookingInfo:
     properties:
-      response:
-        $ref: '#/definitions/Response'
-    type: object
-  EventInfo:
-    properties:
-      EventID:
+      BookingID:
         description: Уникальный идентификатор бронирования
         example: 550e8400-e29b-41d4-a716-446655440000
         format: uuid
@@ -73,18 +68,23 @@ definitions:
         example: 1
         type: integer
     type: object
-  GetEventResponse:
+  DeleteBookingResponse:
     properties:
-      event:
-        $ref: '#/definitions/EventInfo'
       response:
         $ref: '#/definitions/Response'
     type: object
-  GetEventsResponse:
+  GetBookingResponse:
     properties:
-      events:
+      booking:
+        $ref: '#/definitions/BookingInfo'
+      response:
+        $ref: '#/definitions/Response'
+    type: object
+  GetBookingsResponse:
+    properties:
+      bookings:
         items:
-          $ref: '#/definitions/EventInfo'
+          $ref: '#/definitions/BookingInfo'
         type: array
       response:
         $ref: '#/definitions/Response'
@@ -153,11 +153,11 @@ definitions:
         example: 1
         type: integer
     type: object
-  UpdateEventRequest:
+  UpdateBookingRequest:
     properties:
       endDate:
         description: Дата и время окончания бронирования
-        example: "2024-03-29T17:43:00-03:00"
+        example: "2024-03-29T17:43:00Z"
         type: string
       notifyAt:
         description: Интервал времени для уведомления о бронировании
@@ -165,7 +165,7 @@ definitions:
         type: string
       startDate:
         description: Дата и время начала бронировании
-        example: "2024-03-28T17:43:00-03:00"
+        example: "2024-03-28T17:43:00Z"
         type: string
       suiteID:
         description: Номер апартаментов
@@ -177,7 +177,7 @@ definitions:
     - startDate
     - suiteID
     type: object
-  UpdateEventResponse:
+  UpdateBookingResponse:
     properties:
       response:
         $ref: '#/definitions/Response'
@@ -216,19 +216,19 @@ info:
     name: GNU 3.0
     url: https://www.gnu.org/licenses/gpl-3.0.ru.html
   termsOfService: http://swagger.io/terms/
-  title: event-schedule API
+  title: booking-schedule API
   version: "1.0"
 paths:
-  /{event_id}/delete:
+  /{booking_id}/delete:
     delete:
-      description: Deletes an event with given UUID.
-      operationId: removeByEventID
+      description: Deletes an booking with given UUID.
+      operationId: removeByBookingID
       parameters:
       - default: 550e8400-e29b-41d4-a716-446655440000
-        description: event_id
+        description: booking_id
         format: uuid
         in: path
-        name: event_id
+        name: booking_id
         required: true
         type: string
       produces:
@@ -237,42 +237,42 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DeleteEventResponse'
+            $ref: '#/definitions/DeleteBookingResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/DeleteEventResponse'
+            $ref: '#/definitions/DeleteBookingResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/DeleteEventResponse'
+            $ref: '#/definitions/DeleteBookingResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/DeleteEventResponse'
+            $ref: '#/definitions/DeleteBookingResponse'
         "422":
           description: Unprocessable Entity
           schema:
-            $ref: '#/definitions/DeleteEventResponse'
+            $ref: '#/definitions/DeleteBookingResponse'
         "503":
           description: Service Unavailable
           schema:
-            $ref: '#/definitions/DeleteEventResponse'
+            $ref: '#/definitions/DeleteBookingResponse'
       security:
       - Bearer: []
-      summary: Deletes an event
+      summary: Deletes an booking
       tags:
       - bookings
-  /{event_id}/get:
+  /{booking_id}/get:
     get:
-      description: Responds with booking info for booking with given EventID.
-      operationId: getEventbyTag
+      description: Responds with booking info for booking with given BookingID.
+      operationId: getBookingbyTag
       parameters:
       - default: 550e8400-e29b-41d4-a716-446655440000
-        description: event_id
+        description: booking_id
         format: uuid
         in: path
-        name: event_id
+        name: booking_id
         required: true
         type: string
       produces:
@@ -281,88 +281,88 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/GetEventResponse'
+            $ref: '#/definitions/GetBookingResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/GetEventResponse'
+            $ref: '#/definitions/GetBookingResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/GetEventResponse'
+            $ref: '#/definitions/GetBookingResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/GetEventResponse'
+            $ref: '#/definitions/GetBookingResponse'
         "422":
           description: Unprocessable Entity
           schema:
-            $ref: '#/definitions/GetEventResponse'
+            $ref: '#/definitions/GetBookingResponse'
         "503":
           description: Service Unavailable
           schema:
-            $ref: '#/definitions/GetEventResponse'
+            $ref: '#/definitions/GetBookingResponse'
       security:
       - Bearer: []
-      summary: Get event info
+      summary: Get booking info
       tags:
       - bookings
-  /{event_id}/update:
+  /{booking_id}/update:
     patch:
       consumes:
       - application/json
-      description: 'Updates an existing event with given EventID, suiteID, startDate,
+      description: 'Updates an existing booking with given BookingID, suiteID, startDate,
         endDate values (notificationPeriod being optional). Implemented with the use
         of transaction: first room availibility is checked. In case one attempts to
         alter his previous booking (i.e. widen or tighten its'' limits) the booking
         is updated.  If it overlaps with smb else''s booking or with clients'' another
         booking the request is considered unsuccessful. startDate parameter  is to
         be before endDate and both should not be expired.'
-      operationId: modifyEventByJSON
+      operationId: modifyBookingByJSON
       parameters:
       - default: 550e8400-e29b-41d4-a716-446655440000
-        description: event_id
+        description: booking_id
         format: uuid
         in: path
-        name: event_id
+        name: booking_id
         required: true
         type: string
-      - description: UpdateEventRequest
+      - description: UpdateBookingRequest
         in: body
-        name: event
+        name: booking
         required: true
         schema:
-          $ref: '#/definitions/UpdateEventRequest'
+          $ref: '#/definitions/UpdateBookingRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/UpdateEventResponse'
+            $ref: '#/definitions/UpdateBookingResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/UpdateEventResponse'
+            $ref: '#/definitions/UpdateBookingResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/UpdateEventResponse'
+            $ref: '#/definitions/UpdateBookingResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/UpdateEventResponse'
+            $ref: '#/definitions/UpdateBookingResponse'
         "422":
           description: Unprocessable Entity
           schema:
-            $ref: '#/definitions/UpdateEventResponse'
+            $ref: '#/definitions/UpdateBookingResponse'
         "503":
           description: Service Unavailable
           schema:
-            $ref: '#/definitions/UpdateEventResponse'
+            $ref: '#/definitions/UpdateBookingResponse'
       security:
       - Bearer: []
-      summary: Updates event info
+      summary: Updates booking info
       tags:
       - bookings
   /{suite_id}/get-vacant-dates:
@@ -414,61 +414,61 @@ paths:
         one''s new booking request intersects with and old one(even if belongs to
         him), the request is considered erratic. startDate is to be before endDate
         and both should not be expired.'
-      operationId: addByEventJSON
+      operationId: addByBookingJSON
       parameters:
-      - description: AddEventRequest
+      - description: AddBookingRequest
         in: body
-        name: event
+        name: booking
         required: true
         schema:
-          $ref: '#/definitions/AddEventRequest'
+          $ref: '#/definitions/AddBookingRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/AddEventResponse'
+            $ref: '#/definitions/AddBookingResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/AddEventResponse'
+            $ref: '#/definitions/AddBookingResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/AddEventResponse'
+            $ref: '#/definitions/AddBookingResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/AddEventResponse'
+            $ref: '#/definitions/AddBookingResponse'
         "422":
           description: Unprocessable Entity
           schema:
-            $ref: '#/definitions/AddEventResponse'
+            $ref: '#/definitions/AddBookingResponse'
         "503":
           description: Service Unavailable
           schema:
-            $ref: '#/definitions/AddEventResponse'
+            $ref: '#/definitions/AddBookingResponse'
       security:
       - Bearer: []
-      summary: Adds event
+      summary: Adds booking
       tags:
       - bookings
-  /get-events:
+  /get-bookings:
     get:
-      description: Responds with series of event info objects within given time period.
-        The query parameters are start date and end date (start is to be before end
-        and both should not be expired).
-      operationId: getMultipleEventsByTag
+      description: Responds with series of booking info objects within given time
+        period. The query parameters are start date and end date (start is to be before
+        end and both should not be expired).
+      operationId: getMultipleBookingsByTag
       parameters:
-      - default: "2024-03-28T17:43:00Z"
+      - default: 2024-03-28T17:43:00
         description: start
         format: time.Time
         in: query
         name: start
         required: true
         type: string
-      - default: "2024-03-29T17:43:00Z"
+      - default: 2024-03-29T17:43:00
         description: end
         format: time.Time
         in: query
@@ -481,30 +481,30 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/GetEventsResponse'
+            $ref: '#/definitions/GetBookingsResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/GetEventsResponse'
+            $ref: '#/definitions/GetBookingsResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/GetEventsResponse'
+            $ref: '#/definitions/GetBookingsResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/GetEventsResponse'
+            $ref: '#/definitions/GetBookingsResponse'
         "422":
           description: Unprocessable Entity
           schema:
-            $ref: '#/definitions/GetEventsResponse'
+            $ref: '#/definitions/GetBookingsResponse'
         "503":
           description: Service Unavailable
           schema:
-            $ref: '#/definitions/GetEventsResponse'
+            $ref: '#/definitions/GetBookingsResponse'
       security:
       - Bearer: []
-      summary: Get several events info
+      summary: Get several bookings info
       tags:
       - bookings
   /get-vacant-rooms:
@@ -514,14 +514,14 @@ paths:
         parameters for given interval.
       operationId: getRoomsByDates
       parameters:
-      - default: "2024-03-28T17:43:00Z"
+      - default: 2024-03-28T17:43:00
         description: start
         format: time.Time
         in: query
         name: start
         required: true
         type: string
-      - default: "2024-03-29T17:43:00Z"
+      - default: 2024-03-29T17:43:00
         description: end
         format: time.Time
         in: query

@@ -12,8 +12,8 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-type Event struct {
-	EventID uuid.UUID
+type Booking struct {
+	BookingID uuid.UUID
 	// Идентификатор пользователя
 	UserID int64
 	// Номер апартаментов
@@ -26,9 +26,9 @@ type Event struct {
 	NotifyAt null.String
 }
 
-type EventInfo struct {
+type BookingInfo struct {
 	// Уникальный идентификатор бронирования
-	ID uuid.UUID `json:"EventID" example:"550e8400-e29b-41d4-a716-446655440000" format:"uuid"`
+	ID uuid.UUID `json:"BookingID" example:"550e8400-e29b-41d4-a716-446655440000" format:"uuid"`
 	// Номер апартаментов
 	SuiteID int64 `json:"suiteID" example:"1"`
 	//Дата и время начала бронировании
@@ -43,9 +43,9 @@ type EventInfo struct {
 	UpdatedAt time.Time `json:"updatedAt,omitempty" example:"2024-03-27T18:43:00Z"`
 	// Идентификатор владельца бронирования
 	UserID int64 `json:"userID,omitempty" example:"1"`
-} //@name EventInfo
+} //@name BookingInfo
 
-type AddEventRequest struct {
+type AddBookingRequest struct {
 	// Номер апаратаментов
 	SuiteID int64 `json:"suiteID" validate:"required" example:"1"`
 	//Дата и время начала бронировании
@@ -54,17 +54,17 @@ type AddEventRequest struct {
 	EndDate time.Time `json:"endDate" validate:"required" example:"2024-03-29T17:43:00Z"`
 	// Интервал времени для предварительного уведомления о бронировании
 	NotifyAt null.String `json:"notifyAt,omitempty" swaggertype:"primitive,string" example:"24h"`
-} //@name AddEventRequest
+} //@name AddBookingRequest
 
-type AddEventResponse struct {
-	Response *Response `json:"response"`
-	EventID  uuid.UUID `json:"eventID" example:"550e8400-e29b-41d4-a716-446655440000" format:"uuid"`
-} //@name AddEventResponse
+type AddBookingResponse struct {
+	Response  *Response `json:"response"`
+	BookingID uuid.UUID `json:"bookingID" example:"550e8400-e29b-41d4-a716-446655440000" format:"uuid"`
+} //@name AddBookingResponse
 
-func AddEventResponseAPI(eventID uuid.UUID) *AddEventResponse {
-	resp := &AddEventResponse{
-		Response: OK(),
-		EventID:  eventID,
+func AddBookingResponseAPI(bookingID uuid.UUID) *AddBookingResponse {
+	resp := &AddBookingResponse{
+		Response:  OK(),
+		BookingID: bookingID,
 	}
 
 	return resp
@@ -82,7 +82,7 @@ func CheckDates(start time.Time, end time.Time) error {
 	return nil
 }
 
-func (arq *AddEventRequest) Bind(req *http.Request) error {
+func (arq *AddBookingRequest) Bind(req *http.Request) error {
 	err := validator.New().Struct(arq)
 	if err != nil {
 		return err
@@ -91,43 +91,43 @@ func (arq *AddEventRequest) Bind(req *http.Request) error {
 	return CheckDates(arq.StartDate, arq.EndDate)
 }
 
-func (ar *AddEventResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (ar *AddBookingResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-type GetEventResponse struct {
-	Response  *Response  `json:"response"`
-	EventInfo *EventInfo `json:"event"`
-} //@name GetEventResponse
+type GetBookingResponse struct {
+	Response    *Response    `json:"response"`
+	BookingInfo *BookingInfo `json:"booking"`
+} //@name GetBookingResponse
 
-func GetEventResponseAPI(event *EventInfo) *GetEventResponse {
-	resp := &GetEventResponse{
-		Response:  OK(),
-		EventInfo: event,
+func GetBookingResponseAPI(booking *BookingInfo) *GetBookingResponse {
+	resp := &GetBookingResponse{
+		Response:    OK(),
+		BookingInfo: booking,
 	}
 
 	return resp
 }
 
-func (ge *GetEventResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (ge *GetBookingResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-type GetEventsResponse struct {
-	Response   *Response    `json:"response"`
-	EventsInfo []*EventInfo `json:"events"`
-} //@name GetEventsResponse
+type GetBookingsResponse struct {
+	Response     *Response      `json:"response"`
+	BookingsInfo []*BookingInfo `json:"bookings"`
+} //@name GetBookingsResponse
 
-func GetEventsResponseAPI(events []*EventInfo) *GetEventsResponse {
-	resp := &GetEventsResponse{
-		Response:   OK(),
-		EventsInfo: events,
+func GetBookingsResponseAPI(bookings []*BookingInfo) *GetBookingsResponse {
+	resp := &GetBookingsResponse{
+		Response:     OK(),
+		BookingsInfo: bookings,
 	}
 
 	return resp
 }
 
-func (ges *GetEventsResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (ges *GetBookingsResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
@@ -179,18 +179,18 @@ func (gr *GetVacantRoomsResponse) Render(w http.ResponseWriter, r *http.Request)
 	return nil
 }
 
-type UpdateEventRequest struct {
+type UpdateBookingRequest struct {
 	// Номер апартаментов
 	SuiteID int64 `json:"suiteID" validate:"required" format:"int64" example:"1"`
 	// Дата и время начала бронировании
-	StartDate time.Time `json:"startDate" validate:"required" example:"2024-03-28T17:43:00-03:00"`
+	StartDate time.Time `json:"startDate" validate:"required" example:"2024-03-28T17:43:00Z"`
 	// Дата и время окончания бронирования
-	EndDate time.Time `json:"endDate" validate:"required" example:"2024-03-29T17:43:00-03:00"`
+	EndDate time.Time `json:"endDate" validate:"required" example:"2024-03-29T17:43:00Z"`
 	// Интервал времени для уведомления о бронировании
 	NotifyAt null.String `json:"notifyAt,omitempty" swaggertype:"primitive,string" example:"24h"`
-} //@name UpdateEventRequest
+} //@name UpdateBookingRequest
 
-func (urq *UpdateEventRequest) Bind(r *http.Request) error {
+func (urq *UpdateBookingRequest) Bind(r *http.Request) error {
 	err := validator.New().Struct(urq)
 	if err != nil {
 		return err
@@ -199,31 +199,31 @@ func (urq *UpdateEventRequest) Bind(r *http.Request) error {
 	return CheckDates(urq.StartDate, urq.EndDate)
 }
 
-type UpdateEventResponse struct {
+type UpdateBookingResponse struct {
 	Response *Response `json:"response"`
-} //@name UpdateEventResponse
+} //@name UpdateBookingResponse
 
-func (ur *UpdateEventResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (ur *UpdateBookingResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func UpdateEventResponseAPI() *UpdateEventResponse {
-	return &UpdateEventResponse{
+func UpdateBookingResponseAPI() *UpdateBookingResponse {
+	return &UpdateBookingResponse{
 		Response: OK(),
 	}
 }
 
-type DeleteEventResponse struct {
+type DeleteBookingResponse struct {
 	Response *Response `json:"response"`
-} //@name DeleteEventResponse
+} //@name DeleteBookingResponse
 
-func DeleteEventResponseAPI() *DeleteEventResponse {
-	return &DeleteEventResponse{
+func DeleteBookingResponseAPI() *DeleteBookingResponse {
+	return &DeleteBookingResponse{
 		Response: OK(),
 	}
 }
 
-func (dr *DeleteEventResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (dr *DeleteBookingResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 

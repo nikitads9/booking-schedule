@@ -1,9 +1,9 @@
 package sender
 
 import (
+	"booking-schedule/internal/app/model"
 	"context"
 	"encoding/json"
-	"event-schedule/internal/app/model"
 	"fmt"
 	"log/slog"
 	"os"
@@ -31,7 +31,7 @@ func (s *Service) Run(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case msg := <-msgChan:
-			s.receiveEvents(msg)
+			s.receiveBookings(msg)
 
 			if err != nil {
 				log.Error("could not receive messages: ", err)
@@ -43,8 +43,8 @@ func (s *Service) Run(ctx context.Context) {
 
 }
 
-func (s *Service) receiveEvents(msg amqp.Delivery) error {
-	const op = "sender.service.receiveEvents"
+func (s *Service) receiveBookings(msg amqp.Delivery) error {
+	const op = "sender.service.receiveBookings"
 
 	log := s.log.With(
 		slog.String("op", op),
@@ -52,15 +52,15 @@ func (s *Service) receiveEvents(msg amqp.Delivery) error {
 
 	log.Info(fmt.Sprintf("Received a message: %s", msg.Body))
 
-	var events []*model.EventInfo
-	err := json.Unmarshal(msg.Body, &events)
+	var bookings []*model.BookingInfo
+	err := json.Unmarshal(msg.Body, &bookings)
 	if err != nil {
 		return err
 	}
 
-	for _, event := range events {
+	for _, booking := range bookings {
 		log.Info(fmt.Sprintf(
-			"Event:  %d \n "+
+			"Booking:  %d \n "+
 				"SuiteID: %d \n "+
 				"StartDate: %v \n "+
 				"EndDate: :%v \n "+
@@ -68,14 +68,14 @@ func (s *Service) receiveEvents(msg amqp.Delivery) error {
 				"OwnerID: %d \n "+
 				"CreatedAt: %v \n "+
 				"UpdatedAt: %v \n\n ",
-			event.ID,
-			event.SuiteID,
-			event.StartDate,
-			event.EndDate,
-			event.NotifyAt,
-			event.UserID,
-			event.CreatedAt,
-			event.UpdatedAt,
+			booking.ID,
+			booking.SuiteID,
+			booking.StartDate,
+			booking.EndDate,
+			booking.NotifyAt,
+			booking.UserID,
+			booking.CreatedAt,
+			booking.UpdatedAt,
 		))
 	}
 

@@ -1,11 +1,11 @@
 package handlers
 
 import (
+	"booking-schedule/internal/app/api"
+	"booking-schedule/internal/app/convert"
+	"booking-schedule/internal/logger/sl"
+	"booking-schedule/internal/middleware/auth"
 	"errors"
-	"event-schedule/internal/app/api"
-	"event-schedule/internal/app/convert"
-	"event-schedule/internal/logger/sl"
-	"event-schedule/internal/middleware/auth"
 	"log/slog"
 	"net/http"
 
@@ -16,29 +16,29 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-// UpdateEvent godoc
+// UpdateBooking godoc
 //
-//	@Summary		Updates event info
-//	@Description	Updates an existing event with given EventID, suiteID, startDate, endDate values (notificationPeriod being optional). Implemented with the use of transaction: first room availibility is checked. In case one attempts to alter his previous booking (i.e. widen or tighten its' limits) the booking is updated.  If it overlaps with smb else's booking or with clients' another booking the request is considered unsuccessful. startDate parameter  is to be before endDate and both should not be expired.
-//	@ID				modifyEventByJSON
+//	@Summary		Updates booking info
+//	@Description	Updates an existing booking with given BookingID, suiteID, startDate, endDate values (notificationPeriod being optional). Implemented with the use of transaction: first room availibility is checked. In case one attempts to alter his previous booking (i.e. widen or tighten its' limits) the booking is updated.  If it overlaps with smb else's booking or with clients' another booking the request is considered unsuccessful. startDate parameter  is to be before endDate and both should not be expired.
+//	@ID				modifyBookingByJSON
 //	@Tags			bookings
 //	@Accept			json
 //	@Produce		json
 //
-//	@Param			event_id path	string	true	"event_id"	Format(uuid) default(550e8400-e29b-41d4-a716-446655440000)
-//	@Param          event body		api.UpdateEventRequest	true	"UpdateEventRequest"
-//	@Success		200	{object}	api.UpdateEventResponse
-//	@Failure		400	{object}	api.UpdateEventResponse
-//	@Failure		401	{object}	api.UpdateEventResponse
-//	@Failure		404	{object}	api.UpdateEventResponse
-//	@Failure		422	{object}	api.UpdateEventResponse
-//	@Failure		503	{object}	api.UpdateEventResponse
-//	@Router			/{event_id}/update [patch]
+//	@Param			booking_id path	string	true	"booking_id"	Format(uuid) default(550e8400-e29b-41d4-a716-446655440000)
+//	@Param          booking body		api.UpdateBookingRequest	true	"UpdateBookingRequest"
+//	@Success		200	{object}	api.UpdateBookingResponse
+//	@Failure		400	{object}	api.UpdateBookingResponse
+//	@Failure		401	{object}	api.UpdateBookingResponse
+//	@Failure		404	{object}	api.UpdateBookingResponse
+//	@Failure		422	{object}	api.UpdateBookingResponse
+//	@Failure		503	{object}	api.UpdateBookingResponse
+//	@Router			/{booking_id}/update [patch]
 //
 // @Security Bearer
-func (i *Implementation) UpdateEvent(logger *slog.Logger) http.HandlerFunc {
+func (i *Implementation) UpdateBooking(logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "events.api.handlers.UpdateEvent"
+		const op = "bookings.api.handlers.UpdateBooking"
 
 		ctx := r.Context()
 
@@ -47,7 +47,7 @@ func (i *Implementation) UpdateEvent(logger *slog.Logger) http.HandlerFunc {
 			slog.String("request_id", middleware.GetReqID(ctx)),
 		)
 
-		req := &api.UpdateEventRequest{}
+		req := &api.UpdateBookingRequest{}
 		err := render.Bind(r, req)
 		if err != nil {
 			if errors.As(err, api.ValidateErr) {
@@ -70,29 +70,29 @@ func (i *Implementation) UpdateEvent(logger *slog.Logger) http.HandlerFunc {
 			return
 		}
 
-		eventID := chi.URLParam(r, "event_id")
-		if eventID == "" {
-			log.Error("invalid request", sl.Err(api.ErrNoEventID))
-			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoEventID))
+		bookingID := chi.URLParam(r, "booking_id")
+		if bookingID == "" {
+			log.Error("invalid request", sl.Err(api.ErrNoBookingID))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoBookingID))
 
 			return
 		}
 
-		eventUUID, err := uuid.FromString(eventID)
+		bookingUUID, err := uuid.FromString(bookingID)
 		if err != nil {
 			log.Error("invalid request", sl.Err(err))
 			render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
 		}
 
-		if eventUUID == uuid.Nil {
-			log.Error("invalid request", sl.Err(api.ErrNoEventID))
-			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoEventID))
+		if bookingUUID == uuid.Nil {
+			log.Error("invalid request", sl.Err(api.ErrNoBookingID))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoBookingID))
 			return
 		}
 
 		//TODO: getters
-		mod, err := convert.ToEventInfo(&api.Event{
-			EventID:   eventUUID,
+		mod, err := convert.ToBookingInfo(&api.Booking{
+			BookingID: bookingUUID,
 			UserID:    id,
 			SuiteID:   req.SuiteID,
 			StartDate: req.StartDate,
@@ -104,15 +104,15 @@ func (i *Implementation) UpdateEvent(logger *slog.Logger) http.HandlerFunc {
 			render.Render(w, r, api.ErrInvalidRequest(err))
 		}
 
-		err = i.Booking.UpdateEvent(ctx, mod)
+		err = i.Booking.UpdateBooking(ctx, mod)
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
 			render.Render(w, r, api.ErrInternalError(err))
 			return
 		}
 
-		log.Info("event updated", slog.Any("id:", mod.ID))
+		log.Info("booking updated", slog.Any("id:", mod.ID))
 
-		render.Render(w, r, api.UpdateEventResponseAPI())
+		render.Render(w, r, api.UpdateBookingResponseAPI())
 	}
 }

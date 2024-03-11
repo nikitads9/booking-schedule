@@ -12,7 +12,7 @@ import (
 
 type Scheduler struct {
 	CheckPeriodSec int64 `yaml:"check_period_sec"`
-	EventTTL       int64 `yaml:"event_ttl_days"`
+	BookingTTL     int64 `yaml:"booking_ttl_days"`
 }
 
 type RabbitProducer struct {

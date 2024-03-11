@@ -1,10 +1,10 @@
 package handlers
 
 import (
+	"booking-schedule/internal/app/api"
+	"booking-schedule/internal/app/service/user"
+	"booking-schedule/internal/logger/sl"
 	"errors"
-	"event-schedule/internal/app/api"
-	"event-schedule/internal/app/service/user"
-	"event-schedule/internal/logger/sl"
 	"log/slog"
 	"net/http"
 
@@ -28,7 +28,7 @@ import (
 // @Security 		BasicAuth
 func (i *Implementation) SignIn(logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "events.api.auth.SignIn"
+		const op = "bookings.api.auth.SignIn"
 
 		ctx := r.Context()
 		log := logger.With(

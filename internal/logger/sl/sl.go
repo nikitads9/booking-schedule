@@ -3,7 +3,7 @@ package sl
 import (
 	"log/slog"
 
-	_ "event-schedule/internal/logger/handlers/slogdiscard"
+	_ "booking-schedule/internal/logger/handlers/slogdiscard"
 )
 
 func Err(err error) slog.Attr {

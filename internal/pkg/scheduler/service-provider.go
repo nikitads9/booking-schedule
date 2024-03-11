@@ -1,12 +1,12 @@
 package scheduler
 
 import (
+	bookingRepository "booking-schedule/internal/app/repository/booking"
+	schedulerService "booking-schedule/internal/app/service/scheduler"
+	"booking-schedule/internal/config"
+	"booking-schedule/internal/pkg/db"
+	"booking-schedule/internal/pkg/rabbit"
 	"context"
-	eventRepository "event-schedule/internal/app/repository/event"
-	schedulerService "event-schedule/internal/app/service/scheduler"
-	"event-schedule/internal/config"
-	"event-schedule/internal/pkg/db"
-	"event-schedule/internal/pkg/rabbit"
 	"log"
 	"log/slog"
 	"os"
@@ -24,10 +24,10 @@ type serviceProvider struct {
 	configPath string
 	config     *config.SchedulerConfig
 
-	log              *slog.Logger
-	rabbitProducer   rabbit.Producer
-	eventRepository  eventRepository.Repository
-	schedulerService *schedulerService.Service
+	log               *slog.Logger
+	rabbitProducer    rabbit.Producer
+	bookingRepository bookingRepository.Repository
+	schedulerService  *schedulerService.Service
 }
 
 func newServiceProvider(configPath string) *serviceProvider {
@@ -67,23 +67,23 @@ func (s *serviceProvider) GetConfig() *config.SchedulerConfig {
 	return s.config
 }
 
-func (s *serviceProvider) GetEventRepository(ctx context.Context) eventRepository.Repository {
-	if s.eventRepository == nil {
-		s.eventRepository = eventRepository.NewEventRepository(s.GetDB(ctx), s.GetLogger())
-		return s.eventRepository
+func (s *serviceProvider) GetBookingRepository(ctx context.Context) bookingRepository.Repository {
+	if s.bookingRepository == nil {
+		s.bookingRepository = bookingRepository.NewBookingRepository(s.GetDB(ctx), s.GetLogger())
+		return s.bookingRepository
 	}
 
-	return s.eventRepository
+	return s.bookingRepository
 }
 
 func (s *serviceProvider) GetSchedulerService(ctx context.Context) *schedulerService.Service {
 	if s.schedulerService == nil {
 		s.schedulerService = schedulerService.NewSchedulerService(
-			s.GetEventRepository(ctx),
+			s.GetBookingRepository(ctx),
 			s.GetLogger(),
 			s.GetRabbitProducer(),
 			time.Duration(s.GetConfig().GetSchedulerConfig().CheckPeriodSec)*time.Second,
-			time.Duration(s.GetConfig().GetSchedulerConfig().EventTTL)*time.Hour*24)
+			time.Duration(s.GetConfig().GetSchedulerConfig().BookingTTL)*time.Hour*24)
 	}
 
 	return s.schedulerService
@@ -101,7 +101,7 @@ func (s *serviceProvider) GetLogger() *slog.Logger {
 			s.log = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 		}
 
-		s.log.With(slog.String("env", env)) // к каждому сообщению будет добавляться поле с информацией о текущем окружении
+		s.log.With(slog.String("env", env))
 	}
 
 	return s.log

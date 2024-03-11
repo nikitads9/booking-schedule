@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"event-schedule/internal/app/api"
-	"event-schedule/internal/logger/sl"
-	"event-schedule/internal/middleware/auth"
+	"booking-schedule/internal/app/api"
+	"booking-schedule/internal/logger/sl"
+	"booking-schedule/internal/middleware/auth"
 	"log/slog"
 	"net/http"
 
@@ -13,27 +13,27 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-// DeleteEvent godoc
+// DeleteBooking godoc
 //
-//	@Summary		Deletes an event
-//	@Description	Deletes an event with given UUID.
-//	@ID				removeByEventID
+//	@Summary		Deletes an booking
+//	@Description	Deletes an booking with given UUID.
+//	@ID				removeByBookingID
 //	@Tags			bookings
 //	@Produce		json
 //
-//	@Param			event_id path	string	true	"event_id"	Format(uuid) default(550e8400-e29b-41d4-a716-446655440000)
-//	@Success		200	{object}	api.DeleteEventResponse
-//	@Failure		400	{object}	api.DeleteEventResponse
-//	@Failure		401	{object}	api.DeleteEventResponse
-//	@Failure		404	{object}	api.DeleteEventResponse
-//	@Failure		422	{object}	api.DeleteEventResponse
-//	@Failure		503	{object}	api.DeleteEventResponse
-//	@Router			/{event_id}/delete [delete]
+//	@Param			booking_id path	string	true	"booking_id"	Format(uuid) default(550e8400-e29b-41d4-a716-446655440000)
+//	@Success		200	{object}	api.DeleteBookingResponse
+//	@Failure		400	{object}	api.DeleteBookingResponse
+//	@Failure		401	{object}	api.DeleteBookingResponse
+//	@Failure		404	{object}	api.DeleteBookingResponse
+//	@Failure		422	{object}	api.DeleteBookingResponse
+//	@Failure		503	{object}	api.DeleteBookingResponse
+//	@Router			/{booking_id}/delete [delete]
 //
 // @Security Bearer
-func (i *Implementation) DeleteEvent(logger *slog.Logger) http.HandlerFunc {
+func (i *Implementation) DeleteBooking(logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "events.api.handlers.DeleteEvent"
+		const op = "bookings.api.handlers.DeleteBooking"
 
 		ctx := r.Context()
 
@@ -51,36 +51,36 @@ func (i *Implementation) DeleteEvent(logger *slog.Logger) http.HandlerFunc {
 			return
 		}
 
-		eventID := chi.URLParam(r, "event_id")
-		if eventID == "" {
-			log.Error("invalid request", sl.Err(api.ErrNoEventID))
-			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoEventID))
+		bookingID := chi.URLParam(r, "booking_id")
+		if bookingID == "" {
+			log.Error("invalid request", sl.Err(api.ErrNoBookingID))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoBookingID))
 			return
 		}
 
-		eventUUID, err := uuid.FromString(eventID)
+		bookingUUID, err := uuid.FromString(bookingID)
 		if err != nil {
 			log.Error("invalid request", sl.Err(err))
 			render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
 			return
 		}
 
-		if eventUUID == uuid.Nil {
-			log.Error("invalid request", sl.Err(api.ErrNoEventID))
-			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoEventID))
+		if bookingUUID == uuid.Nil {
+			log.Error("invalid request", sl.Err(api.ErrNoBookingID))
+			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoBookingID))
 			return
 		}
 
-		log.Info("decoded URL param", slog.Any("eventID:", eventUUID))
+		log.Info("decoded URL param", slog.Any("bookingID:", bookingUUID))
 
-		err = i.Booking.DeleteEvent(ctx, eventUUID, userID)
+		err = i.Booking.DeleteBooking(ctx, bookingUUID, userID)
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
 			render.Render(w, r, api.ErrInternalError(err))
 			return
 		}
 
-		log.Info("deleted event", slog.Any("id:", eventUUID))
-		render.Render(w, r, api.DeleteEventResponseAPI())
+		log.Info("deleted booking", slog.Any("id:", bookingUUID))
+		render.Render(w, r, api.DeleteBookingResponseAPI())
 	}
 }

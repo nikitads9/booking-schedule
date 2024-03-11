@@ -1,8 +1,8 @@
 package transaction
 
 import (
+	"booking-schedule/internal/pkg/db"
 	"context"
-	"event-schedule/internal/pkg/db"
 
 	pgx "github.com/jackc/pgx/v5"
 	"github.com/pkg/errors"

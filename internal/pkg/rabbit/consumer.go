@@ -1,7 +1,7 @@
 package rabbit
 
 import (
-	"event-schedule/internal/config"
+	"booking-schedule/internal/config"
 	"io"
 
 	"github.com/streadway/amqp"

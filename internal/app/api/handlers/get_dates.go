@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"event-schedule/internal/app/api"
-	"event-schedule/internal/app/convert"
-	"event-schedule/internal/logger/sl"
+	"booking-schedule/internal/app/api"
+	"booking-schedule/internal/app/convert"
+	"booking-schedule/internal/logger/sl"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -29,7 +29,7 @@ import (
 //	@Router			/{suite_id}/get-vacant-dates [get]
 func (i *Implementation) GetVacantDates(logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "events.api.handlers.GetVacantDates"
+		const op = "bookings.api.handlers.GetVacantDates"
 
 		ctx := r.Context()
 

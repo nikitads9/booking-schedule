@@ -1,26 +1,26 @@
 package scheduler
 
 import (
-	"event-schedule/internal/app/repository/event"
-	"event-schedule/internal/pkg/rabbit"
+	"booking-schedule/internal/app/repository/booking"
+	"booking-schedule/internal/pkg/rabbit"
 	"log/slog"
 	"time"
 )
 
 type Service struct {
-	eventRepository event.Repository
-	log             *slog.Logger
-	rabbitProducer  rabbit.Producer
-	checkPeriod     time.Duration
-	eventTTL        time.Duration
+	bookingRepository booking.Repository
+	log               *slog.Logger
+	rabbitProducer    rabbit.Producer
+	checkPeriod       time.Duration
+	bookingTTL        time.Duration
 }
 
-func NewSchedulerService(eventRepository event.Repository, log *slog.Logger, rabbitProducer rabbit.Producer, checkPeriod time.Duration, eventTTL time.Duration) *Service {
+func NewSchedulerService(bookingRepository booking.Repository, log *slog.Logger, rabbitProducer rabbit.Producer, checkPeriod time.Duration, bookingTTL time.Duration) *Service {
 	return &Service{
-		eventRepository: eventRepository,
-		log:             log,
-		rabbitProducer:  rabbitProducer,
-		checkPeriod:     checkPeriod,
-		eventTTL:        eventTTL,
+		bookingRepository: bookingRepository,
+		log:               log,
+		rabbitProducer:    rabbitProducer,
+		checkPeriod:       checkPeriod,
+		bookingTTL:        bookingTTL,
 	}
 }

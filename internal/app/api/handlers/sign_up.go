@@ -1,10 +1,10 @@
 package handlers
 
 import (
+	"booking-schedule/internal/app/api"
+	"booking-schedule/internal/app/convert"
+	"booking-schedule/internal/logger/sl"
 	"errors"
-	"event-schedule/internal/app/api"
-	"event-schedule/internal/app/convert"
-	"event-schedule/internal/logger/sl"
 	"log/slog"
 
 	"net/http"

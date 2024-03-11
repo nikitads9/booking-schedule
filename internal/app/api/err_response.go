@@ -28,11 +28,11 @@ type Response struct {
 
 var (
 	ErrNoUserID           = errors.New(" received no user id")
-	ErrNoEventID          = errors.New("received no event id")
+	ErrNoBookingID        = errors.New("received no booking id")
 	ErrNoInterval         = errors.New(" received no time period")
 	ErrNoSuiteID          = errors.New(" received no suite id")
 	ErrUserNotFound       = errors.New("no user with this id")
-	ErrEventNotFound      = errors.New("no event with this id")
+	ErrBookingNotFound    = errors.New("no booking with this id")
 	ErrInvalidDateFormat  = errors.New("received invalid date")
 	ErrInvalidInterval    = errors.New("end date is beforehand the start date or matches it")
 	ErrExpiredDate        = errors.New("date is expired")
