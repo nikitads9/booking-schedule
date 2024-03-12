@@ -125,6 +125,8 @@ func (a *App) startServer() error {
 
 	done := make(chan os.Signal, 1)
 	errChan := make(chan error)
+	defer close(errChan)
+
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {

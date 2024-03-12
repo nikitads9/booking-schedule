@@ -50,7 +50,7 @@ func init() {
 // @tag.name bookings
 // @tag.description operations with bookings, suites and intervals
 // @tag.name users
-// @tag.description operations with user profile such as sign in, sign up, getting profile editing it and deleting
+// @tag.description operations with user profile such as sign in, sign up, getting profile editing or deleting it
 func main() {
 	flag.Parse()
 

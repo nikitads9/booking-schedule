@@ -25,7 +25,7 @@ AND NOT (
 )
 ORDER BY start_date;
 */
-func (r *repository) GetVacantDates(ctx context.Context, suiteID int64) ([]*model.Interval, error) {
+func (r *repository) GetBusyDates(ctx context.Context, suiteID int64) ([]*model.Interval, error) {
 	const op = "bookings.repository.GetVacantDates"
 
 	log := r.log.With(

@@ -83,7 +83,7 @@ func ToApiSuites(mod []*model.Suite) []*api.Suite {
 }
 
 // Эта функция преобразует массив занятых интервалов к виду свободных
-func ToFreeIntervals(mod []*model.Interval) []*api.Interval {
+func ToVacantIntervals(mod []*model.Interval) []*api.Interval {
 	now := time.Now()
 	month := now.Add(720 * time.Hour)
 	var res []*api.Interval

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
+	"sync"
 	"time"
 )
 
@@ -23,17 +24,14 @@ func (s *Service) Run(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			err := s.handleBookings(ctx)
-			if err != nil {
-				log.Error("failed to handle bookings:", err)
-			}
+			s.handleBookings(ctx)
 		}
 	}
-
 }
 
-func (s *Service) handleBookings(ctx context.Context) error {
+func (s *Service) handleBookings(ctx context.Context) {
 	const op = "scheduler.service.handleBookings"
+	wg := &sync.WaitGroup{}
 
 	log := s.log.With(
 		slog.String("op", op),
@@ -41,30 +39,40 @@ func (s *Service) handleBookings(ctx context.Context) error {
 
 	log.Debug("started handling")
 
-	bookings, err := s.getBookings(ctx)
-	if err != nil {
-		return err
-	}
-	if len(bookings) == 0 {
-		log.Debug("No bookings.")
-		return nil
-	}
+	wg.Add(2)
 
-	for _, val := range bookings {
-		err = s.sendBooking(val)
+	go func(*sync.WaitGroup) {
+		defer wg.Done()
+		bookings, err := s.getBookings(ctx)
 		if err != nil {
-			log.Error("failed to send booking:", err)
+			log.Error("failed to get bookings")
+			return
 		}
-	}
+		if len(bookings) == 0 {
+			log.Debug("no bookings to send")
+			return
+		}
 
-	err = s.cleanUpOldBookings(ctx)
-	if err != nil {
-		return err
-	}
+		for _, val := range bookings {
+			err = s.sendBooking(val)
+			if err != nil {
+				log.Error("failed to send booking:", err)
+			}
+		}
+	}(wg)
 
-	log.Debug("successfully handled bookings")
+	go func(*sync.WaitGroup) {
+		defer wg.Done()
+		err := s.cleanUpOldBookings(ctx)
+		if err != nil {
+			log.Error("failed to clean up old bookings", err)
+			return
+		}
+		log.Debug("old bookings handled")
+	}(wg)
 
-	return nil
+	wg.Wait()
+	log.Debug("fimished handling bookings")
 }
 
 func (s *Service) getBookings(ctx context.Context) ([]*model.BookingInfo, error) {

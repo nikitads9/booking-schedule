@@ -70,7 +70,7 @@ func (i *Implementation) GetVacantDates(logger *slog.Logger) http.HandlerFunc {
 			return
 		}
 
-		intervals, err := i.Booking.GetVacantDates(ctx, id)
+		dates, err := i.Booking.GetBusyDates(ctx, id)
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
 			err = render.Render(w, r, api.ErrInternalError(err))
@@ -81,10 +81,10 @@ func (i *Implementation) GetVacantDates(logger *slog.Logger) http.HandlerFunc {
 			return
 		}
 
-		log.Info("vacant dates acquired", slog.Int("quantity: ", len(intervals)))
+		log.Info("vacant dates acquired", slog.Int("quantity: ", len(dates)))
 
 		render.Status(r, http.StatusCreated)
-		err = render.Render(w, r, api.GetVacantDatesAPI(convert.ToFreeIntervals(intervals)))
+		err = render.Render(w, r, api.GetVacantDatesAPI(convert.ToVacantIntervals(dates)))
 		if err != nil {
 			log.Error("failed to render response", sl.Err(err))
 			return
