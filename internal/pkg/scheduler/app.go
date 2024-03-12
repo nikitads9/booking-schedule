@@ -43,6 +43,7 @@ func (a *App) initServiceProvider(_ context.Context) error {
 }
 
 // Run ...
+// nolint
 func (a *App) Run(ctx context.Context) error {
 	defer func() {
 		a.serviceProvider.db.Close()

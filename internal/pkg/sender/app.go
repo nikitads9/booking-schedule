@@ -45,6 +45,7 @@ func (a *App) initServiceProvider(_ context.Context) error {
 // Run ...
 func (a *App) Run(ctx context.Context) error {
 	defer func() {
+		// nolint
 		a.serviceProvider.rabbitConsumer.Close()
 	}()
 

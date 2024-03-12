@@ -89,6 +89,7 @@ func (p *producer) Publish(msg []byte) error {
 // Close ...
 func (p *producer) Close() error {
 	for _, closeFunc := range p.closeFuncs {
+		// nolint
 		closeFunc.Close()
 	}
 

@@ -62,6 +62,7 @@ func (a *App) initServiceProvider(_ context.Context) error {
 // Run ...
 func (a *App) Run() error {
 	defer func() {
+		//nolint
 		a.serviceProvider.db.Close()
 	}()
 
@@ -118,53 +119,54 @@ func (a *App) initServer(ctx context.Context) error {
 func (a *App) startServer() error {
 	srv := a.serviceProvider.getServer(a.router)
 	if srv == nil {
-		a.serviceProvider.log.Error("server was not initialized")
+		a.serviceProvider.GetLogger().Error("server was not initialized")
 		return errors.New("server was not initialized")
 	}
-	a.serviceProvider.log.Info("starting server", slog.String("address", srv.Addr))
+	a.serviceProvider.GetLogger().Info("starting server", slog.String("address", srv.Addr))
 
 	done := make(chan os.Signal, 1)
+	errChan := make(chan error)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
-	go func() error {
+	go func() {
 		switch a.serviceProvider.GetConfig().GetEnv() {
 		case envProd:
 			err := a.initCertificates()
 			if err != nil {
-				a.serviceProvider.log.Error("failed to initialize certificates", sl.Err(err))
-				return err
+				a.serviceProvider.GetLogger().Error("failed to initialize certificates", sl.Err(err))
+				errChan <- err
 			}
 
 			if err = srv.ListenAndServeTLS(a.pathCert, a.pathKey); err != nil {
-				a.serviceProvider.log.Error("", sl.Err(err))
-				return err
+				a.serviceProvider.GetLogger().Error("", sl.Err(err))
+				errChan <- err
 			}
 		default:
 			if err := srv.ListenAndServe(); err != nil {
-				a.serviceProvider.log.Error("", sl.Err(err))
-				return err
+				a.serviceProvider.GetLogger().Error("", sl.Err(err))
+				errChan <- err
 			}
 		}
-
-		return nil
 	}()
 
-	a.serviceProvider.log.Info("server started")
+	a.serviceProvider.GetLogger().Info("server started")
 
-	<-done
-	a.serviceProvider.log.Info("stopping server")
-
-	// TODO: move timeout to config
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	if err := srv.Shutdown(ctx); err != nil {
-		a.serviceProvider.log.Error("failed to stop server", sl.Err(err))
-
+	select {
+	case err := <-errChan:
 		return err
-	}
+	case <-done:
+		a.serviceProvider.GetLogger().Info("stopping server")
+		// TODO: move timeout to config
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
 
-	a.serviceProvider.log.Info("server stopped")
+		if err := srv.Shutdown(ctx); err != nil {
+			a.serviceProvider.GetLogger().Error("failed to stop server", sl.Err(err))
+			return err
+		}
+
+		a.serviceProvider.GetLogger().Info("server stopped")
+	}
 
 	return nil
 }
