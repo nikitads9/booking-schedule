@@ -62,13 +62,12 @@ func (a *App) initServiceProvider(_ context.Context) error {
 // Run ...
 func (a *App) Run() error {
 	defer func() {
-		//nolint
-		a.serviceProvider.db.Close()
+		a.serviceProvider.db.Close() //nolint:errcheck
 	}()
 
 	err := a.startServer()
 	if err != nil {
-		a.serviceProvider.log.Error("failed to start server: %s", err)
+		a.serviceProvider.GetLogger().Error("failed to start server: %s", err)
 		return err
 	}
 

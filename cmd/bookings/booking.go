@@ -15,7 +15,7 @@ import (
 var pathConfig, pathCert, pathKey string
 
 func init() {
-	flag.StringVar(&pathConfig, "config", ".configs/booking_config.yml", "path to config file")
+	flag.StringVar(&pathConfig, "config", "./configs/booking_config.yml", "path to config file")
 	flag.StringVar(&pathCert, "certfile", "cert.pem", "certificate PEM file")
 	flag.StringVar(&pathKey, "keyfile", "key.pem", "key PEM file")
 	time.Local = time.UTC

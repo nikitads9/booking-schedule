@@ -43,8 +43,8 @@ func (a *App) initServiceProvider(_ context.Context) error {
 }
 
 // Run ...
-// nolint
 func (a *App) Run(ctx context.Context) error {
+	//nolint:errcheck
 	defer func() {
 		a.serviceProvider.db.Close()
 		a.serviceProvider.rabbitProducer.Close()
