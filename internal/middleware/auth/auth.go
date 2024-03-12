@@ -3,6 +3,7 @@ package auth
 import (
 	"booking-schedule/internal/app/api"
 	"booking-schedule/internal/app/service/jwt"
+	"booking-schedule/internal/logger/sl"
 	"context"
 	"errors"
 	"log/slog"
@@ -44,7 +45,11 @@ func Auth(logger *slog.Logger, jwtService jwt.Service) func(next http.Handler) h
 			if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer") {
 				log.Error("missing token ", errMissingToken)
 				render.Status(r, http.StatusUnauthorized)
-				render.Render(w, r, api.ErrUnauthorized(errMissingToken))
+				err := render.Render(w, r, api.ErrUnauthorized(errMissingToken))
+				if err != nil {
+					log.Error("failed to render response", sl.Err(err))
+					return
+				}
 				return
 			}
 
@@ -53,7 +58,11 @@ func Auth(logger *slog.Logger, jwtService jwt.Service) func(next http.Handler) h
 			if err != nil {
 				log.Error("issue verifying jwt token", err)
 				render.Status(r, http.StatusUnauthorized)
-				render.Render(w, r, api.ErrUnauthorized(errInvalidToken))
+				err = render.Render(w, r, api.ErrUnauthorized(errInvalidToken))
+				if err != nil {
+					log.Error("failed to render response", sl.Err(err))
+					return
+				}
 				return
 			}
 

@@ -113,7 +113,11 @@ func (i *Implementation) GetBookings(logger *slog.Logger) http.HandlerFunc {
 		bookings, err := i.Booking.GetBookings(ctx, startDate, endDate, userID)
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
-			render.Render(w, r, api.ErrInternalError(err))
+			err = render.Render(w, r, api.ErrInternalError(err))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 
