@@ -44,30 +44,45 @@ func (i *Implementation) DeleteBooking(logger *slog.Logger) http.HandlerFunc {
 
 		userID := auth.UserIDFromContext(ctx)
 
-		//id, err := strconv.ParseInt(userID, 10, 64)
 		if userID == 0 {
 			log.Error("no user id in context", sl.Err(api.ErrNoUserID))
-			render.Render(w, r, api.ErrUnauthorized(api.ErrNoAuth))
+			err := render.Render(w, r, api.ErrUnauthorized(api.ErrNoAuth))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 
 		bookingID := chi.URLParam(r, "booking_id")
 		if bookingID == "" {
 			log.Error("invalid request", sl.Err(api.ErrNoBookingID))
-			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoBookingID))
+			err := render.Render(w, r, api.ErrInvalidRequest(api.ErrNoBookingID))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 
 		bookingUUID, err := uuid.FromString(bookingID)
 		if err != nil {
 			log.Error("invalid request", sl.Err(err))
-			render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
+			err = render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 
 		if bookingUUID == uuid.Nil {
 			log.Error("invalid request", sl.Err(api.ErrNoBookingID))
-			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoBookingID))
+			err = render.Render(w, r, api.ErrInvalidRequest(api.ErrNoBookingID))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 
@@ -76,11 +91,20 @@ func (i *Implementation) DeleteBooking(logger *slog.Logger) http.HandlerFunc {
 		err = i.Booking.DeleteBooking(ctx, bookingUUID, userID)
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
-			render.Render(w, r, api.ErrInternalError(err))
+			err = render.Render(w, r, api.ErrInternalError(err))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 
-		log.Info("deleted booking", slog.Any("id:", bookingUUID))
-		render.Render(w, r, api.DeleteBookingResponseAPI())
+		log.Info("deleted booking", slog.Any("id: ", bookingUUID))
+
+		err = render.Render(w, r, api.DeleteBookingResponseAPI())
+		if err != nil {
+			log.Error("failed to render response", sl.Err(err))
+			return
+		}
 	}
 }

@@ -47,41 +47,65 @@ func (i *Implementation) GetBookings(logger *slog.Logger) http.HandlerFunc {
 		userID := auth.UserIDFromContext(ctx)
 		if userID == 0 {
 			log.Error("no user id in context", sl.Err(api.ErrNoUserID))
-			render.Render(w, r, api.ErrUnauthorized(api.ErrNoAuth))
+			err := render.Render(w, r, api.ErrUnauthorized(api.ErrNoAuth))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 
 		start := r.URL.Query().Get("start")
 		if start == "" {
 			log.Error("invalid request", sl.Err(api.ErrNoInterval))
-			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoInterval))
+			err := render.Render(w, r, api.ErrInvalidRequest(api.ErrNoInterval))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 
 		end := r.URL.Query().Get("end")
 		if end == "" {
 			log.Error("invalid request", sl.Err(api.ErrNoInterval))
-			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoInterval))
+			err := render.Render(w, r, api.ErrInvalidRequest(api.ErrNoInterval))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 
 		startDate, err := time.Parse("2006-01-02T15:04:05", start)
 		if err != nil {
 			log.Error("invalid request", sl.Err(err))
-			render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
+			err = render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 		endDate, err := time.Parse("2006-01-02T15:04:05", end)
 		if err != nil {
 			log.Error("invalid request", sl.Err(err))
-			render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
+			err = render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 
 		err = api.CheckDates(startDate, endDate)
 		if err != nil {
 			log.Error("invalid request", sl.Err(err))
-			render.Render(w, r, api.ErrInvalidRequest(err))
+			err = render.Render(w, r, api.ErrInvalidRequest(err))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 		}
 
 		log.Info("received request", slog.Any("params:", start+" to "+end))
@@ -93,10 +117,14 @@ func (i *Implementation) GetBookings(logger *slog.Logger) http.HandlerFunc {
 			return
 		}
 
-		log.Info("bookings acquired", slog.Int("quantity:", len(bookings)))
+		log.Info("bookings acquired", slog.Int("quantity: ", len(bookings)))
 
 		render.Status(r, http.StatusCreated)
-		render.Render(w, r, api.GetBookingsResponseAPI(convert.ToApiBookingsInfo(bookings)))
+		err = render.Render(w, r, api.GetBookingsResponseAPI(convert.ToApiBookingsInfo(bookings)))
+		if err != nil {
+			log.Error("failed to render response", sl.Err(err))
+			return
+		}
 	}
 
 }

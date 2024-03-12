@@ -81,7 +81,7 @@ func (a *App) initServer(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	a.serviceProvider.GetLogger().Info("initializing server", slog.String("address", address)) // Вывод параметра с адресом
+	a.serviceProvider.GetLogger().Info("initializing server", slog.String("address", address))
 	a.serviceProvider.GetLogger().Debug("logger debug mode enabled")
 
 	a.router = chi.NewRouter()
@@ -129,8 +129,13 @@ func (a *App) startServer() error {
 	go func() error {
 		switch a.serviceProvider.GetConfig().GetEnv() {
 		case envProd:
-			a.initCertificates()
-			if err := srv.ListenAndServeTLS(a.pathCert, a.pathKey); err != nil {
+			err := a.initCertificates()
+			if err != nil {
+				a.serviceProvider.log.Error("failed to initialize certificates", sl.Err(err))
+				return err
+			}
+
+			if err = srv.ListenAndServeTLS(a.pathCert, a.pathKey); err != nil {
 				a.serviceProvider.log.Error("", sl.Err(err))
 				return err
 			}

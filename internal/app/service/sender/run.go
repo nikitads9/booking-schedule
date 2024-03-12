@@ -31,12 +31,14 @@ func (s *Service) Run(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case msg := <-msgChan:
-			s.receiveBookings(msg)
-
+			err = s.receiveBookings(msg)
 			if err != nil {
 				log.Error("could not receive messages: ", err)
 			}
-			msg.Ack(false)
+			err = msg.Ack(false)
+			if err != nil {
+				log.Error("could not acknowledge message acquiring: ", err)
+			}
 		}
 
 	}

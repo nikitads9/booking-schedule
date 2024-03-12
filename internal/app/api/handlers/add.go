@@ -53,20 +53,31 @@ func (i *Implementation) AddBooking(logger *slog.Logger) http.HandlerFunc {
 				// Приводим ошибку к типу ошибки валидации
 				validateErr := err.(validator.ValidationErrors)
 				log.Error("some of the required values were not received", sl.Err(validateErr))
-				render.Render(w, r, api.ErrValidationError(validateErr))
+				err = render.Render(w, r, api.ErrValidationError(validateErr))
+				if err != nil {
+					log.Error("failed to render response", sl.Err(err))
+					return
+				}
 				return
 			}
 			log.Error("failed to decode request body", sl.Err(err))
-			render.Render(w, r, api.ErrInvalidRequest(err))
+			err = render.Render(w, r, api.ErrInvalidRequest(err))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 		log.Info("request body decoded", slog.Any("req", req))
 
 		userID := auth.UserIDFromContext(ctx)
-		//id, err := strconv.ParseInt(userID, 10, 64)
 		if userID == 0 {
 			log.Error("no user id in context", sl.Err(api.ErrNoUserID))
-			render.Render(w, r, api.ErrUnauthorized(api.ErrNoAuth))
+			err = render.Render(w, r, api.ErrUnauthorized(api.ErrNoAuth))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 		//TODO: getters
@@ -80,42 +91,33 @@ func (i *Implementation) AddBooking(logger *slog.Logger) http.HandlerFunc {
 
 		if err != nil {
 			log.Error("invalid request", sl.Err(err))
-			render.Render(w, r, api.ErrInvalidRequest(err))
+			err = render.Render(w, r, api.ErrInvalidRequest(err))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 
 		bookingID, err := i.Booking.AddBooking(ctx, mod)
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
-			render.Render(w, r, api.ErrInternalError(err))
+			err = render.Render(w, r, api.ErrInternalError(err))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 
-		log.Info("booking added", slog.Any("id:", bookingID))
+		log.Info("booking added", slog.Any("id: ", bookingID))
 
 		render.Status(r, http.StatusCreated)
-		render.Render(w, r, api.AddBookingResponseAPI(bookingID))
+		err = render.Render(w, r, api.AddBookingResponseAPI(bookingID))
+		if err != nil {
+			log.Error("failed to render response", sl.Err(err))
+			return
+		}
 	}
 
 }
-
-//TODO:
-//для презентации времени в нормальном виде
-/* type CustomTime struct {
-	time.Time
-}
-
-func (t *CustomTime) UnmarshalJSON(b []byte) (err error) {
-	date, err := time.Parse(`"2006-01-02T15:04:05.000-0700"`, string(b))
-	if err != nil {
-		return err
-	}
-	t.Time = date
-
-	return
-}
-
-func (t *CustomTime) ExcelDate() string {
-    return t.Format("01/02/2006")
-}
-*/

@@ -46,34 +46,54 @@ func (i *Implementation) SignUp(logger *slog.Logger) http.HandlerFunc {
 			if errors.As(err, api.ValidateErr) {
 				validateErr := err.(validator.ValidationErrors)
 				log.Error("some of the required values were not received or were null", sl.Err(validateErr))
-				render.Render(w, r, api.ErrValidationError(validateErr))
+				err = render.Render(w, r, api.ErrValidationError(validateErr))
+				if err != nil {
+					log.Error("failed to render response", sl.Err(err))
+					return
+				}
 				return
 			}
 			log.Error("failed to decode request body", sl.Err(err))
-			render.Render(w, r, api.ErrInvalidRequest(err))
+			err = render.Render(w, r, api.ErrInvalidRequest(err))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
-		//TODO: remove
-		log.Debug("request body decoded", slog.Any("req", req))
+
 		user, err := convert.ToUserInfo(req)
 
 		if err != nil {
 			log.Error("invalid request", sl.Err(err))
-			render.Render(w, r, api.ErrInvalidRequest(err))
+			err = render.Render(w, r, api.ErrInvalidRequest(err))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 
 		token, err := i.User.SignUp(ctx, user)
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
-			render.Render(w, r, api.ErrInternalError(err))
+			err = render.Render(w, r, api.ErrInternalError(err))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 
-		log.Debug("user created", slog.Any("token:", token))
+		log.Debug("user created", slog.Any("token: ", token))
+		log.Info("user created", slog.Any("login: ", req.Nickname))
 
 		render.Status(r, http.StatusCreated)
-		render.Render(w, r, api.AuthResponseAPI(token))
+		err = render.Render(w, r, api.AuthResponseAPI(token))
+		if err != nil {
+			log.Error("failed to render response", sl.Err(err))
+			return
+		}
 	}
 
 }

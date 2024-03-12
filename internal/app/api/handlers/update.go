@@ -53,27 +53,42 @@ func (i *Implementation) UpdateBooking(logger *slog.Logger) http.HandlerFunc {
 			if errors.As(err, api.ValidateErr) {
 				validateErr := err.(validator.ValidationErrors)
 				log.Error("some of the required values were not received", sl.Err(validateErr))
-				render.Render(w, r, api.ErrValidationError(validateErr))
+				err = render.Render(w, r, api.ErrValidationError(validateErr))
+				if err != nil {
+					log.Error("failed to render response", sl.Err(err))
+					return
+				}
 				return
 			}
 			log.Error("failed to decode request body", sl.Err(err))
-			render.Render(w, r, api.ErrInvalidRequest(err))
+			err = render.Render(w, r, api.ErrInvalidRequest(err))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 		log.Info("request body decoded", slog.Any("req", req))
 
 		id := auth.UserIDFromContext(ctx)
-		//id, err := strconv.ParseInt(userID, 10, 64)
 		if id == 0 {
 			log.Error("no user id in context", sl.Err(api.ErrNoUserID))
-			render.Render(w, r, api.ErrUnauthorized(api.ErrNoAuth))
+			err = render.Render(w, r, api.ErrUnauthorized(api.ErrNoAuth))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 
 		bookingID := chi.URLParam(r, "booking_id")
 		if bookingID == "" {
 			log.Error("invalid request", sl.Err(api.ErrNoBookingID))
-			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoBookingID))
+			err = render.Render(w, r, api.ErrInvalidRequest(api.ErrNoBookingID))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 
 			return
 		}
@@ -81,15 +96,22 @@ func (i *Implementation) UpdateBooking(logger *slog.Logger) http.HandlerFunc {
 		bookingUUID, err := uuid.FromString(bookingID)
 		if err != nil {
 			log.Error("invalid request", sl.Err(err))
-			render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
+			err = render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 		}
 
 		if bookingUUID == uuid.Nil {
 			log.Error("invalid request", sl.Err(api.ErrNoBookingID))
-			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoBookingID))
+			err = render.Render(w, r, api.ErrInvalidRequest(api.ErrNoBookingID))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
-
 		//TODO: getters
 		mod, err := convert.ToBookingInfo(&api.Booking{
 			BookingID: bookingUUID,
@@ -101,18 +123,30 @@ func (i *Implementation) UpdateBooking(logger *slog.Logger) http.HandlerFunc {
 		})
 		if err != nil {
 			log.Error("invalid request", sl.Err(err))
-			render.Render(w, r, api.ErrInvalidRequest(err))
+			err = render.Render(w, r, api.ErrInvalidRequest(err))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 		}
 
 		err = i.Booking.UpdateBooking(ctx, mod)
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
-			render.Render(w, r, api.ErrInternalError(err))
+			err = render.Render(w, r, api.ErrInternalError(err))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 
-		log.Info("booking updated", slog.Any("id:", mod.ID))
+		log.Info("booking updated", slog.Any("id: ", mod.ID))
 
-		render.Render(w, r, api.UpdateBookingResponseAPI())
+		err = render.Render(w, r, api.UpdateBookingResponseAPI())
+		if err != nil {
+			log.Error("failed to render response", sl.Err(err))
+			return
+		}
 	}
 }

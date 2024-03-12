@@ -46,27 +46,43 @@ func (i *Implementation) GetBooking(logger *slog.Logger) http.HandlerFunc {
 		userID := auth.UserIDFromContext(ctx)
 		if userID == 0 {
 			log.Error("no user id in context", sl.Err(api.ErrNoUserID))
-			render.Render(w, r, api.ErrUnauthorized(api.ErrNoAuth))
+			err := render.Render(w, r, api.ErrUnauthorized(api.ErrNoAuth))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 
 		bookingID := chi.URLParam(r, "booking_id")
 		if bookingID == "" {
 			log.Error("invalid request", sl.Err(api.ErrNoBookingID))
-			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoBookingID))
+			err := render.Render(w, r, api.ErrInvalidRequest(api.ErrNoBookingID))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 
 		bookingUUID, err := uuid.FromString(bookingID)
 		if err != nil {
 			log.Error("invalid request", sl.Err(err))
-			render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
+			err = render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 
 		if bookingUUID == uuid.Nil {
 			log.Error("invalid request", sl.Err(api.ErrNoBookingID))
-			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoBookingID))
+			err = render.Render(w, r, api.ErrInvalidRequest(api.ErrNoBookingID))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 
@@ -75,17 +91,25 @@ func (i *Implementation) GetBooking(logger *slog.Logger) http.HandlerFunc {
 		booking, err := i.Booking.GetBooking(ctx, bookingUUID, userID)
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
-			render.Render(w, r, api.ErrInternalError(err))
+			err = render.Render(w, r, api.ErrInternalError(err))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
+
+		log.Info("booking acquired", slog.Any("booking: ", booking))
 
 		err = render.Render(w, r, api.GetBookingResponseAPI(convert.ToApiBookingInfo(booking)))
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
-			render.Render(w, r, api.ErrRender(err))
+			err = render.Render(w, r, api.ErrRender(err))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
-
-		log.Info("booking acquired", slog.Any("booking:", booking))
 	}
 }

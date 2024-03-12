@@ -41,34 +41,53 @@ func (i *Implementation) GetVacantDates(logger *slog.Logger) http.HandlerFunc {
 		suiteID := chi.URLParam(r, "suite_id")
 		if suiteID == "" {
 			log.Error("invalid request", sl.Err(api.ErrNoSuiteID))
-			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoSuiteID))
+			err := render.Render(w, r, api.ErrInvalidRequest(api.ErrNoSuiteID))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 
 		id, err := strconv.ParseInt(suiteID, 10, 64)
 		if err != nil {
 			log.Error("invalid request", sl.Err(err))
-			render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
+			err = render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 
 		if id == 0 {
 			log.Error("invalid request", sl.Err(api.ErrNoSuiteID))
-			render.Render(w, r, api.ErrInvalidRequest(api.ErrNoSuiteID))
+			err = render.Render(w, r, api.ErrInvalidRequest(api.ErrNoSuiteID))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 
 		intervals, err := i.Booking.GetVacantDates(ctx, id)
 		if err != nil {
 			log.Error("internal error", sl.Err(err))
-			render.Render(w, r, api.ErrInternalError(err))
+			err = render.Render(w, r, api.ErrInternalError(err))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
 			return
 		}
 
-		log.Info("vacant dates acquired", slog.Any("quantity:", len(intervals)))
+		log.Info("vacant dates acquired", slog.Int("quantity: ", len(intervals)))
 
 		render.Status(r, http.StatusCreated)
-		render.Render(w, r, api.GetVacantDatesAPI(convert.ToFreeIntervals(intervals)))
-		//TODO: ошибка и проверка на ошибку
+		err = render.Render(w, r, api.GetVacantDatesAPI(convert.ToFreeIntervals(intervals)))
+		if err != nil {
+			log.Error("failed to render response", sl.Err(err))
+			return
+		}
 	}
 }
