@@ -1,8 +1,7 @@
-package bookings
+package auth
 
 import (
 	"booking-schedule/internal/logger/sl"
-	"booking-schedule/internal/middleware/auth"
 	mwLogger "booking-schedule/internal/middleware/logger"
 	"booking-schedule/internal/pkg/certificates"
 	"context"
@@ -13,15 +12,17 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/go-chi/chi"
+	"github.com/riandyrn/otelchi"
+
 	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/chi/v5"
 )
 
 type App struct {
 	pathConfig      string
 	pathCert        string
 	pathKey         string
-	serviceProvider *serviceProvider
+	serviceProvider *serviceProvider //TODO: описать интерфейс сервис провайдера
 	router          *chi.Mux
 }
 
@@ -133,7 +134,10 @@ func (a *App) startServer() error {
 }
 
 func (a *App) initServer(ctx context.Context) error {
-	impl := a.serviceProvider.GetBookingImpl(ctx)
+	impl, err := a.serviceProvider.GetAuthImpl(ctx)
+	if err != nil {
+		return err
+	}
 
 	address, err := a.serviceProvider.GetConfig().GetAddress()
 	if err != nil {
@@ -146,26 +150,11 @@ func (a *App) initServer(ctx context.Context) error {
 	a.router.Use(middleware.RequestID) // Добавляет request_id в каждый запрос, для трейсинга
 	//a.router.Use(middleware.Logger)    // Логирование всех запросов
 	a.router.Use(mwLogger.New(a.serviceProvider.GetLogger()))
+	a.router.Use(otelchi.Middleware("auth", otelchi.WithChiRoutes(a.router)))
 	a.router.Use(middleware.Recoverer) // Если где-то внутри сервера (обработчика запроса) произойдет паника, приложение не должно упасть
-
-	a.router.Route("/bookings", func(r chi.Router) {
-		r.Route("/user", func(r chi.Router) {
-			//r.Group(func(r chi.Router) {r.Use(authHandler) r.Get("/me", impl.GetMyUser(a.serviceProvider.GetLogger()))})
-
-		})
-		r.Get("/get-vacant-rooms", impl.GetVacantRooms(a.serviceProvider.GetLogger()))
-		r.Get("/{suite_id}/get-vacant-dates", impl.GetVacantDates(a.serviceProvider.GetLogger()))
-		r.Group(func(r chi.Router) {
-			r.Use(auth.Auth(a.serviceProvider.GetLogger(), a.serviceProvider.GetJWTService()))
-			r.Post("/add", impl.AddBooking(a.serviceProvider.GetLogger()))
-			r.Get("/get-bookings", impl.GetBookings(a.serviceProvider.GetLogger()))
-			r.Route("/{booking_id}", func(r chi.Router) {
-				r.Get("/get", impl.GetBooking(a.serviceProvider.GetLogger()))
-				r.Patch("/update", impl.UpdateBooking(a.serviceProvider.GetLogger()))
-				r.Delete("/delete", impl.DeleteBooking(a.serviceProvider.GetLogger()))
-			})
-		})
-
+	a.router.Route("/bookings/auth", func(r chi.Router) {
+		r.Post("/sign-up", impl.SignUp(a.serviceProvider.GetLogger()))
+		r.Get("/sign-in", impl.SignIn(a.serviceProvider.GetLogger()))
 	})
 
 	return nil

@@ -4,10 +4,11 @@ import (
 	"context"
 	"time"
 
-	//_ "go.uber.org/automaxprocs"
+	_ "go.uber.org/automaxprocs"
 
 	//_ "booking-schedule/cmd/server/docs"
 	"booking-schedule/internal/pkg/bookings"
+
 	"flag"
 	"log"
 )
@@ -45,12 +46,14 @@ func init() {
 // @name Authorization
 //
 //	 @Schemes 		http https
-//		@Tags			bookings
+//		@Tags			bookings auth
 //
 // @tag.name bookings
 // @tag.description operations with bookings, suites and intervals
+// @tag.name auth
+// @tag.description sign in and sign up operations
 // @tag.name users
-// @tag.description operations with user profile such as sign in, sign up, getting profile editing or deleting it
+// @tag.description service for viewing profile editing or deleting it
 func main() {
 	flag.Parse()
 

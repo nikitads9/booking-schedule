@@ -44,12 +44,12 @@ const docTemplate = `{
                 "operationId": "addByBookingJSON",
                 "parameters": [
                     {
-                        "description": "AddBookingRequest",
+                        "description": "BookingEntry",
                         "name": "booking",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/AddBookingRequest"
+                            "$ref": "#/definitions/BookingEntry"
                         }
                     }
                 ],
@@ -88,6 +88,103 @@ const docTemplate = `{
                         "description": "Service Unavailable",
                         "schema": {
                             "$ref": "#/definitions/AddBookingResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/sign-in": {
+            "get": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "Get auth token to access user restricted api methods. Requires nickname and password passed via basic auth.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Sign in",
+                "operationId": "getOauthToken",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/SignInResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/SignInResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/SignInResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/SignInResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/sign-up": {
+            "post": {
+                "description": "Creates user with given tg id, nickname, name and password hashed by bcrypto. Every parameter is required. Returns jwt token.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Sign up",
+                "operationId": "signUpUserJson",
+                "parameters": [
+                    {
+                        "description": "User",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/User"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/SignInResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/SignInResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/SignInResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/SignInResponse"
                         }
                     }
                 }
@@ -229,103 +326,6 @@ const docTemplate = `{
                         "description": "Service Unavailable",
                         "schema": {
                             "$ref": "#/definitions/GetVacantRoomsResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/sign-in": {
-            "get": {
-                "security": [
-                    {
-                        "BasicAuth": []
-                    }
-                ],
-                "description": "Get auth token to access user restricted api methods. Requires nickname and password passed via basic auth.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Sign in",
-                "operationId": "getOauthToken",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/SignInResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/SignInResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/SignInResponse"
-                        }
-                    },
-                    "503": {
-                        "description": "Service Unavailable",
-                        "schema": {
-                            "$ref": "#/definitions/SignInResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/sign-up": {
-            "post": {
-                "description": "Creates user with given tg id, nickname, name and password hashed by bcrypto. Every parameter is required. Returns jwt token.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Sign up",
-                "operationId": "signUpUserJson",
-                "parameters": [
-                    {
-                        "description": "User",
-                        "name": "user",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/User"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/SignInResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/SignInResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/SignInResponse"
-                        }
-                    },
-                    "503": {
-                        "description": "Service Unavailable",
-                        "schema": {
-                            "$ref": "#/definitions/SignInResponse"
                         }
                     }
                 }
@@ -495,12 +495,12 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "UpdateBookingRequest",
+                        "description": "BookingEntry",
                         "name": "booking",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/UpdateBookingRequest"
+                            "$ref": "#/definitions/BookingEntry"
                         }
                     }
                 ],
@@ -602,7 +602,20 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "AddBookingRequest": {
+        "AddBookingResponse": {
+            "type": "object",
+            "properties": {
+                "bookingID": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "response": {
+                    "$ref": "#/definitions/Response"
+                }
+            }
+        },
+        "BookingEntry": {
             "type": "object",
             "required": [
                 "endDate",
@@ -629,19 +642,6 @@ const docTemplate = `{
                     "description": "Номер апаратаментов",
                     "type": "integer",
                     "example": 1
-                }
-            }
-        },
-        "AddBookingResponse": {
-            "type": "object",
-            "properties": {
-                "bookingID": {
-                    "type": "string",
-                    "format": "uuid",
-                    "example": "550e8400-e29b-41d4-a716-446655440000"
-                },
-                "response": {
-                    "$ref": "#/definitions/Response"
                 }
             }
         },
@@ -771,15 +771,15 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "code": {
-                    "description": "application-specific error code",
+                    "description": "Код ошибки приложения",
                     "type": "integer"
                 },
                 "error": {
-                    "description": "application-level error message, for debugging",
+                    "description": "Сообщение об ошибке в приложении",
                     "type": "string"
                 },
                 "status": {
-                    "description": "user-level status message",
+                    "description": "Статус ответа приложения",
                     "type": "string"
                 }
             }
@@ -812,37 +812,6 @@ const docTemplate = `{
                 "suiteID": {
                     "description": "Номер апартаментов",
                     "type": "integer",
-                    "example": 1
-                }
-            }
-        },
-        "UpdateBookingRequest": {
-            "type": "object",
-            "required": [
-                "endDate",
-                "startDate",
-                "suiteID"
-            ],
-            "properties": {
-                "endDate": {
-                    "description": "Дата и время окончания бронирования",
-                    "type": "string",
-                    "example": "2024-03-29T17:43:00Z"
-                },
-                "notifyAt": {
-                    "description": "Интервал времени для уведомления о бронировании",
-                    "type": "string",
-                    "example": "24h"
-                },
-                "startDate": {
-                    "description": "Дата и время начала бронировании",
-                    "type": "string",
-                    "example": "2024-03-28T17:43:00Z"
-                },
-                "suiteID": {
-                    "description": "Номер апартаментов",
-                    "type": "integer",
-                    "format": "int64",
                     "example": 1
                 }
             }
@@ -904,7 +873,11 @@ const docTemplate = `{
             "name": "bookings"
         },
         {
-            "description": "operations with user profile such as sign in, sign up, getting profile editing it and deleting",
+            "description": "sign in and sign up operations",
+            "name": "auth"
+        },
+        {
+            "description": "service for viewing profile editing or deleting it",
             "name": "users"
         }
     ]

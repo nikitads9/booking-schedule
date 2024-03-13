@@ -1,5 +1,6 @@
 include .env
 BIN_SCHEDULER := "./bin/bookings"
+BIN_AUTH := "./bin/auth"
 BIN_NOTIFIER := "./bin/scheduler"
 BIN_SENDER := "./bin/sender"
 
@@ -15,9 +16,11 @@ migrate-down:
 	export PG_DSN="host=${DB_HOST} port=${DB_PORT} dbname=${DB_NAME} user=${DB_USER} password=${DB_PASSWORD} sslmode=${DB_SSL}"
 	sleep 2 && goose -dir ${MIGRATION_DIR} postgres "${PG_DSN}" up -v
 
-build: build-bookings build-scheduler build-sender
+build: build-bookings build-auth build-scheduler build-sender
 build-bookings:
-	go build -v -ldflags "-w -s" -o $(BIN_SCHEDULER) ./cmd/bookings/booking.go
+	go build -v -ldflags "-w -s" -o $(BIN_SCHEDULER) ./cmd/bookings/bookings.go
+build-auth:
+	go build -v -ldflags "-w -s" -o $(BIN_AUTH) ./cmd/auth/auth.go
 build-scheduler:
 	go build -v -ldflags "-w -s" -o $(BIN_NOTIFIER) ./cmd/scheduler/scheduler.go
 build-sender:

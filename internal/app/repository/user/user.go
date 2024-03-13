@@ -14,6 +14,7 @@ type Repository interface {
 	CreateUser(ctx context.Context, user *model.User) (int64, error)
 	GetUser(ctx context.Context, userID int64) (*model.User, error)
 	GetUserByNickname(ctx context.Context, nickName string) (*model.User, error)
+	EditUser(ctx context.Context, user *model.UpdateUserInfo) error
 	DeleteUser(ctx context.Context, userID int64) error
 }
 

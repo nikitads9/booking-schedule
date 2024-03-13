@@ -38,15 +38,15 @@ type JWT struct {
 	Expiration time.Duration `yaml:"expiration"`
 }
 
-type BookingConfig struct {
+type AppConfig struct {
 	Server   *Server   `yaml:"server"`
 	Database *Database `yaml:"database"`
 	Jwt      *JWT      `yaml:"jwt"`
 	Env      string    `yaml:"env"`
 }
 
-func ReadBookingConfig(path string) (*BookingConfig, error) {
-	config := &BookingConfig{}
+func ReadAppConfig(path string) (*AppConfig, error) {
+	config := &AppConfig{}
 
 	file, err := os.ReadFile(path)
 	if err != nil {
@@ -62,21 +62,21 @@ func ReadBookingConfig(path string) (*BookingConfig, error) {
 }
 
 // GetServerConfig ...
-func (e *BookingConfig) GetServerConfig() *Server {
+func (e *AppConfig) GetServerConfig() *Server {
 	return e.Server
 }
 
 // GetJWTConfig
-func (e *BookingConfig) GetJWTConfig() *JWT {
+func (e *AppConfig) GetJWTConfig() *JWT {
 	return e.Jwt
 }
 
 // GetEnv ...
-func (e *BookingConfig) GetEnv() string {
+func (e *AppConfig) GetEnv() string {
 	return e.Env
 }
 
-func (e *BookingConfig) GetDBConfig() (*pgxpool.Config, error) {
+func (e *AppConfig) GetDBConfig() (*pgxpool.Config, error) {
 	dbDsn := fmt.Sprintf("user=%s dbname=%s password={password} host=%s port=%s sslmode=%s", e.Database.User, e.Database.Name, e.Database.Host, e.Database.Port, e.Database.Ssl)
 	dbDsn = strings.ReplaceAll(dbDsn, dbPassEscSeq, password)
 
@@ -91,7 +91,7 @@ func (e *BookingConfig) GetDBConfig() (*pgxpool.Config, error) {
 	return poolConfig, nil
 }
 
-func (c *BookingConfig) GetAddress() (string, error) {
+func (c *AppConfig) GetAddress() (string, error) {
 	address := c.GetServerConfig().Host + c.GetServerConfig().Port
 	//TODO: regex check
 	return address, nil

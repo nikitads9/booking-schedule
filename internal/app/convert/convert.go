@@ -141,7 +141,7 @@ func ToVacantIntervals(mod []*model.Interval) []*api.Interval {
 	return res
 }
 
-func ToUserInfo(user *api.User) (*model.User, error) {
+func ToUserInfo(user *api.SignUpRequest) (*model.User, error) {
 	if user == nil {
 		return nil, api.ErrEmptyRequest
 	}

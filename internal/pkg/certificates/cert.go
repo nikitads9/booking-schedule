@@ -1,4 +1,4 @@
-package bookings
+package certificates
 
 import (
 	"crypto/ecdsa"
@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-func (a *App) initCertificates() error {
+func InitCertificates() error {
 	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		log.Printf("Failed to generate private key: %v", err)
@@ -62,7 +62,7 @@ func (a *App) initCertificates() error {
 
 	log.Print("wrote cert.pem\n")
 
-	err = a.CreatePrivateKey(privateKey)
+	err = createPrivateKey(privateKey)
 	if err != nil {
 		log.Printf("Failed to create private key")
 		return err
@@ -71,7 +71,7 @@ func (a *App) initCertificates() error {
 	return nil
 }
 
-func (a *App) CreatePrivateKey(privateKey *ecdsa.PrivateKey) error {
+func createPrivateKey(privateKey *ecdsa.PrivateKey) error {
 	privBytes, err := x509.MarshalPKCS8PrivateKey(privateKey)
 	if err != nil {
 		log.Printf("Unable to marshal private key: %v", err)

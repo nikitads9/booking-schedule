@@ -1,4 +1,4 @@
-package booking
+package user
 
 import (
 	"booking-schedule/internal/app/model"
@@ -13,30 +13,31 @@ import (
 	"github.com/go-chi/chi/middleware"
 )
 
-func (r *repository) UpdateBooking(ctx context.Context, mod *model.BookingInfo) error {
-	const op = "bookings.repository.UpdateBooking"
+func (r *repository) EditUser(ctx context.Context, user *model.UpdateUserInfo) error {
+	const op = "bookings.repository.EditUser"
 
 	log := r.log.With(
 		slog.String("op", op),
 		slog.String("request_id", middleware.GetReqID(ctx)),
 	)
 
-	builder := sq.Update(t.BookingTable).
+	builder := sq.Update(t.UserTable).
 		Set(t.UpdatedAt, time.Now()).
-		Set("start_date", mod.StartDate).
-		Set("end_date", mod.EndDate).
-		Set("suite_id", mod.SuiteID).
-		Where(sq.And{
-			sq.Eq{t.ID: mod.ID},
-			sq.Eq{t.UserID: mod.UserID},
-		}).
-		PlaceholderFormat(sq.Dollar)
+		Where(sq.Eq{t.ID: user.ID})
 
-	if mod.NotifyAt != 0 {
-		builder = builder.Set(t.NotifyAt, mod.NotifyAt)
+	if user.Name.Valid {
+		builder = builder.Set(t.Name, user.Name.String)
 	}
 
-	query, args, err := builder.ToSql()
+	if user.Nickname.Valid {
+		builder = builder.Set(t.TelegramNickname, user.Nickname.String)
+	}
+
+	if user.Password.Valid {
+		builder = builder.Set(t.Password, user.Password.String)
+	}
+
+	query, args, err := builder.PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
 		log.Error("failed to build a query", err)
 		return ErrQueryBuild
@@ -52,6 +53,10 @@ func (r *repository) UpdateBooking(ctx context.Context, mod *model.BookingInfo) 
 		if errors.As(err, pgNoConnection) {
 			log.Error("no connection to database host", err)
 			return ErrNoConnection
+		}
+		if errors.As(err, &ErrDuplicate) {
+			log.Error("this user already exists", err)
+			return ErrAlreadyExists
 		}
 		log.Error("query execution error", err)
 		return ErrQuery

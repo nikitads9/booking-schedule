@@ -1,4 +1,4 @@
-package handlers
+package booking
 
 import (
 	"booking-schedule/internal/app/api"

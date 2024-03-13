@@ -45,6 +45,24 @@ services:
           memory: 200m
           cpus: "0.50"
 
+  auth:
+    container_name: auth
+    build:
+      context: .
+      dockerfile: ./deploy/bookings/Dockerfile
+    image: nikitads9/booking-schedule:auth
+    ports:
+      - "${AUTH_PORT}:${AUTH_PORT}"
+    depends_on:
+      - db
+    networks:
+      - app_net
+    deploy:
+      resources:
+        limits:
+          memory: 200m
+          cpus: "0.70"
+
   migrator:
     container_name: migrator
     build: $MIGRATION_DIR
@@ -117,3 +135,9 @@ services:
       - "${AMQP_PORT}"
     networks:
       - app_net
+
+  jaeger:
+    image: jaegertracing/all-in-one
+    ports:
+      - "14268:14268"
+      - "16686:16686"

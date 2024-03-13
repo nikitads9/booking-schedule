@@ -1,4 +1,4 @@
-package handlers
+package booking
 
 import (
 	"booking-schedule/internal/app/api"
@@ -25,7 +25,7 @@ import (
 //	@Accept			json
 //	@Produce		json
 //
-//	@Param          booking	body	api.AddBookingRequest	true	"AddBookingRequest"
+//	@Param          booking	body	api.AddBookingRequest	true	"BookingEntry"
 //	@Success		200	{object}	api.AddBookingResponse
 //	@Failure		400	{object}	api.AddBookingResponse
 //	@Failure		401	{object}	api.AddBookingResponse

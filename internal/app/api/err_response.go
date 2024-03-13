@@ -18,12 +18,12 @@ import (
 // helps reveal information on the error, setting it on Err, and in the Render()
 // method, using it to set the application-specific error code in AppCode.
 type Response struct {
-	Err            error `json:"-,omitempty"` // low-level runtime error
-	HTTPStatusCode int   `json:"-"`           // http response status code
+	Err            error `json:"-,omitempty"` // Ошибка рантайма
+	HTTPStatusCode int   `json:"-"`           // Код статуса HTTP
 
-	Status    string `json:"status"`          // user-level status message
-	AppCode   int64  `json:"code,omitempty"`  // application-specific error code
-	ErrorText string `json:"error,omitempty"` // application-level error message, for debugging
+	Status    string `json:"status"`          // Статус ответа приложения
+	AppCode   int64  `json:"code,omitempty"`  // Код ошибки приложения
+	ErrorText string `json:"error,omitempty"` // Сообщение об ошибке в приложении
 } //@name Response
 
 var (

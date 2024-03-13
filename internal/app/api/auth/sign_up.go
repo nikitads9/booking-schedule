@@ -1,4 +1,4 @@
-package handlers
+package auth
 
 import (
 	"booking-schedule/internal/app/api"
@@ -20,18 +20,18 @@ import (
 //	@Summary		Sign up
 //	@Description	Creates user with given tg id, nickname, name and password hashed by bcrypto. Every parameter is required. Returns jwt token.
 //	@ID				signUpUserJson
-//	@Tags			users
+//	@Tags			auth
 //	@Accept			json
 //	@Produce		json
-//	@Param          user	body	api.User	true	"User"
+//	@Param          user	body	api.SignUpRequest	true	"User"
 //	@Success		200	{object}	api.AuthResponse
 //	@Failure		400	{object}	api.AuthResponse
 //	@Failure		404	{object}	api.AuthResponse
 //	@Failure		503	{object}	api.AuthResponse
-//	@Router			/user/sign-up [post]
+//	@Router			/auth/sign-up [post]
 func (i *Implementation) SignUp(logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "user.api.handlers.SignUp"
+		const op = "user.SignUp"
 
 		ctx := r.Context()
 
@@ -40,7 +40,10 @@ func (i *Implementation) SignUp(logger *slog.Logger) http.HandlerFunc {
 			slog.String("request_id", middleware.GetReqID(ctx)),
 		)
 
-		req := &api.User{}
+		_, span := i.Tracer.Start(ctx, op)
+		defer span.End()
+
+		req := &api.SignUpRequest{}
 		err := render.Bind(r, req)
 		if err != nil {
 			if errors.As(err, api.ValidateErr) {

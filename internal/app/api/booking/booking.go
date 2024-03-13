@@ -1,4 +1,4 @@
-package handlers
+package booking
 
 import (
 	booking "booking-schedule/internal/app/service/booking"

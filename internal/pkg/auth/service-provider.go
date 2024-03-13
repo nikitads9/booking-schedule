@@ -1,4 +1,4 @@
-package bookings
+package auth
 
 import (
 	"context"
@@ -8,15 +8,16 @@ import (
 	"net/http"
 	"os"
 
-	"booking-schedule/internal/app/api/booking"
-	bookingRepository "booking-schedule/internal/app/repository/booking"
+	"booking-schedule/internal/app/api/auth"
 	userRepository "booking-schedule/internal/app/repository/user"
-	bookingService "booking-schedule/internal/app/service/booking"
 	"booking-schedule/internal/app/service/jwt"
 	userService "booking-schedule/internal/app/service/user"
 	"booking-schedule/internal/config"
 	"booking-schedule/internal/pkg/db"
 	"booking-schedule/internal/pkg/db/transaction"
+	tracer "booking-schedule/internal/pkg/trace"
+
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -33,15 +34,13 @@ type serviceProvider struct {
 
 	server *http.Server
 	log    *slog.Logger
-
-	bookingRepository bookingRepository.Repository
-	bookingService    *bookingService.Service
+	tracer trace.Tracer
 
 	userRepository userRepository.Repository
 	userService    *userService.Service
 	jwtService     jwt.Service
 
-	bookingImpl *booking.Implementation
+	authImpl *auth.Implementation
 }
 
 func newServiceProvider(configPath string) *serviceProvider {
@@ -79,15 +78,6 @@ func (s *serviceProvider) GetConfig() *config.AppConfig {
 	return s.config
 }
 
-func (s *serviceProvider) GetBookingRepository(ctx context.Context) bookingRepository.Repository {
-	if s.bookingRepository == nil {
-		s.bookingRepository = bookingRepository.NewBookingRepository(s.GetDB(ctx), s.GetLogger())
-		return s.bookingRepository
-	}
-
-	return s.bookingRepository
-}
-
 func (s *serviceProvider) GetUserRepository(ctx context.Context) userRepository.Repository {
 	if s.userRepository == nil {
 		s.userRepository = userRepository.NewUserRepository(s.GetDB(ctx), s.GetLogger())
@@ -95,15 +85,6 @@ func (s *serviceProvider) GetUserRepository(ctx context.Context) userRepository.
 	}
 
 	return s.userRepository
-}
-
-func (s *serviceProvider) GetBookingService(ctx context.Context) *bookingService.Service {
-	if s.bookingService == nil {
-		bookingRepository := s.GetBookingRepository(ctx)
-		s.bookingService = bookingService.NewBookingService(bookingRepository, s.GetJWTService(), s.GetLogger(), s.TxManager(ctx))
-	}
-
-	return s.bookingService
 }
 
 func (s *serviceProvider) GetUserService(ctx context.Context) *userService.Service {
@@ -123,12 +104,16 @@ func (s *serviceProvider) GetJWTService() jwt.Service {
 	return s.jwtService
 }
 
-func (s *serviceProvider) GetBookingImpl(ctx context.Context) *booking.Implementation {
-	if s.bookingImpl == nil {
-		s.bookingImpl = booking.NewImplementation(s.GetBookingService(ctx), s.GetUserService(ctx))
+func (s *serviceProvider) GetAuthImpl(ctx context.Context) (*auth.Implementation, error) {
+	if s.authImpl == nil {
+		tracer, err := s.GetTracer(ctx)
+		if err != nil {
+			return nil, err
+		}
+		s.authImpl = auth.NewImplementation(s.GetUserService(ctx), tracer)
 	}
 
-	return s.bookingImpl
+	return s.authImpl, nil
 }
 
 func (s *serviceProvider) getServer(router http.Handler) *http.Server {
@@ -178,4 +163,17 @@ func (s *serviceProvider) TxManager(ctx context.Context) db.TxManager {
 	}
 
 	return s.txManager
+}
+
+func (s *serviceProvider) GetTracer(ctx context.Context) (trace.Tracer, error) {
+	if s.tracer == nil {
+		tracer, err := tracer.NewTracer(ctx, "http://jaeger:14268/api/traces", "auth")
+		if err != nil {
+			s.log.Error("failed to create tracer: %s", err)
+			return nil, err
+		}
+		s.tracer = tracer
+	}
+
+	return s.tracer, nil
 }

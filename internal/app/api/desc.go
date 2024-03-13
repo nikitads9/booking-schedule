@@ -180,17 +180,21 @@ func (gr *GetVacantRoomsResponse) Render(w http.ResponseWriter, r *http.Request)
 }
 
 type UpdateBookingRequest struct {
-	// Номер апартаментов
-	SuiteID int64 `json:"suiteID" validate:"required" format:"int64" example:"1"`
-	// Дата и время начала бронировании
+	// Номер апаратаментов
+	SuiteID int64 `json:"suiteID" validate:"required" example:"1"`
+	//Дата и время начала бронировании
 	StartDate time.Time `json:"startDate" validate:"required" example:"2024-03-28T17:43:00Z"`
-	// Дата и время окончания бронирования
+	// Дата и время окончания бронировании
 	EndDate time.Time `json:"endDate" validate:"required" example:"2024-03-29T17:43:00Z"`
-	// Интервал времени для уведомления о бронировании
+	// Интервал времени для предварительного уведомления о бронировании
 	NotifyAt null.String `json:"notifyAt,omitempty" swaggertype:"primitive,string" example:"24h"`
 } //@name UpdateBookingRequest
 
-func (urq *UpdateBookingRequest) Bind(r *http.Request) error {
+type UpdateBookingResponse struct {
+	Response *Response `json:"response"`
+} //@name UpdateBookingResponse
+
+func (urq *UpdateBookingRequest) Bind(req *http.Request) error {
 	err := validator.New().Struct(urq)
 	if err != nil {
 		return err
@@ -199,11 +203,7 @@ func (urq *UpdateBookingRequest) Bind(r *http.Request) error {
 	return CheckDates(urq.StartDate, urq.EndDate)
 }
 
-type UpdateBookingResponse struct {
-	Response *Response `json:"response"`
-} //@name UpdateBookingResponse
-
-func (ur *UpdateBookingResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (urq *UpdateBookingResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
@@ -244,7 +244,7 @@ func (auth *AuthResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-type User struct {
+type SignUpRequest struct {
 	// Телеграм ID пользователя
 	TelegramID int64 `json:"telegramID" validate:"required,notblank" example:"1235678"`
 	// Никнейм пользователя в телеграме
@@ -253,16 +253,16 @@ type User struct {
 	Name string `json:"name" validate:"required,notblank" example:"Pavel Durov"`
 	// Пароль
 	Password string `json:"password" validate:"required,notblank" example:"12345"`
-} //@name User
+} //@name SignUpRequest
 
-func (u *User) Bind(req *http.Request) error {
+func (srq *SignUpRequest) Bind(req *http.Request) error {
 	v := validator.New()
 	err := v.RegisterValidation("notblank", NotBlank)
 	if err != nil {
 		return err
 	}
 
-	err = v.Struct(u)
+	err = v.Struct(srq)
 	if err != nil {
 		return err
 	}

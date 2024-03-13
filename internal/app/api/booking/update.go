@@ -1,4 +1,4 @@
-package handlers
+package booking
 
 import (
 	"booking-schedule/internal/app/api"
@@ -26,7 +26,7 @@ import (
 //	@Produce		json
 //
 //	@Param			booking_id path	string	true	"booking_id"	Format(uuid) default(550e8400-e29b-41d4-a716-446655440000)
-//	@Param          booking body		api.UpdateBookingRequest	true	"UpdateBookingRequest"
+//	@Param          booking body		api.UpdateBookingRequest	true	"BookingEntry"
 //	@Success		200	{object}	api.UpdateBookingResponse
 //	@Failure		400	{object}	api.UpdateBookingResponse
 //	@Failure		401	{object}	api.UpdateBookingResponse

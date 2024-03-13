@@ -1,6 +1,15 @@
 basePath: /bookings
 definitions:
-  AddBookingRequest:
+  AddBookingResponse:
+    properties:
+      bookingID:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        format: uuid
+        type: string
+      response:
+        $ref: '#/definitions/Response'
+    type: object
+  BookingEntry:
     properties:
       endDate:
         description: Дата и время окончания бронировании
@@ -22,15 +31,6 @@ definitions:
     - endDate
     - startDate
     - suiteID
-    type: object
-  AddBookingResponse:
-    properties:
-      bookingID:
-        example: 550e8400-e29b-41d4-a716-446655440000
-        format: uuid
-        type: string
-      response:
-        $ref: '#/definitions/Response'
     type: object
   BookingInfo:
     properties:
@@ -121,13 +121,13 @@ definitions:
   Response:
     properties:
       code:
-        description: application-specific error code
+        description: Код ошибки приложения
         type: integer
       error:
-        description: application-level error message, for debugging
+        description: Сообщение об ошибке в приложении
         type: string
       status:
-        description: user-level status message
+        description: Статус ответа приложения
         type: string
     type: object
   SignInResponse:
@@ -152,30 +152,6 @@ definitions:
         description: Номер апартаментов
         example: 1
         type: integer
-    type: object
-  UpdateBookingRequest:
-    properties:
-      endDate:
-        description: Дата и время окончания бронирования
-        example: "2024-03-29T17:43:00Z"
-        type: string
-      notifyAt:
-        description: Интервал времени для уведомления о бронировании
-        example: 24h
-        type: string
-      startDate:
-        description: Дата и время начала бронировании
-        example: "2024-03-28T17:43:00Z"
-        type: string
-      suiteID:
-        description: Номер апартаментов
-        example: 1
-        format: int64
-        type: integer
-    required:
-    - endDate
-    - startDate
-    - suiteID
     type: object
   UpdateBookingResponse:
     properties:
@@ -327,12 +303,12 @@ paths:
         name: booking_id
         required: true
         type: string
-      - description: UpdateBookingRequest
+      - description: BookingEntry
         in: body
         name: booking
         required: true
         schema:
-          $ref: '#/definitions/UpdateBookingRequest'
+          $ref: '#/definitions/BookingEntry'
       produces:
       - application/json
       responses:
@@ -416,12 +392,12 @@ paths:
         and both should not be expired.'
       operationId: addByBookingJSON
       parameters:
-      - description: AddBookingRequest
+      - description: BookingEntry
         in: body
         name: booking
         required: true
         schema:
-          $ref: '#/definitions/AddBookingRequest'
+          $ref: '#/definitions/BookingEntry'
       produces:
       - application/json
       responses:
@@ -454,6 +430,71 @@ paths:
       summary: Adds booking
       tags:
       - bookings
+  /auth/sign-in:
+    get:
+      description: Get auth token to access user restricted api methods. Requires
+        nickname and password passed via basic auth.
+      operationId: getOauthToken
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/SignInResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/SignInResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/SignInResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/SignInResponse'
+      security:
+      - BasicAuth: []
+      summary: Sign in
+      tags:
+      - auth
+  /auth/sign-up:
+    post:
+      consumes:
+      - application/json
+      description: Creates user with given tg id, nickname, name and password hashed
+        by bcrypto. Every parameter is required. Returns jwt token.
+      operationId: signUpUserJson
+      parameters:
+      - description: User
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/SignInResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/SignInResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/SignInResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/SignInResponse'
+      summary: Sign up
+      tags:
+      - auth
   /get-bookings:
     get:
       description: Responds with series of booking info objects within given time
@@ -554,71 +595,6 @@ paths:
       summary: Get list of vacant rooms
       tags:
       - bookings
-  /user/sign-in:
-    get:
-      description: Get auth token to access user restricted api methods. Requires
-        nickname and password passed via basic auth.
-      operationId: getOauthToken
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/SignInResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/SignInResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/SignInResponse'
-        "503":
-          description: Service Unavailable
-          schema:
-            $ref: '#/definitions/SignInResponse'
-      security:
-      - BasicAuth: []
-      summary: Sign in
-      tags:
-      - users
-  /user/sign-up:
-    post:
-      consumes:
-      - application/json
-      description: Creates user with given tg id, nickname, name and password hashed
-        by bcrypto. Every parameter is required. Returns jwt token.
-      operationId: signUpUserJson
-      parameters:
-      - description: User
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/User'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/SignInResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/SignInResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/SignInResponse'
-        "503":
-          description: Service Unavailable
-          schema:
-            $ref: '#/definitions/SignInResponse'
-      summary: Sign up
-      tags:
-      - users
 schemes:
 - http
 - https
@@ -634,6 +610,7 @@ swagger: "2.0"
 tags:
 - description: operations with bookings, suites and intervals
   name: bookings
-- description: operations with user profile such as sign in, sign up, getting profile
-    editing it and deleting
+- description: sign in and sign up operations
+  name: auth
+- description: service for viewing profile editing or deleting it
   name: users

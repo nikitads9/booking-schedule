@@ -8,22 +8,14 @@ import (
 )
 
 type BookingInfo struct {
-	// Уникальный идентификатор бронирования
-	ID uuid.UUID `db:"id"`
-	// Номер апартаментов
-	SuiteID int64 `db:"suite_id"`
-	//Дата и время начала бронировании
-	StartDate time.Time `db:"start_date"`
-	// Дата и время окончания бронировании
-	EndDate time.Time `db:"end_date"`
-	// Интервал времени для уведомления о бронировании
-	NotifyAt time.Duration `db:"notify_at"`
-	// Дата и время создания
-	CreatedAt time.Time `db:"created_at"`
-	// Дата и время обновления
-	UpdatedAt null.Time `db:"updated_at"`
-	// Идентификатор владельца бронирования
-	UserID int64 `db:"user_id"`
+	ID        uuid.UUID     `db:"id"`
+	SuiteID   int64         `db:"suite_id"`
+	StartDate time.Time     `db:"start_date"`
+	EndDate   time.Time     `db:"end_date"`
+	NotifyAt  time.Duration `db:"notify_at"`
+	CreatedAt time.Time     `db:"created_at"`
+	UpdatedAt null.Time     `db:"updated_at"`
+	UserID    int64         `db:"user_id"`
 }
 
 type Interval struct {
