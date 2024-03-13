@@ -2,13 +2,13 @@
 SELECT NOT EXISTS (
     SELECT 1 FROM bookings b
     WHERE ((b.suite_id = $2 AND (
-        (b.start_date >= sqlc.arg(StartDate)::text AND b.start_date <= sqlc.arg(EndDate)::text) OR (b.end_date >= sqlc.arg(StartDate)::text AND b.end_date <= sqlc.arg(EndDate)::text)
+        (b.start_date >= sqlc.arg(start_date)::text AND b.start_date <= sqlc.arg(end_date)::text) OR (b.end_date >= sqlc.arg(start_date)::text AND b.end_date <= sqlc.arg(end_date)::text)
         ))) ) as availible, 
         (SELECT EXISTS (
             SELECT 1 FROM bookings b
             WHERE (((b.suite_id = $2 AND (b.user_id = $3 AND b.id = $1)) 
             AND 
-            ((b.start_date > sqlc.arg(StartDate)::text AND b.start_date < sqlc.arg(EndDate)::text) OR (b.end_date > sqlc.arg(StartDate)::text AND b.end_date < sqlc.arg(EndDate)::text)))) )) as occupied_by_client;
+            ((b.start_date > sqlc.arg(start_date)::text AND b.start_date < sqlc.arg(end_date)::text) OR (b.end_date > sqlc.arg(start_date)::text AND b.end_date < sqlc.arg(end_date)::text)))) )) as occupied_by_client;
 
 -- name: AddBooking :exec
 INSERT INTO bookings 
@@ -58,9 +58,9 @@ SELECT DISTINCT rooms.id AS suite_id, name, capacity
 FROM rooms 
 WHERE NOT EXISTS (
     SELECT 1 FROM bookings AS e 
-    WHERE (e.suite_id=rooms.id AND ((e.start_date < sqlc.arg(StartDate)::text AND e.end_date > sqlc.arg(EndDate)::text) 
+    WHERE (e.suite_id=rooms.id AND ((e.start_date < sqlc.arg(start_date)::text AND e.end_date > sqlc.arg(end_date)::text) 
     OR 
-    (e.start_date < sqlc.arg(EndDate)::text AND e.end_date > sqlc.arg(StartDate)::text)))) 
+    (e.start_date < sqlc.arg(end_date)::text AND e.end_date > sqlc.arg(start_date)::text)))) 
     OR 
     NOT EXISTS (SELECT DISTINCT suite_id FROM bookings);
 

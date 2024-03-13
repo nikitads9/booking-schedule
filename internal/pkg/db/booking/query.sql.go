@@ -57,8 +57,8 @@ type CheckAvailibilityParams struct {
 	ID        pgtype.UUID `db:"id"`
 	SuiteID   int64       `db:"suite_id"`
 	UserID    int64       `db:"user_id"`
-	Startdate string      `db:"startdate"`
-	Enddate   string      `db:"enddate"`
+	StartDate string      `db:"start_date"`
+	EndDate   string      `db:"end_date"`
 }
 
 type CheckAvailibilityRow struct {
@@ -71,8 +71,8 @@ func (q *Queries) CheckAvailibility(ctx context.Context, arg CheckAvailibilityPa
 		arg.ID,
 		arg.SuiteID,
 		arg.UserID,
-		arg.Startdate,
-		arg.Enddate,
+		arg.StartDate,
+		arg.EndDate,
 	)
 	var i CheckAvailibilityRow
 	err := row.Scan(&i.Availible, &i.OccupiedByClient)
@@ -303,8 +303,8 @@ WHERE NOT EXISTS (
 `
 
 type GetVacantRoomsParams struct {
-	Startdate string `db:"startdate"`
-	Enddate   string `db:"enddate"`
+	StartDate string `db:"start_date"`
+	EndDate   string `db:"end_date"`
 }
 
 type GetVacantRoomsRow struct {
@@ -314,7 +314,7 @@ type GetVacantRoomsRow struct {
 }
 
 func (q *Queries) GetVacantRooms(ctx context.Context, arg GetVacantRoomsParams) ([]GetVacantRoomsRow, error) {
-	rows, err := q.db.Query(ctx, getVacantRooms, arg.Startdate, arg.Enddate)
+	rows, err := q.db.Query(ctx, getVacantRooms, arg.StartDate, arg.EndDate)
 	if err != nil {
 		return nil, err
 	}
