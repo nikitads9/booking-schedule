@@ -11,6 +11,9 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // GetVacantDates godoc
@@ -29,7 +32,7 @@ import (
 //	@Router			/{suite_id}/get-vacant-dates [get]
 func (i *Implementation) GetVacantDates(logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "bookings.api.handlers.GetVacantDates"
+		const op = "api.booking.GetVacantDates"
 
 		ctx := r.Context()
 
@@ -37,9 +40,13 @@ func (i *Implementation) GetVacantDates(logger *slog.Logger) http.HandlerFunc {
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(ctx)),
 		)
+		ctx, span := i.tracer.Start(ctx, op)
+		defer span.End()
 
 		suiteID := chi.URLParam(r, "suite_id")
 		if suiteID == "" {
+			span.RecordError(api.ErrNoSuiteID)
+			span.SetStatus(codes.Error, api.ErrNoSuiteID.Error())
 			log.Error("invalid request", sl.Err(api.ErrNoSuiteID))
 			err := render.Render(w, r, api.ErrInvalidRequest(api.ErrNoSuiteID))
 			if err != nil {
@@ -49,8 +56,12 @@ func (i *Implementation) GetVacantDates(logger *slog.Logger) http.HandlerFunc {
 			return
 		}
 
+		span.AddEvent("suiteID extracted from path", trace.WithAttributes(attribute.String("id", suiteID)))
+
 		id, err := strconv.ParseInt(suiteID, 10, 64)
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			log.Error("invalid request", sl.Err(err))
 			err = render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
 			if err != nil {
@@ -61,6 +72,8 @@ func (i *Implementation) GetVacantDates(logger *slog.Logger) http.HandlerFunc {
 		}
 
 		if id == 0 {
+			span.RecordError(api.ErrNoSuiteID)
+			span.SetStatus(codes.Error, api.ErrNoSuiteID.Error())
 			log.Error("invalid request", sl.Err(api.ErrNoSuiteID))
 			err = render.Render(w, r, api.ErrInvalidRequest(api.ErrNoSuiteID))
 			if err != nil {
@@ -70,8 +83,12 @@ func (i *Implementation) GetVacantDates(logger *slog.Logger) http.HandlerFunc {
 			return
 		}
 
-		dates, err := i.Booking.GetBusyDates(ctx, id)
+		span.AddEvent("suiteID parsed")
+
+		dates, err := i.booking.GetBusyDates(ctx, id)
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			log.Error("internal error", sl.Err(err))
 			err = render.Render(w, r, api.ErrInternalError(err))
 			if err != nil {
@@ -81,11 +98,18 @@ func (i *Implementation) GetVacantDates(logger *slog.Logger) http.HandlerFunc {
 			return
 		}
 
-		log.Info("vacant dates acquired", slog.Int("quantity: ", len(dates)))
+		span.AddEvent("busy dates acquired", trace.WithAttributes(attribute.Int("quantity", len(dates))))
+		log.Info("busy dates acquired", slog.Int("quantity: ", len(dates)))
 
-		render.Status(r, http.StatusCreated)
-		err = render.Render(w, r, api.GetVacantDatesAPI(convert.ToVacantIntervals(dates)))
+		vacant := convert.ToVacantIntervals(dates)
+
+		span.AddEvent("converted to vacant dates", trace.WithAttributes(attribute.Int("quantity", len(vacant))))
+		log.Info("converted to vacant dates", slog.Int("quantity: ", len(vacant)))
+
+		err = render.Render(w, r, api.GetVacantDatesAPI(vacant))
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			log.Error("failed to render response", sl.Err(err))
 			return
 		}

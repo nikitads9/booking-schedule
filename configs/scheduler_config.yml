@@ -15,3 +15,7 @@ rabbit_producer:
   queue_name: "bookings"
 
 env: "dev"
+
+tracer:
+  endpoint_url: "http://jaeger:4318/v1/traces"
+  sampling_rate: 1.0

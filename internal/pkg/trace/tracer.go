@@ -4,54 +4,36 @@ import (
 	"context"
 	"fmt"
 
+	jaegerPropagator "go.opentelemetry.io/contrib/propagators/jaeger"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
-	"go.opentelemetry.io/otel/sdk/resource"
-	tracesdk "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
 	"go.opentelemetry.io/otel/trace"
+
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
 )
 
-func NewTracer(ctx context.Context, jaegerURL string, serviceName string) (trace.Tracer, error) {
-	exporter, err := NewJaegerExporter(ctx, jaegerURL)
+func NewTracer(ctx context.Context, jaegerEndpoint string, svcName string, samplingRate float64) (trace.Tracer, error) {
+	// create jaeger exporter
+	exporter, err := otlptracehttp.New(ctx, otlptracehttp.WithEndpointURL(jaegerEndpoint), otlptracehttp.WithInsecure())
 	if err != nil {
-		return nil, fmt.Errorf("initialize exporter: %w", err)
+		return nil, fmt.Errorf("unable to initialize exporter due: %w", err)
 	}
 
-	tp, err := NewTraceProvider(exporter, serviceName)
-	if err != nil {
-		return nil, fmt.Errorf("initialize provider: %w", err)
-	}
+	tp := sdktrace.NewTracerProvider(
+		//sdktrace.WithSampler(trace.),
+		sdktrace.WithSampler(sdktrace.TraceIDRatioBased(samplingRate)),
+		sdktrace.WithBatcher(exporter),
+		sdktrace.WithResource(resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceNameKey.String(svcName),
+		)),
+	)
 
 	otel.SetTracerProvider(tp)
+	otel.SetTextMapPropagator(jaegerPropagator.Jaeger{})
 
-	return tp.Tracer("main tracer"), nil
-}
-
-// NewJaegerExporter creates new jaeger exporter
-//
-//	url example - http://localhost:14268/api/traces
-func NewJaegerExporter(ctx context.Context, url string) (*otlptrace.Exporter, error) {
-	return otlptracehttp.New(ctx, otlptracehttp.WithEndpointURL(url))
-}
-
-func NewTraceProvider(exp tracesdk.SpanExporter, ServiceName string) (*tracesdk.TracerProvider, error) {
-	// Ensure default SDK resources and the required service name are set.
-	r, err := resource.Merge(
-		resource.Default(),
-		resource.NewWithAttributes(
-			semconv.SchemaURL,
-			semconv.ServiceNameKey.String(ServiceName),
-		),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return tracesdk.NewTracerProvider(
-		tracesdk.WithBatcher(exp),
-		tracesdk.WithResource(r),
-		//tracesdk.WithSampler(tracesdk.Sample)
-	), nil
+	// returns tracer
+	return otel.Tracer(svcName), nil
 }

@@ -6,11 +6,14 @@ import (
 	"booking-schedule/internal/config"
 	"booking-schedule/internal/pkg/db"
 	"booking-schedule/internal/pkg/rabbit"
+	tracer "booking-schedule/internal/pkg/trace"
 	"context"
 	"log"
 	"log/slog"
 	"os"
 	"time"
+
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -25,6 +28,7 @@ type serviceProvider struct {
 	config     *config.SchedulerConfig
 
 	log               *slog.Logger
+	tracer            trace.Tracer
 	rabbitProducer    rabbit.Producer
 	bookingRepository bookingRepository.Repository
 	schedulerService  *schedulerService.Service
@@ -69,7 +73,7 @@ func (s *serviceProvider) GetConfig() *config.SchedulerConfig {
 
 func (s *serviceProvider) GetBookingRepository(ctx context.Context) bookingRepository.Repository {
 	if s.bookingRepository == nil {
-		s.bookingRepository = bookingRepository.NewBookingRepository(s.GetDB(ctx), s.GetLogger())
+		s.bookingRepository = bookingRepository.NewBookingRepository(s.GetDB(ctx), s.GetLogger(), s.GetTracer(ctx))
 		return s.bookingRepository
 	}
 
@@ -119,4 +123,19 @@ func (s *serviceProvider) GetRabbitProducer() rabbit.Producer {
 	}
 
 	return s.rabbitProducer
+}
+
+func (s *serviceProvider) GetTracer(ctx context.Context) trace.Tracer {
+	if s.tracer == nil {
+		tracer, err := tracer.NewTracer(ctx, s.GetConfig().GetTracerConfig().EndpointURL, "auth", s.GetConfig().GetTracerConfig().SamplingRate)
+		if err != nil {
+			s.GetLogger().Error("failed to create tracer: ", err)
+			return nil
+		}
+
+		s.tracer = tracer
+
+	}
+
+	return s.tracer
 }

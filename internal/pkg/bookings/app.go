@@ -13,8 +13,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/chi/v5"
+	"github.com/riandyrn/otelchi"
 )
 
 type App struct {
@@ -145,6 +146,7 @@ func (a *App) initServer(ctx context.Context) error {
 	a.router = chi.NewRouter()
 	a.router.Use(middleware.RequestID) // Добавляет request_id в каждый запрос, для трейсинга
 	//a.router.Use(middleware.Logger)    // Логирование всех запросов
+	a.router.Use(otelchi.Middleware("bookings-api", otelchi.WithChiRoutes(a.router)))
 	a.router.Use(mwLogger.New(a.serviceProvider.GetLogger()))
 	a.router.Use(middleware.Recoverer) // Если где-то внутри сервера (обработчика запроса) произойдет паника, приложение не должно упасть
 
@@ -156,7 +158,7 @@ func (a *App) initServer(ctx context.Context) error {
 		r.Get("/get-vacant-rooms", impl.GetVacantRooms(a.serviceProvider.GetLogger()))
 		r.Get("/{suite_id}/get-vacant-dates", impl.GetVacantDates(a.serviceProvider.GetLogger()))
 		r.Group(func(r chi.Router) {
-			r.Use(auth.Auth(a.serviceProvider.GetLogger(), a.serviceProvider.GetJWTService()))
+			r.Use(auth.Auth(a.serviceProvider.GetLogger(), a.serviceProvider.GetJWTService(ctx)))
 			r.Post("/add", impl.AddBooking(a.serviceProvider.GetLogger()))
 			r.Get("/get-bookings", impl.GetBookings(a.serviceProvider.GetLogger()))
 			r.Route("/{booking_id}", func(r chi.Router) {

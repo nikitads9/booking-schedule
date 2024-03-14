@@ -10,6 +10,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type Repository interface {
@@ -41,11 +42,13 @@ var (
 type repository struct {
 	client db.Client
 	log    *slog.Logger
+	tracer trace.Tracer
 }
 
-func NewBookingRepository(client db.Client, log *slog.Logger) Repository {
+func NewBookingRepository(client db.Client, log *slog.Logger, tracer trace.Tracer) Repository {
 	return &repository{
 		client: client,
 		log:    log,
+		tracer: tracer,
 	}
 }

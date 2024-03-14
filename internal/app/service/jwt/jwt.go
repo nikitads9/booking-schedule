@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/golang-jwt/jwt/v5"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Service is an interface that represents all the capabilities for the JWT service.
@@ -21,12 +22,13 @@ type service struct {
 	jwtSecret  string
 	expiration time.Duration
 	log        *slog.Logger
+	tracer     trace.Tracer
 }
 
 // New creates a service with a provided JWT secret string and expiration (hourly) number. It implements
 // the JWT Service interface.
-func NewJWTService(jwtSecret string, expiration time.Duration, log *slog.Logger) Service {
-	return &service{jwtSecret, expiration, log}
+func NewJWTService(jwtSecret string, expiration time.Duration, log *slog.Logger, tracer trace.Tracer) Service {
+	return &service{jwtSecret, expiration, log, tracer}
 }
 
 var (

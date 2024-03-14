@@ -12,6 +12,9 @@ import (
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // GetBookings godoc
@@ -35,7 +38,7 @@ import (
 // @Security Bearer
 func (i *Implementation) GetBookings(logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "bookings.api.handlers.GetBookings"
+		const op = "api.booking.GetBookings"
 
 		ctx := r.Context()
 
@@ -43,9 +46,13 @@ func (i *Implementation) GetBookings(logger *slog.Logger) http.HandlerFunc {
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(ctx)),
 		)
+		ctx, span := i.tracer.Start(ctx, op)
+		defer span.End()
 
 		userID := auth.UserIDFromContext(ctx)
 		if userID == 0 {
+			span.RecordError(api.ErrNoUserID)
+			span.SetStatus(codes.Error, api.ErrNoUserID.Error())
 			log.Error("no user id in context", sl.Err(api.ErrNoUserID))
 			err := render.Render(w, r, api.ErrUnauthorized(api.ErrNoAuth))
 			if err != nil {
@@ -55,8 +62,12 @@ func (i *Implementation) GetBookings(logger *slog.Logger) http.HandlerFunc {
 			return
 		}
 
+		span.AddEvent("userID extracted from context", trace.WithAttributes(attribute.Int64("id", userID)))
+
 		start := r.URL.Query().Get("start")
 		if start == "" {
+			span.RecordError(api.ErrNoInterval)
+			span.SetStatus(codes.Error, api.ErrNoInterval.Error())
 			log.Error("invalid request", sl.Err(api.ErrNoInterval))
 			err := render.Render(w, r, api.ErrInvalidRequest(api.ErrNoInterval))
 			if err != nil {
@@ -65,9 +76,13 @@ func (i *Implementation) GetBookings(logger *slog.Logger) http.HandlerFunc {
 			}
 			return
 		}
+
+		span.AddEvent("startDate extracted from query", trace.WithAttributes(attribute.String("start", start)))
 
 		end := r.URL.Query().Get("end")
 		if end == "" {
+			span.RecordError(api.ErrNoInterval)
+			span.SetStatus(codes.Error, api.ErrNoInterval.Error())
 			log.Error("invalid request", sl.Err(api.ErrNoInterval))
 			err := render.Render(w, r, api.ErrInvalidRequest(api.ErrNoInterval))
 			if err != nil {
@@ -77,8 +92,12 @@ func (i *Implementation) GetBookings(logger *slog.Logger) http.HandlerFunc {
 			return
 		}
 
+		span.AddEvent("endDate extracted from query", trace.WithAttributes(attribute.String("end", end)))
+
 		startDate, err := time.Parse("2006-01-02T15:04:05", start)
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			log.Error("invalid request", sl.Err(err))
 			err = render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
 			if err != nil {
@@ -89,6 +108,8 @@ func (i *Implementation) GetBookings(logger *slog.Logger) http.HandlerFunc {
 		}
 		endDate, err := time.Parse("2006-01-02T15:04:05", end)
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			log.Error("invalid request", sl.Err(err))
 			err = render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
 			if err != nil {
@@ -98,8 +119,12 @@ func (i *Implementation) GetBookings(logger *slog.Logger) http.HandlerFunc {
 			return
 		}
 
+		span.AddEvent("start and end dates parsed")
+
 		err = api.CheckDates(startDate, endDate)
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			log.Error("invalid request", sl.Err(err))
 			err = render.Render(w, r, api.ErrInvalidRequest(err))
 			if err != nil {
@@ -107,11 +132,13 @@ func (i *Implementation) GetBookings(logger *slog.Logger) http.HandlerFunc {
 				return
 			}
 		}
-
+		span.AddEvent("dates verified")
 		log.Info("received request", slog.Any("params:", start+" to "+end))
 
-		bookings, err := i.Booking.GetBookings(ctx, startDate, endDate, userID)
+		bookings, err := i.booking.GetBookings(ctx, startDate, endDate, userID)
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			log.Error("internal error", sl.Err(err))
 			err = render.Render(w, r, api.ErrInternalError(err))
 			if err != nil {
@@ -121,11 +148,14 @@ func (i *Implementation) GetBookings(logger *slog.Logger) http.HandlerFunc {
 			return
 		}
 
+		span.AddEvent("bookings acquired", trace.WithAttributes(attribute.Int("quantity", len(bookings))))
 		log.Info("bookings acquired", slog.Int("quantity: ", len(bookings)))
 
 		render.Status(r, http.StatusCreated)
 		err = render.Render(w, r, api.GetBookingsResponseAPI(convert.ToApiBookingsInfo(bookings)))
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			log.Error("failed to render response", sl.Err(err))
 			return
 		}

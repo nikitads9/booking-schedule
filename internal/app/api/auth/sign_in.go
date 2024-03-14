@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
+	"go.opentelemetry.io/otel/codes"
 )
 
 // SignIn godoc
@@ -29,7 +30,7 @@ import (
 //	@Security 		BasicAuth
 func (i *Implementation) SignIn(logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "auth.SignIn"
+		const op = "api.auth.SignIn"
 
 		ctx := r.Context()
 		log := logger.With(
@@ -37,11 +38,13 @@ func (i *Implementation) SignIn(logger *slog.Logger) http.HandlerFunc {
 			slog.String("request_id", middleware.GetReqID(ctx)),
 		)
 
-		_, span := i.Tracer.Start(ctx, op)
+		ctx, span := i.tracer.Start(ctx, op)
 		defer span.End()
 
 		nickname, pass, ok := r.BasicAuth()
 		if !ok {
+			span.RecordError(api.ErrBadRequest)
+			span.SetStatus(codes.Error, api.ErrBadRequest.Error())
 			log.Error("bad request")
 			err := render.Render(w, r, api.ErrInvalidRequest(api.ErrNoAuth))
 			if err != nil {
@@ -50,8 +53,13 @@ func (i *Implementation) SignIn(logger *slog.Logger) http.HandlerFunc {
 			}
 			return
 		}
-		token, err := i.User.SignIn(ctx, nickname, pass)
+
+		span.AddEvent("acquired login and password")
+
+		token, err := i.user.SignIn(ctx, nickname, pass)
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			if errors.Is(err, user.ErrBadLogin) {
 				log.Error("incorrect login", sl.Err(err))
 				err = render.Render(w, r, api.ErrUnauthorized(err))
@@ -79,10 +87,13 @@ func (i *Implementation) SignIn(logger *slog.Logger) http.HandlerFunc {
 			return
 		}
 
+		span.AddEvent("token acquired")
 		log.Info("user signed in", slog.Any("login: ", nickname))
 
 		err = render.Render(w, r, api.AuthResponseAPI(token))
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			log.Error("failed to render response", sl.Err(err))
 			return
 		}

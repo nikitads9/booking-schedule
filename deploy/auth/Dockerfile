@@ -22,4 +22,4 @@ WORKDIR /root/
 COPY --from=builder /github.com/nikitads9/booking-schedule/bin .
 COPY --from=builder /github.com/nikitads9/booking-schedule/configs/auth_config.yml .
 
-CMD ["./bookings", "-config", "auth_config.yml"]
+CMD ["./auth", "-config", "auth_config.yml"]

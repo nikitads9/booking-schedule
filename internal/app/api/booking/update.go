@@ -14,6 +14,9 @@ import (
 	"github.com/go-chi/render"
 	validator "github.com/go-playground/validator/v10"
 	"github.com/gofrs/uuid"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // UpdateBooking godoc
@@ -38,7 +41,7 @@ import (
 // @Security Bearer
 func (i *Implementation) UpdateBooking(logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "bookings.api.handlers.UpdateBooking"
+		const op = "api.booking.UpdateBooking"
 
 		ctx := r.Context()
 
@@ -46,12 +49,31 @@ func (i *Implementation) UpdateBooking(logger *slog.Logger) http.HandlerFunc {
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(ctx)),
 		)
+		ctx, span := i.tracer.Start(ctx, op)
+		defer span.End()
+
+		id := auth.UserIDFromContext(ctx)
+		if id == 0 {
+			span.RecordError(api.ErrNoUserID)
+			span.SetStatus(codes.Error, api.ErrNoUserID.Error())
+			log.Error("no user id in context", sl.Err(api.ErrNoUserID))
+			err := render.Render(w, r, api.ErrUnauthorized(api.ErrNoAuth))
+			if err != nil {
+				log.Error("failed to render response", sl.Err(err))
+				return
+			}
+			return
+		}
+
+		span.AddEvent("userID extracted from context", trace.WithAttributes(attribute.Int64("id", id)))
 
 		req := &api.UpdateBookingRequest{}
 		err := render.Bind(r, req)
 		if err != nil {
 			if errors.As(err, api.ValidateErr) {
 				validateErr := err.(validator.ValidationErrors)
+				span.RecordError(validateErr)
+				span.SetStatus(codes.Error, err.Error())
 				log.Error("some of the required values were not received", sl.Err(validateErr))
 				err = render.Render(w, r, api.ErrValidationError(validateErr))
 				if err != nil {
@@ -60,6 +82,8 @@ func (i *Implementation) UpdateBooking(logger *slog.Logger) http.HandlerFunc {
 				}
 				return
 			}
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			log.Error("failed to decode request body", sl.Err(err))
 			err = render.Render(w, r, api.ErrInvalidRequest(err))
 			if err != nil {
@@ -68,33 +92,29 @@ func (i *Implementation) UpdateBooking(logger *slog.Logger) http.HandlerFunc {
 			}
 			return
 		}
-		log.Info("request body decoded", slog.Any("req", req))
 
-		id := auth.UserIDFromContext(ctx)
-		if id == 0 {
-			log.Error("no user id in context", sl.Err(api.ErrNoUserID))
-			err = render.Render(w, r, api.ErrUnauthorized(api.ErrNoAuth))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
-			return
-		}
+		span.AddEvent("request body decoded")
+		log.Info("request body decoded", slog.Any("req", req))
 
 		bookingID := chi.URLParam(r, "booking_id")
 		if bookingID == "" {
+			span.RecordError(api.ErrNoBookingID)
+			span.SetStatus(codes.Error, api.ErrNoBookingID.Error())
 			log.Error("invalid request", sl.Err(api.ErrNoBookingID))
 			err = render.Render(w, r, api.ErrInvalidRequest(api.ErrNoBookingID))
 			if err != nil {
 				log.Error("failed to render response", sl.Err(err))
 				return
 			}
-
 			return
 		}
 
+		span.AddEvent("bookingID extracted from path", trace.WithAttributes(attribute.String("id", bookingID)))
+
 		bookingUUID, err := uuid.FromString(bookingID)
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			log.Error("invalid request", sl.Err(err))
 			err = render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
 			if err != nil {
@@ -104,6 +124,8 @@ func (i *Implementation) UpdateBooking(logger *slog.Logger) http.HandlerFunc {
 		}
 
 		if bookingUUID == uuid.Nil {
+			span.RecordError(api.ErrNoBookingID)
+			span.SetStatus(codes.Error, api.ErrNoBookingID.Error())
 			log.Error("invalid request", sl.Err(api.ErrNoBookingID))
 			err = render.Render(w, r, api.ErrInvalidRequest(api.ErrNoBookingID))
 			if err != nil {
@@ -112,6 +134,8 @@ func (i *Implementation) UpdateBooking(logger *slog.Logger) http.HandlerFunc {
 			}
 			return
 		}
+
+		span.AddEvent("booking uuid decoded")
 		//TODO: getters
 		mod, err := convert.ToBookingInfo(&api.Booking{
 			BookingID: bookingUUID,
@@ -122,6 +146,8 @@ func (i *Implementation) UpdateBooking(logger *slog.Logger) http.HandlerFunc {
 			NotifyAt:  req.NotifyAt,
 		})
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			log.Error("invalid request", sl.Err(err))
 			err = render.Render(w, r, api.ErrInvalidRequest(err))
 			if err != nil {
@@ -130,8 +156,12 @@ func (i *Implementation) UpdateBooking(logger *slog.Logger) http.HandlerFunc {
 			}
 		}
 
-		err = i.Booking.UpdateBooking(ctx, mod)
+		span.AddEvent("converted to booking model")
+
+		err = i.booking.UpdateBooking(ctx, mod)
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			log.Error("internal error", sl.Err(err))
 			err = render.Render(w, r, api.ErrInternalError(err))
 			if err != nil {
@@ -141,10 +171,13 @@ func (i *Implementation) UpdateBooking(logger *slog.Logger) http.HandlerFunc {
 			return
 		}
 
+		span.AddEvent("booking updated")
 		log.Info("booking updated", slog.Any("id: ", mod.ID))
 
 		err = render.Render(w, r, api.UpdateBookingResponseAPI())
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			log.Error("failed to render response", sl.Err(err))
 			return
 		}

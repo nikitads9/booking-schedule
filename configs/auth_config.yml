@@ -16,3 +16,7 @@ jwt:
   expiration: 2160h
   
 env: "dev"
+
+tracer:
+  endpoint_url: "http://jaeger:4318/v1/traces"
+  sampling_rate: 1.0

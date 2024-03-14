@@ -3,16 +3,20 @@ package booking
 import (
 	booking "booking-schedule/internal/app/service/booking"
 	"booking-schedule/internal/app/service/user"
+
+	"go.opentelemetry.io/otel/trace"
 )
 
 type Implementation struct {
-	Booking *booking.Service
-	User    *user.Service
+	booking *booking.Service
+	user    *user.Service
+	tracer  trace.Tracer
 }
 
-func NewImplementation(booking *booking.Service, user *user.Service) *Implementation {
+func NewImplementation(booking *booking.Service, user *user.Service, tracer trace.Tracer) *Implementation {
 	return &Implementation{
-		Booking: booking,
-		User:    user,
+		booking: booking,
+		user:    user,
+		tracer:  tracer,
 	}
 }

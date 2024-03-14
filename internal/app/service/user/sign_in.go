@@ -8,6 +8,9 @@ import (
 	"log/slog"
 
 	"github.com/go-chi/chi/middleware"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Login performs the login process using the provided user credentials.
@@ -23,19 +26,31 @@ func (s *Service) SignIn(ctx context.Context, nickname string, pass string) (tok
 		slog.String("request_id", middleware.GetReqID(ctx)),
 	)
 
+	ctx, span := s.tracer.Start(ctx, op)
+	defer span.End()
+
 	retrievedUser, err := s.userRepository.GetUserByNickname(ctx, nickname)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		log.Error("failed to get user by nickname: ", err)
 		if errors.Is(err, user.ErrNotFound) {
+			span.SetStatus(codes.Error, user.ErrNotFound.Error())
 			return "", ErrBadLogin
 		}
 		return "", err
 	}
 
+	span.AddEvent("user retrieved", trace.WithAttributes(attribute.Int64("id", retrievedUser.ID)))
+
 	if ok := security.CheckPasswordHash(pass, *retrievedUser.Password); !ok {
-		log.Error("password check failed: ", err)
+		span.RecordError(ErrBadPasswd)
+		span.SetStatus(codes.Error, ErrBadPasswd.Error())
+		log.Error("password check failed")
 		return "", ErrBadPasswd
 	}
+
+	span.AddEvent("password checked")
 
 	return s.jwtService.GenerateToken(ctx, retrievedUser.ID)
 }

@@ -7,13 +7,13 @@ import (
 )
 
 type Implementation struct {
-	User   *user.Service
-	Tracer trace.Tracer
+	user   *user.Service
+	tracer trace.Tracer
 }
 
 func NewImplementation(user *user.Service, tracer trace.Tracer) *Implementation {
 	return &Implementation{
-		User:   user,
-		Tracer: tracer,
+		user:   user,
+		tracer: tracer,
 	}
 }

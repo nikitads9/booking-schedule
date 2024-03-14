@@ -8,12 +8,14 @@ import (
 	"log/slog"
 
 	"github.com/jackc/pgx/v5/pgconn"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type Service struct {
 	bookingRepository booking.Repository
 	jwtService        jwt.Service
 	log               *slog.Logger
+	tracer            trace.Tracer
 	txManager         db.TxManager
 }
 
@@ -24,11 +26,12 @@ var (
 	pgNoConnection  = new(*pgconn.ConnectError)
 )
 
-func NewBookingService(bookingRepository booking.Repository, jwtService jwt.Service, log *slog.Logger, txManager db.TxManager) *Service {
+func NewBookingService(bookingRepository booking.Repository, jwtService jwt.Service, log *slog.Logger, txManager db.TxManager, tracer trace.Tracer) *Service {
 	return &Service{
 		bookingRepository: bookingRepository,
 		jwtService:        jwtService,
 		log:               log,
+		tracer:            tracer,
 		txManager:         txManager,
 	}
 }

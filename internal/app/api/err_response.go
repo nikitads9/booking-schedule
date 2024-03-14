@@ -27,6 +27,7 @@ type Response struct {
 } //@name Response
 
 var (
+	ErrBadRequest         = errors.New("bad request")
 	ErrNoUserID           = errors.New(" received no user id")
 	ErrNoBookingID        = errors.New("received no booking id")
 	ErrNoInterval         = errors.New(" received no time period")

@@ -134,10 +134,7 @@ func (a *App) startServer() error {
 }
 
 func (a *App) initServer(ctx context.Context) error {
-	impl, err := a.serviceProvider.GetAuthImpl(ctx)
-	if err != nil {
-		return err
-	}
+	impl := a.serviceProvider.GetAuthImpl(ctx)
 
 	address, err := a.serviceProvider.GetConfig().GetAddress()
 	if err != nil {
@@ -149,8 +146,8 @@ func (a *App) initServer(ctx context.Context) error {
 	a.router = chi.NewRouter()
 	a.router.Use(middleware.RequestID) // Добавляет request_id в каждый запрос, для трейсинга
 	//a.router.Use(middleware.Logger)    // Логирование всех запросов
-	a.router.Use(mwLogger.New(a.serviceProvider.GetLogger()))
 	a.router.Use(otelchi.Middleware("auth", otelchi.WithChiRoutes(a.router)))
+	a.router.Use(mwLogger.New(a.serviceProvider.GetLogger()))
 	a.router.Use(middleware.Recoverer) // Если где-то внутри сервера (обработчика запроса) произойдет паника, приложение не должно упасть
 	a.router.Route("/bookings/auth", func(r chi.Router) {
 		r.Post("/sign-up", impl.SignUp(a.serviceProvider.GetLogger()))

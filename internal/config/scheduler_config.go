@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/exaring/otelpgx"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"gopkg.in/yaml.v3"
@@ -25,6 +26,7 @@ type SchedulerConfig struct {
 	Database       *Database       `yaml:"database"`
 	RabbitProducer *RabbitProducer `yaml:"rabbit_producer"`
 	Env            string          `yaml:"env"`
+	Tracer         *Tracer         `yaml:"tracer"`
 }
 
 func ReadSchedulerConfig(path string) (*SchedulerConfig, error) {
@@ -53,6 +55,11 @@ func (s *SchedulerConfig) GetRabbitProducerConfig() *RabbitProducer {
 	return s.RabbitProducer
 }
 
+// GetTracerConfig
+func (e *SchedulerConfig) GetTracerConfig() *Tracer {
+	return e.Tracer
+}
+
 // GetEnv ...
 func (s *SchedulerConfig) GetEnv() string {
 	return s.Env
@@ -67,6 +74,7 @@ func (s *SchedulerConfig) GetDBConfig() (*pgxpool.Config, error) {
 		return nil, err
 	}
 
+	poolConfig.ConnConfig.Tracer = otelpgx.NewTracer(otelpgx.WithTrimSQLInSpanName())
 	poolConfig.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
 	poolConfig.MaxConns = s.Database.MaxOpenedConnections
 

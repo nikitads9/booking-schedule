@@ -80,7 +80,7 @@ func (s *serviceProvider) GetConfig() *config.AppConfig {
 
 func (s *serviceProvider) GetUserRepository(ctx context.Context) userRepository.Repository {
 	if s.userRepository == nil {
-		s.userRepository = userRepository.NewUserRepository(s.GetDB(ctx), s.GetLogger())
+		s.userRepository = userRepository.NewUserRepository(s.GetDB(ctx), s.GetLogger(), s.GetTracer(ctx))
 		return s.userRepository
 	}
 
@@ -90,30 +90,26 @@ func (s *serviceProvider) GetUserRepository(ctx context.Context) userRepository.
 func (s *serviceProvider) GetUserService(ctx context.Context) *userService.Service {
 	if s.userService == nil {
 		userRepository := s.GetUserRepository(ctx)
-		s.userService = userService.NewUserService(userRepository, s.GetJWTService(), s.GetLogger())
+		s.userService = userService.NewUserService(userRepository, s.GetJWTService(ctx), s.GetLogger(), s.GetTracer(ctx))
 	}
 
 	return s.userService
 }
 
-func (s *serviceProvider) GetJWTService() jwt.Service {
+func (s *serviceProvider) GetJWTService(ctx context.Context) jwt.Service {
 	if s.jwtService == nil {
-		s.jwtService = jwt.NewJWTService(s.GetConfig().GetJWTConfig().Secret, s.GetConfig().GetJWTConfig().Expiration, s.GetLogger())
+		s.jwtService = jwt.NewJWTService(s.GetConfig().GetJWTConfig().Secret, s.GetConfig().GetJWTConfig().Expiration, s.GetLogger(), s.GetTracer(ctx))
 	}
 
 	return s.jwtService
 }
 
-func (s *serviceProvider) GetAuthImpl(ctx context.Context) (*auth.Implementation, error) {
+func (s *serviceProvider) GetAuthImpl(ctx context.Context) *auth.Implementation {
 	if s.authImpl == nil {
-		tracer, err := s.GetTracer(ctx)
-		if err != nil {
-			return nil, err
-		}
-		s.authImpl = auth.NewImplementation(s.GetUserService(ctx), tracer)
+		s.authImpl = auth.NewImplementation(s.GetUserService(ctx), s.GetTracer(ctx))
 	}
 
-	return s.authImpl, nil
+	return s.authImpl
 }
 
 func (s *serviceProvider) getServer(router http.Handler) *http.Server {
@@ -130,8 +126,7 @@ func (s *serviceProvider) getServer(router http.Handler) *http.Server {
 			WriteTimeout: s.GetConfig().GetServerConfig().Timeout,
 			IdleTimeout:  s.GetConfig().GetServerConfig().IdleTimeout,
 			TLSConfig: &tls.Config{
-				MinVersion:               tls.VersionTLS13,
-				PreferServerCipherSuites: true,
+				MinVersion: tls.VersionTLS13,
 			},
 		}
 	}
@@ -165,15 +160,17 @@ func (s *serviceProvider) TxManager(ctx context.Context) db.TxManager {
 	return s.txManager
 }
 
-func (s *serviceProvider) GetTracer(ctx context.Context) (trace.Tracer, error) {
+func (s *serviceProvider) GetTracer(ctx context.Context) trace.Tracer {
 	if s.tracer == nil {
-		tracer, err := tracer.NewTracer(ctx, "http://jaeger:14268/api/traces", "auth")
+		tracer, err := tracer.NewTracer(ctx, s.GetConfig().GetTracerConfig().EndpointURL, "auth", s.GetConfig().GetTracerConfig().SamplingRate)
 		if err != nil {
-			s.log.Error("failed to create tracer: %s", err)
-			return nil, err
+			s.GetLogger().Error("failed to create tracer: ", err)
+			return nil
 		}
+
 		s.tracer = tracer
+
 	}
 
-	return s.tracer, nil
+	return s.tracer
 }
