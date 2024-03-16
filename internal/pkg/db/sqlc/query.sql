@@ -6,9 +6,9 @@ SELECT NOT EXISTS (
         ))) ) as availible, 
         (SELECT EXISTS (
             SELECT 1 FROM bookings b
-            WHERE (((b.suite_id = $2 AND (b.user_id = $3 AND b.id = $1)) 
+            WHERE (((b.suite_id = $2 AND b.user_id = $3) OR b.id = $1) 
             AND 
-            ((b.start_date > sqlc.arg(start_date)::text AND b.start_date < sqlc.arg(end_date)::text) OR (b.end_date > sqlc.arg(start_date)::text AND b.end_date < sqlc.arg(end_date)::text)))) )) as occupied_by_client;
+            ((b.start_date > sqlc.arg(start_date)::text AND b.start_date < sqlc.arg(end_date)::text) OR (b.end_date > sqlc.arg(start_date)::text AND b.end_date < sqlc.arg(end_date)::text)) ))) as occupied_by_client;
 
 -- name: AddBooking :exec
 INSERT INTO bookings 
