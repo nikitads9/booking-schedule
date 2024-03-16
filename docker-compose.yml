@@ -37,6 +37,7 @@ services:
       - "${EVENTS_PORT}:${EVENTS_PORT}"
     depends_on:
       - db
+      - jaeger
     networks:
       - app_net
     deploy:
@@ -154,4 +155,6 @@ services:
       - "9411:9411" # collector Zipkin compatible endpoint (optional)
       - "4317:4317" # OTLP collector grpc
       - "4318:4318" # OTLP collector http
+    networks:
+      - app_net
 

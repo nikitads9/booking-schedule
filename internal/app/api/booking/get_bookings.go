@@ -131,6 +131,7 @@ func (i *Implementation) GetBookings(logger *slog.Logger) http.HandlerFunc {
 				log.Error("failed to render response", sl.Err(err))
 				return
 			}
+			return
 		}
 		span.AddEvent("dates verified")
 		log.Info("received request", slog.Any("params:", start+" to "+end))

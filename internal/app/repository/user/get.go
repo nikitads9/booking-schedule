@@ -10,6 +10,7 @@ import (
 	t "booking-schedule/internal/app/repository/table"
 
 	"github.com/go-chi/chi/middleware"
+	"go.opentelemetry.io/otel/codes"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
@@ -22,17 +23,23 @@ func (r *repository) GetUser(ctx context.Context, userID int64) (*model.User, er
 		slog.String("op", op),
 		slog.String("request_id", middleware.GetReqID(ctx)),
 	)
+	ctx, span := r.tracer.Start(ctx, op)
+	defer span.End()
 
-	builder := sq.Select("*").
+	builder := sq.Select(t.ID, t.TelegramID, t.Name, t.TelegramNickname, t.CreatedAt, t.UpdatedAt).
 		From(t.UserTable).
 		Where(sq.Eq{t.ID: userID}).
 		PlaceholderFormat(sq.Dollar)
 
 	query, args, err := builder.ToSql()
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		log.Error("failed to build a query", err)
 		return nil, ErrQueryBuild
 	}
+
+	span.AddEvent("query built")
 
 	q := db.Query{
 		Name:     op,
@@ -42,6 +49,8 @@ func (r *repository) GetUser(ctx context.Context, userID int64) (*model.User, er
 	var res = new(model.User)
 	err = r.client.DB().GetContext(ctx, res, q, args...)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		if errors.As(err, pgNoConnection) {
 			log.Error("no connection to database host", err)
 			return nil, ErrNoConnection
@@ -53,6 +62,8 @@ func (r *repository) GetUser(ctx context.Context, userID int64) (*model.User, er
 		log.Error("query execution error", err)
 		return nil, ErrQuery
 	}
+
+	span.AddEvent("query successfully executed")
 
 	return res, nil
 }

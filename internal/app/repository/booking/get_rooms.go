@@ -12,15 +12,18 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/georgysavva/scany/pgxscan"
 	"github.com/go-chi/chi/middleware"
+	"go.opentelemetry.io/otel/codes"
 )
 
 func (r *repository) GetVacantRooms(ctx context.Context, startDate time.Time, endDate time.Time) ([]*model.Suite, error) {
-	const op = "bookings.repository.GetVacantRooms"
+	const op = "repository.booking.GetVacantRooms"
 
 	log := r.log.With(
 		slog.String("op", op),
 		slog.String("request_id", middleware.GetReqID(ctx)),
 	)
+	ctx, span := r.tracer.Start(ctx, op)
+	defer span.End()
 
 	builder := sq.Select(t.SuiteTable+".id AS "+t.SuiteID, t.Name, t.Capacity).
 		Distinct().
@@ -42,6 +45,8 @@ func (r *repository) GetVacantRooms(ctx context.Context, startDate time.Time, en
 		).
 		PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		log.Error("failed to build subquery", err)
 		return nil, ErrQueryBuild
 	}
@@ -54,6 +59,8 @@ func (r *repository) GetVacantRooms(ctx context.Context, startDate time.Time, en
 		return nil, ErrQueryBuild
 	}
 
+	span.AddEvent("query built")
+
 	q := db.Query{
 		Name:     op,
 		QueryRaw: query,
@@ -62,6 +69,8 @@ func (r *repository) GetVacantRooms(ctx context.Context, startDate time.Time, en
 	var res []*model.Suite
 	err = r.client.DB().SelectContext(ctx, &res, q, args...)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		if errors.As(err, pgNoConnection) {
 			log.Error("no connection to database host", err)
 			return nil, ErrNoConnection
@@ -73,6 +82,8 @@ func (r *repository) GetVacantRooms(ctx context.Context, startDate time.Time, en
 		log.Error("query execution error", err)
 		return nil, ErrQuery
 	}
+
+	span.AddEvent("query successfully executed")
 
 	return res, nil
 }

@@ -29,7 +29,7 @@ import (
 //	@Failure		400	{object}	api.AuthResponse
 //	@Failure		404	{object}	api.AuthResponse
 //	@Failure		503	{object}	api.AuthResponse
-//	@Router			/auth/sign-up [post]
+//	@Router			/sign-up [post]
 func (i *Implementation) SignUp(logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "api.auth.SignUp"
@@ -102,7 +102,6 @@ func (i *Implementation) SignUp(logger *slog.Logger) http.HandlerFunc {
 		}
 
 		span.AddEvent("user created")
-		log.Debug("user created", slog.Any("token: ", token))
 		log.Info("user created", slog.Any("login: ", req.Nickname))
 
 		render.Status(r, http.StatusCreated)

@@ -1,11 +1,13 @@
 package bookings
 
 import (
+	"booking-schedule/internal/app/api"
 	"booking-schedule/internal/logger/sl"
 	"booking-schedule/internal/middleware/auth"
 	mwLogger "booking-schedule/internal/middleware/logger"
 	"booking-schedule/internal/pkg/certificates"
 	"context"
+
 	"errors"
 	"log/slog"
 	"os"
@@ -134,7 +136,8 @@ func (a *App) startServer() error {
 }
 
 func (a *App) initServer(ctx context.Context) error {
-	impl := a.serviceProvider.GetBookingImpl(ctx)
+	bookingImpl := a.serviceProvider.GetBookingImpl(ctx)
+	userImpl := a.serviceProvider.GetUserImpl(ctx)
 
 	address, err := a.serviceProvider.GetConfig().GetAddress()
 	if err != nil {
@@ -144,27 +147,33 @@ func (a *App) initServer(ctx context.Context) error {
 	a.serviceProvider.GetLogger().Debug("logger debug mode enabled")
 
 	a.router = chi.NewRouter()
-	a.router.Use(middleware.RequestID) // Добавляет request_id в каждый запрос, для трейсинга
+	a.router.Use(middleware.RequestID)
 	//a.router.Use(middleware.Logger)    // Логирование всех запросов
 	a.router.Use(otelchi.Middleware("bookings-api", otelchi.WithChiRoutes(a.router)))
 	a.router.Use(mwLogger.New(a.serviceProvider.GetLogger()))
 	a.router.Use(middleware.Recoverer) // Если где-то внутри сервера (обработчика запроса) произойдет паника, приложение не должно упасть
 
 	a.router.Route("/bookings", func(r chi.Router) {
+		r.Get("/ping", api.HandlePingCheck())
 		r.Route("/user", func(r chi.Router) {
-			//r.Group(func(r chi.Router) {r.Use(authHandler) r.Get("/me", impl.GetMyUser(a.serviceProvider.GetLogger()))})
+			r.Group(func(r chi.Router) {
+				r.Use(auth.Auth(a.serviceProvider.GetLogger(), a.serviceProvider.GetJWTService(ctx)))
+				r.Get("/me", userImpl.GetMyProfile(a.serviceProvider.GetLogger()))
+				r.Delete("/delete", userImpl.DeleteMyProfile(a.serviceProvider.GetLogger()))
+				r.Patch("/edit", userImpl.EditMyProfile(a.serviceProvider.GetLogger()))
+			})
 
 		})
-		r.Get("/get-vacant-rooms", impl.GetVacantRooms(a.serviceProvider.GetLogger()))
-		r.Get("/{suite_id}/get-vacant-dates", impl.GetVacantDates(a.serviceProvider.GetLogger()))
+		r.Get("/get-vacant-rooms", bookingImpl.GetVacantRooms(a.serviceProvider.GetLogger()))
+		r.Get("/{suite_id}/get-vacant-dates", bookingImpl.GetVacantDates(a.serviceProvider.GetLogger()))
 		r.Group(func(r chi.Router) {
 			r.Use(auth.Auth(a.serviceProvider.GetLogger(), a.serviceProvider.GetJWTService(ctx)))
-			r.Post("/add", impl.AddBooking(a.serviceProvider.GetLogger()))
-			r.Get("/get-bookings", impl.GetBookings(a.serviceProvider.GetLogger()))
+			r.Post("/add", bookingImpl.AddBooking(a.serviceProvider.GetLogger()))
+			r.Get("/get-bookings", bookingImpl.GetBookings(a.serviceProvider.GetLogger()))
 			r.Route("/{booking_id}", func(r chi.Router) {
-				r.Get("/get", impl.GetBooking(a.serviceProvider.GetLogger()))
-				r.Patch("/update", impl.UpdateBooking(a.serviceProvider.GetLogger()))
-				r.Delete("/delete", impl.DeleteBooking(a.serviceProvider.GetLogger()))
+				r.Get("/get", bookingImpl.GetBooking(a.serviceProvider.GetLogger()))
+				r.Patch("/update", bookingImpl.UpdateBooking(a.serviceProvider.GetLogger()))
+				r.Delete("/delete", bookingImpl.DeleteBooking(a.serviceProvider.GetLogger()))
 			})
 		})
 

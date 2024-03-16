@@ -43,7 +43,7 @@ func (s *Service) SignIn(ctx context.Context, nickname string, pass string) (tok
 
 	span.AddEvent("user retrieved", trace.WithAttributes(attribute.Int64("id", retrievedUser.ID)))
 
-	if ok := security.CheckPasswordHash(pass, *retrievedUser.Password); !ok {
+	if ok := security.CheckPasswordHash(pass, retrievedUser.Password); !ok {
 		span.RecordError(ErrBadPasswd)
 		span.SetStatus(codes.Error, ErrBadPasswd.Error())
 		log.Error("password check failed")

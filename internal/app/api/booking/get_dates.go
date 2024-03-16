@@ -2,14 +2,13 @@ package booking
 
 import (
 	"booking-schedule/internal/app/api"
-	"booking-schedule/internal/app/convert"
 	"booking-schedule/internal/logger/sl"
 	"log/slog"
 	"net/http"
 	"strconv"
 
-	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -85,7 +84,7 @@ func (i *Implementation) GetVacantDates(logger *slog.Logger) http.HandlerFunc {
 
 		span.AddEvent("suiteID parsed")
 
-		dates, err := i.booking.GetBusyDates(ctx, id)
+		dates, err := i.booking.GetVacantDates(ctx, id)
 		if err != nil {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
@@ -98,15 +97,10 @@ func (i *Implementation) GetVacantDates(logger *slog.Logger) http.HandlerFunc {
 			return
 		}
 
-		span.AddEvent("busy dates acquired", trace.WithAttributes(attribute.Int("quantity", len(dates))))
-		log.Info("busy dates acquired", slog.Int("quantity: ", len(dates)))
+		span.AddEvent("vacant dates acquired", trace.WithAttributes(attribute.Int("quantity", len(dates))))
+		log.Info("vacant dates acquired", slog.Int("quantity: ", len(dates)))
 
-		vacant := convert.ToVacantIntervals(dates)
-
-		span.AddEvent("converted to vacant dates", trace.WithAttributes(attribute.Int("quantity", len(vacant))))
-		log.Info("converted to vacant dates", slog.Int("quantity: ", len(vacant)))
-
-		err = render.Render(w, r, api.GetVacantDatesAPI(vacant))
+		err = render.Render(w, r, api.GetVacantDatesAPI(dates))
 		if err != nil {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())

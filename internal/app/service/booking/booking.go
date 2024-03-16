@@ -20,8 +20,8 @@ type Service struct {
 }
 
 var (
-	ErrNoModel      = errors.New("received no model")
 	ErrNotAvailible = errors.New("this period is not availible for booking")
+
 	ErrNoConnection = errors.New("can't begin transaction, no connection to database")
 	pgNoConnection  = new(*pgconn.ConnectError)
 )

@@ -6,7 +6,7 @@ import (
 
 	_ "go.uber.org/automaxprocs"
 
-	//_ "booking-schedule/cmd/server/docs"
+	//_ "booking-schedule/cmd/bookings/docs"
 	"booking-schedule/internal/pkg/bookings"
 
 	"flag"
@@ -40,18 +40,12 @@ func init() {
 // @in header
 // @name Authorization
 // @description Type "Bearer" followed by a space and JWT token.
-
-// @securityDefinitions.basic BasicAuth
-// @in header
-// @name Authorization
 //
 //	 @Schemes 		http https
-//		@Tags			bookings auth
+//		@Tags			bookings users
 //
 // @tag.name bookings
 // @tag.description operations with bookings, suites and intervals
-// @tag.name auth
-// @tag.description sign in and sign up operations
 // @tag.name users
 // @tag.description service for viewing profile editing or deleting it
 func main() {

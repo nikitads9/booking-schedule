@@ -1,0 +1,134 @@
+basePath: /auth
+definitions:
+  AuthResponse:
+    properties:
+      response:
+        $ref: '#/definitions/Response'
+      token:
+        description: JWT токен для доступа
+        type: string
+    type: object
+  Response:
+    properties:
+      code:
+        description: Код ошибки приложения
+        type: integer
+      error:
+        description: Сообщение об ошибке в приложении
+        type: string
+      status:
+        description: Статус ответа приложения
+        type: string
+    type: object
+  SignUpRequest:
+    properties:
+      name:
+        description: Имя пользователя
+        example: Pavel Durov
+        type: string
+      password:
+        description: Пароль
+        example: "12345"
+        type: string
+      telegramID:
+        description: Телеграм ID пользователя
+        example: 1235678
+        type: integer
+      telegramNickname:
+        description: Никнейм пользователя в телеграме
+        example: pavel_durov
+        type: string
+    required:
+    - name
+    - password
+    - telegramID
+    - telegramNickname
+    type: object
+host: 127.0.0.1:5000
+info:
+  contact:
+    name: Nikita Denisenok
+    url: https://vk.com/ndenisenok
+  description: This is a basic auth service for booking API.
+  license:
+    name: GNU 3.0
+    url: https://www.gnu.org/licenses/gpl-3.0.ru.html
+  termsOfService: http://swagger.io/terms/
+  title: auth API
+  version: "1.0"
+paths:
+  /sign-in:
+    get:
+      description: Get auth token to access user restricted api methods. Requires
+        nickname and password passed via basic auth.
+      operationId: getOauthToken
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/AuthResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/AuthResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/AuthResponse'
+      security:
+      - BasicAuth: []
+      summary: Sign in
+      tags:
+      - auth
+  /sign-up:
+    post:
+      consumes:
+      - application/json
+      description: Creates user with given tg id, nickname, name and password hashed
+        by bcrypto. Every parameter is required. Returns jwt token.
+      operationId: signUpUserJson
+      parameters:
+      - description: User
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/SignUpRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/AuthResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/AuthResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/AuthResponse'
+      summary: Sign up
+      tags:
+      - auth
+schemes:
+- http
+- https
+securityDefinitions:
+  BasicAuth:
+    type: basic
+swagger: "2.0"
+tags:
+- description: sign in and sign up operations
+  name: auth

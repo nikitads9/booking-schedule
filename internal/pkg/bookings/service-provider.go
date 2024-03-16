@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"booking-schedule/internal/app/api/booking"
+	"booking-schedule/internal/app/api/user"
 	bookingRepository "booking-schedule/internal/app/repository/booking"
 	userRepository "booking-schedule/internal/app/repository/user"
 	bookingService "booking-schedule/internal/app/service/booking"
@@ -46,6 +47,7 @@ type serviceProvider struct {
 	jwtService     jwt.Service
 
 	bookingImpl *booking.Implementation
+	userImpl    *user.Implementation
 }
 
 func newServiceProvider(configPath string) *serviceProvider {
@@ -129,10 +131,18 @@ func (s *serviceProvider) GetJWTService(ctx context.Context) jwt.Service {
 
 func (s *serviceProvider) GetBookingImpl(ctx context.Context) *booking.Implementation {
 	if s.bookingImpl == nil {
-		s.bookingImpl = booking.NewImplementation(s.GetBookingService(ctx), s.GetUserService(ctx), s.GetTracer(ctx))
+		s.bookingImpl = booking.NewImplementation(s.GetBookingService(ctx), s.GetTracer(ctx))
 	}
 
 	return s.bookingImpl
+}
+
+func (s *serviceProvider) GetUserImpl(ctx context.Context) *user.Implementation {
+	if s.userImpl == nil {
+		s.userImpl = user.NewImplementation(s.GetUserService(ctx), s.GetTracer(ctx))
+	}
+
+	return s.userImpl
 }
 
 func (s *serviceProvider) getServer(router http.Handler) *http.Server {
@@ -186,7 +196,7 @@ func (s *serviceProvider) TxManager(ctx context.Context) db.TxManager {
 
 func (s *serviceProvider) GetTracer(ctx context.Context) trace.Tracer {
 	if s.tracer == nil {
-		tracer, err := tracer.NewTracer(ctx, s.GetConfig().GetTracerConfig().EndpointURL, "auth", s.GetConfig().GetTracerConfig().SamplingRate)
+		tracer, err := tracer.NewTracer(ctx, s.GetConfig().GetTracerConfig().EndpointURL, "bookings", s.GetConfig().GetTracerConfig().SamplingRate)
 		if err != nil {
 			s.GetLogger().Error("failed to create tracer: ", err)
 			return nil

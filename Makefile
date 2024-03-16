@@ -42,7 +42,8 @@ install-go-deps: .install-go-deps
 
 .PHONY: generate-swag
 generate-swag:
-	swag init --generalInfo cmd/bookings/booking.go --parseDependency --parseInternal
+	swag init --generalInfo cmd/bookings/bookings.go --parseDependency --parseInternal --tags users,bookings --output ./docs/bookings/
+	swag init --generalInfo cmd/auth/auth.go --parseDependency --parseInternal --tags auth --output ./docs/auth/
 
 .PHONY: coverage
 coverage:

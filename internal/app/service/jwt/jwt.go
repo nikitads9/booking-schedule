@@ -9,6 +9,8 @@ import (
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/golang-jwt/jwt/v5"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -33,43 +35,50 @@ func NewJWTService(jwtSecret string, expiration time.Duration, log *slog.Logger,
 
 var (
 	ErrUnsupportedSign = errors.New("unexpected signing method")
-	ErrParseID         = errors.New("parsing user id failed")
-	ErrParseExp        = errors.New("parsing token expiration failed")
 	ErrNoID            = errors.New("user id not set")
 	ErrInvalidToken    = errors.New("invalid token")
+
+	ErrParseID  = errors.New("parsing user id failed")
+	ErrParseExp = errors.New("parsing token expiration failed")
 )
 
 // GenerateToken takes a user ID and
 func (s *service) GenerateToken(ctx context.Context, userID int64) (string, error) {
-	const op = "auth.service.GenerateToken"
+	const op = "service.jwt.GenerateToken"
 
 	log := s.log.With(
 		slog.String("op", op),
 		slog.String("request_id", middleware.GetReqID(ctx)),
 	)
+	_, span := s.tracer.Start(ctx, op)
+	defer span.End()
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"userID": userID,
 		"exp":    time.Now().Add(s.expiration).Unix(),
 	})
 
-	log.Info("generated token", slog.Any("user id:", userID))
-	tkn, err := token.SignedString([]byte(s.jwtSecret))
+	span.AddEvent("token generated", trace.WithAttributes(attribute.Int64("user_id", userID)))
+	log.Info("token generated", slog.Int64("user id:", userID))
 
-	return tkn, err
+	return token.SignedString([]byte(s.jwtSecret))
 }
 
 // VerifyToken parses and validates a jwt token. It returns the userID if the token is valid.
 func (s *service) VerifyToken(ctx context.Context, tokenString string) (int64, error) {
-	const op = "jwt.service.VerifyToken"
+	const op = "service.jwt.VerifyToken"
 
 	log := s.log.With(
 		slog.String("op", op),
 		slog.String("request_id", middleware.GetReqID(ctx)),
 	)
+	_, span := s.tracer.Start(ctx, op)
+	defer span.End()
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			span.RecordError(ErrUnsupportedSign)
+			span.SetStatus(codes.Error, ErrUnsupportedSign.Error())
 			log.Error("unexpected signing method: ", token.Header["alg"])
 			return nil, ErrUnsupportedSign
 		}
@@ -77,12 +86,18 @@ func (s *service) VerifyToken(ctx context.Context, tokenString string) (int64, e
 	}, jwt.WithJSONNumber())
 
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		log.Error("parsing token failed: ", err)
 		return 0, err
 	}
 
+	span.AddEvent("token parsed")
+
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !token.Valid || !ok {
+		span.RecordError(ErrInvalidToken)
+		span.SetStatus(codes.Error, ErrInvalidToken.Error())
 		log.Error("invalid token")
 		return 0, ErrInvalidToken
 	}
@@ -90,24 +105,36 @@ func (s *service) VerifyToken(ctx context.Context, tokenString string) (int64, e
 	userID := claims["userID"]
 	userIDInt, err := userID.(json.Number).Int64()
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		log.Error("issue parsing user id", err)
 		return 0, ErrParseID
 
 	}
 
 	if userIDInt == 0 {
+		span.RecordError(ErrNoID)
+		span.SetStatus(codes.Error, ErrNoID.Error())
 		log.Error("empty user id")
 		return 0, ErrNoID
 	}
 
+	span.AddEvent("userID acquired")
+
 	exp, err := claims["exp"].(json.Number).Int64()
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		log.Error("issue parsing token expiration", err)
 		return 0, ErrParseExp
 
 	}
 
+	span.AddEvent("token expiration acquired")
+
 	if exp < time.Now().Unix() {
+		span.RecordError(jwt.ErrTokenExpired)
+		span.SetStatus(codes.Error, jwt.ErrTokenExpired.Error())
 		log.Error("token expired", jwt.ErrTokenExpired)
 		return 0, jwt.ErrTokenExpired
 	}

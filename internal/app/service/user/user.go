@@ -17,8 +17,9 @@ type Service struct {
 }
 
 var (
-	ErrBadLogin   = errors.New("incorrect nickname")
-	ErrBadPasswd  = errors.New("incorrect password")
+	ErrBadLogin  = errors.New("incorrect nickname")
+	ErrBadPasswd = errors.New("incorrect password")
+
 	ErrHashFailed = errors.New("failed to hash password")
 )
 

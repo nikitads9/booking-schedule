@@ -4,8 +4,6 @@ import (
 	"booking-schedule/internal/app/api"
 	"booking-schedule/internal/app/model"
 	"time"
-
-	"github.com/gofrs/uuid"
 )
 
 func ToBookingInfo(req *api.Booking) (*model.BookingInfo, error) {
@@ -14,13 +12,11 @@ func ToBookingInfo(req *api.Booking) (*model.BookingInfo, error) {
 	}
 
 	res := &model.BookingInfo{
+		ID:        req.BookingID,
 		UserID:    req.UserID,
 		SuiteID:   req.SuiteID,
 		StartDate: req.StartDate,
 		EndDate:   req.EndDate,
-	}
-	if req.BookingID != uuid.Nil {
-		res.ID = req.BookingID
 	}
 
 	if req.NotifyAt.Valid {
@@ -46,11 +42,12 @@ func ToApiBookingInfo(mod *model.BookingInfo) *api.BookingInfo {
 	}
 
 	if mod.NotifyAt != 0 {
-		res.NotifyAt = mod.NotifyAt.String()
+		notifyAt := mod.NotifyAt.String()
+		res.NotifyAt = &notifyAt
 	}
 
 	if mod.UpdatedAt.Valid {
-		res.UpdatedAt = mod.UpdatedAt.Time
+		res.UpdatedAt = &mod.UpdatedAt.Time
 	}
 
 	return res
@@ -83,7 +80,7 @@ func ToApiSuites(mod []*model.Suite) []*api.Suite {
 }
 
 // Эта функция преобразует массив занятых интервалов к виду свободных
-func ToVacantIntervals(mod []*model.Interval) []*api.Interval {
+func ToVacantDates(mod []*model.Interval) []*api.Interval {
 	now := time.Now()
 	month := now.Add(720 * time.Hour)
 	var res []*api.Interval
@@ -150,8 +147,36 @@ func ToUserInfo(user *api.SignUpRequest) (*model.User, error) {
 		TelegramID: user.TelegramID,
 		Nickname:   user.Nickname,
 		Name:       user.Name,
-		Password:   &user.Password,
+		Password:   user.Password,
 		CreatedAt:  time.Now(),
 	}
 	return mod, nil
+}
+
+func ToApiUserInfo(user *model.User) *api.UserInfo {
+	res := &api.UserInfo{
+		ID:         user.ID,
+		TelegramID: user.TelegramID,
+		Nickname:   user.Nickname,
+		Name:       user.Name,
+		CreatedAt:  time.Now(),
+	}
+
+	if user.UpdatedAt != nil {
+		res.UpdatedAt = user.UpdatedAt
+	}
+
+	return res
+}
+
+func ToUpdateUserInfo(user *api.EditMyProfileRequest, userID int64) *model.UpdateUserInfo {
+	mod := &model.UpdateUserInfo{
+		ID:         userID,
+		TelegramID: user.TelegramID,
+		Nickname:   user.Nickname,
+		Name:       user.Name,
+		Password:   user.Password,
+	}
+
+	return mod
 }

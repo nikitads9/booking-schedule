@@ -21,7 +21,7 @@ func (s *Service) SignUp(ctx context.Context, user *model.User) (string, error) 
 	ctx, span := s.tracer.Start(ctx, op)
 	defer span.End()
 
-	hashedPassword, err := security.HashPassword(*user.Password)
+	hashedPassword, err := security.HashPassword(user.Password)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
@@ -30,7 +30,7 @@ func (s *Service) SignUp(ctx context.Context, user *model.User) (string, error) 
 	}
 
 	span.AddEvent("password hash created")
-	user.Password = &hashedPassword
+	user.Password = hashedPassword
 
 	id, err := s.userRepository.CreateUser(ctx, user)
 	if err != nil {
@@ -50,7 +50,7 @@ func (s *Service) SignUp(ctx context.Context, user *model.User) (string, error) 
 		return "", err
 	}
 
-	span.AddEvent("generated token")
+	span.AddEvent("signed token acquired")
 
 	return jwtToken, nil
 }

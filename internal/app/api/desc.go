@@ -12,20 +12,6 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-type Booking struct {
-	BookingID uuid.UUID
-	// Идентификатор пользователя
-	UserID int64
-	// Номер апартаментов
-	SuiteID int64
-	// Дата и время начала бронировании
-	StartDate time.Time
-	// Дата и время окончания бронировании
-	EndDate time.Time
-	// Интервал времени для уведомления о бронировании
-	NotifyAt null.String
-}
-
 type BookingInfo struct {
 	// Уникальный идентификатор бронирования
 	ID uuid.UUID `json:"BookingID" example:"550e8400-e29b-41d4-a716-446655440000" format:"uuid"`
@@ -36,11 +22,11 @@ type BookingInfo struct {
 	// Дата и время окончания бронировании
 	EndDate time.Time `json:"endDate" example:"2024-03-29T17:43:00Z"`
 	// Интервал времени для уведомления о бронировании
-	NotifyAt string `json:"notifyAt,omitempty" example:"24h00m00s"`
+	NotifyAt *string `json:"notifyAt,omitempty" example:"24h00m00s"`
 	// Дата и время создания
 	CreatedAt time.Time `json:"createdAt" example:"2024-03-27T17:43:00Z"`
 	// Дата и время обновления
-	UpdatedAt time.Time `json:"updatedAt,omitempty" example:"2024-03-27T18:43:00Z"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty" example:"2024-03-27T18:43:00Z"`
 	// Идентификатор владельца бронирования
 	UserID int64 `json:"userID,omitempty" example:"1"`
 } //@name BookingInfo
@@ -190,6 +176,20 @@ type UpdateBookingRequest struct {
 	NotifyAt null.String `json:"notifyAt,omitempty" swaggertype:"primitive,string" example:"24h"`
 } //@name UpdateBookingRequest
 
+type Booking struct {
+	BookingID uuid.UUID
+	// Идентификатор пользователя
+	UserID int64
+	// Номер апартаментов
+	SuiteID int64
+	// Дата и время начала бронировании
+	StartDate time.Time
+	// Дата и время окончания бронировании
+	EndDate time.Time
+	// Интервал времени для уведомления о бронировании
+	NotifyAt null.String
+}
+
 type UpdateBookingResponse struct {
 	Response *Response `json:"response"`
 } //@name UpdateBookingResponse
@@ -203,7 +203,7 @@ func (urq *UpdateBookingRequest) Bind(req *http.Request) error {
 	return CheckDates(urq.StartDate, urq.EndDate)
 }
 
-func (urq *UpdateBookingResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (ur *UpdateBookingResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
@@ -231,7 +231,7 @@ type AuthResponse struct {
 	Response *Response `json:"response"`
 	// JWT токен для доступа
 	Token string `json:"token"`
-} //@name SignInResponse
+} //@name AuthResponse
 
 func AuthResponseAPI(token string) *AuthResponse {
 	return &AuthResponse{
@@ -284,5 +284,110 @@ func NotBlank(fl validator.FieldLevel) bool {
 		return !field.IsNil()
 	default:
 		return field.IsValid() && field.Interface() != reflect.Zero(field.Type()).Interface()
+	}
+}
+
+type UserInfo struct {
+	//ID пользователя в системе
+	ID int64 `json:"id"`
+	// Телеграм ID пользователя
+	TelegramID int64 `json:"telegramID"`
+	// Никнейм пользователя в телеграме
+	Nickname string `json:"telegramNickname"`
+	// Имя пользователя
+	Name string `json:"name"`
+	// Дата и время регистрации
+	CreatedAt time.Time `json:"createdAt"`
+	// Дата и время обновления профиля
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
+} //@name UserInfo
+
+type GetMyProfileResponse struct {
+	Response *Response `json:"response"`
+	// JWT токен для доступа
+	Profile *UserInfo `json:"profile"`
+} //@name GetMyProfileResponse
+
+func GetMyProfileResponseAPI(user *UserInfo) *GetMyProfileResponse {
+	return &GetMyProfileResponse{
+		Response: OK(),
+		Profile:  user,
+	}
+}
+
+func (gmr *GetMyProfileResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+type DeleteMyProfileResponse struct {
+	Response *Response `json:"response"`
+} //@name DeleteMyProfileResponse
+
+func DeleteMyProfileResponseAPI() *DeleteMyProfileResponse {
+	return &DeleteMyProfileResponse{
+		Response: OK(),
+	}
+}
+
+func (dmr *DeleteMyProfileResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+type EditMyProfileRequest struct {
+	// Имя пользователя
+	Name null.String `json:"name" swaggertype:"primitive,string" validate:"notblank" example:"Kolya Durov"`
+	// Телеграм ID пользователя
+	TelegramID null.Int `json:"telegramID" swaggertype:"primitive,integer" validate:"notblank" example:"1235678"`
+	// Никнейм пользователя в телеграме
+	Nickname null.String `json:"telegramNickname" swaggertype:"primitive,string" validate:"notblank" example:"kolya_durov"`
+	// Пароль
+	Password null.String `json:"password" swaggertype:"primitive,string" validate:"notblank" example:"123456"`
+} // @name EditMyProfileRequest
+
+func (empr *EditMyProfileRequest) Bind(req *http.Request) error {
+	v := validator.New()
+	err := v.RegisterValidation("notblank", NotBlank)
+	if err != nil {
+		return err
+	}
+
+	err = v.Struct(empr)
+	if err != nil {
+		return err
+	}
+
+	if (empr.TelegramID.Valid && !empr.Nickname.Valid) || (!empr.TelegramID.Valid && empr.Nickname.Valid) {
+		return ErrIncompleteRequest
+	}
+
+	return nil
+}
+
+type EditMyProfileResponse struct {
+	Response *Response `json:"response"`
+} // @name EditMyProfileResponse
+
+func (umr *EditMyProfileResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+func EditMyProfileResponseAPI() *EditMyProfileResponse {
+	return &EditMyProfileResponse{
+		Response: OK(),
+	}
+}
+
+type PingResponse struct {
+	Response *Response `json:"response"`
+	Message  string
+} //@name PingResponse
+
+func (pr *PingResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+func PingResponseAPI() *PingResponse {
+	return &PingResponse{
+		Response: OK(),
+		Message:  "pong",
 	}
 }

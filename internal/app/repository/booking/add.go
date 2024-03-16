@@ -10,26 +10,33 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/middleware"
+	"go.opentelemetry.io/otel/codes"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/gofrs/uuid"
 )
 
 func (r *repository) AddBooking(ctx context.Context, mod *model.BookingInfo) (uuid.UUID, error) {
-	const op = "bookings.repository.AddBooking"
+	const op = "repository.booking.AddBooking"
 
 	log := r.log.With(
 		slog.String("op", op),
 		slog.String("request_id", middleware.GetReqID(ctx)),
 	)
+	ctx, span := r.tracer.Start(ctx, op)
+	defer span.End()
 
 	var builder sq.InsertBuilder
 
 	newID, err := uuid.NewV4()
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		log.Error("failed to generate uuid", err)
 		return uuid.Nil, ErrUuid
 	}
+
+	span.AddEvent("uuid generated")
 
 	if mod.NotifyAt != 0 {
 		builder = sq.Insert(t.BookingTable).
@@ -43,9 +50,13 @@ func (r *repository) AddBooking(ctx context.Context, mod *model.BookingInfo) (uu
 
 	query, args, err := builder.PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		log.Error("failed to build a query", err)
 		return uuid.Nil, ErrQueryBuild
 	}
+
+	span.AddEvent("query built")
 
 	q := db.Query{
 		Name:     op,
@@ -54,6 +65,8 @@ func (r *repository) AddBooking(ctx context.Context, mod *model.BookingInfo) (uu
 
 	_, err = r.client.DB().QueryContext(ctx, q, args...)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		if errors.As(err, pgNoConnection) {
 			log.Error("no connection to database host", err)
 			return uuid.Nil, ErrNoConnection
@@ -61,6 +74,8 @@ func (r *repository) AddBooking(ctx context.Context, mod *model.BookingInfo) (uu
 		log.Error("query execution error", err)
 		return uuid.Nil, ErrQuery
 	}
+
+	span.AddEvent("query successfully executed")
 
 	return newID, nil
 }

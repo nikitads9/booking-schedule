@@ -41,7 +41,7 @@ var (
 	ErrEmptyRequest       = errors.New("received empty request")
 	ErrNoAuth             = errors.New("received no auth info")
 	ErrIncompleteInterval = errors.New("received no start date or no end date")
-	ErrIncompleteRequest  = errors.New("received booking interval with no notification time")
+	ErrIncompleteRequest  = errors.New("in case telegram account is changed, both id and nickname should be set")
 	ErrAuthFailed         = errors.New("failed to authenticate")
 	ValidateErr           = new(validator.ValidationErrors)
 )

@@ -85,6 +85,7 @@ func (s *serviceProvider) GetSchedulerService(ctx context.Context) *schedulerSer
 		s.schedulerService = schedulerService.NewSchedulerService(
 			s.GetBookingRepository(ctx),
 			s.GetLogger(),
+			s.GetTracer(ctx),
 			s.GetRabbitProducer(),
 			time.Duration(s.GetConfig().GetSchedulerConfig().CheckPeriodSec)*time.Second,
 			time.Duration(s.GetConfig().GetSchedulerConfig().BookingTTL)*time.Hour*24)
@@ -127,7 +128,7 @@ func (s *serviceProvider) GetRabbitProducer() rabbit.Producer {
 
 func (s *serviceProvider) GetTracer(ctx context.Context) trace.Tracer {
 	if s.tracer == nil {
-		tracer, err := tracer.NewTracer(ctx, s.GetConfig().GetTracerConfig().EndpointURL, "auth", s.GetConfig().GetTracerConfig().SamplingRate)
+		tracer, err := tracer.NewTracer(ctx, s.GetConfig().GetTracerConfig().EndpointURL, "scheduler", s.GetConfig().GetTracerConfig().SamplingRate)
 		if err != nil {
 			s.GetLogger().Error("failed to create tracer: ", err)
 			return nil

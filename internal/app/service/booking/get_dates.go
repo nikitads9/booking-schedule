@@ -1,26 +1,41 @@
 package booking
 
 import (
-	"booking-schedule/internal/app/model"
+	"booking-schedule/internal/app/api"
+	"booking-schedule/internal/app/convert"
 	"context"
 	"log/slog"
 
 	"github.com/go-chi/chi/middleware"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
-func (s *Service) GetBusyDates(ctx context.Context, suiteID int64) ([]*model.Interval, error) {
-	const op = "bookings.service.GetVacantDates"
+func (s *Service) GetVacantDates(ctx context.Context, suiteID int64) ([]*api.Interval, error) {
+	const op = "service.booking.GetVacantDates"
 
 	log := s.log.With(
 		slog.String("op", op),
 		slog.String("request_id", middleware.GetReqID(ctx)),
 	)
+	ctx, span := s.tracer.Start(ctx, op)
+	defer span.End()
 
-	res, err := s.bookingRepository.GetBusyDates(ctx, suiteID)
+	dates, err := s.bookingRepository.GetBusyDates(ctx, suiteID)
 	if err != nil {
-		log.Error("could not get vacant dates:", err)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		log.Error("could not get busy dates:", err)
 		return nil, err
 	}
 
-	return res, nil
+	span.AddEvent("acquired busy dates", trace.WithAttributes(attribute.Int("quantity", len(dates))))
+
+	vacant := convert.ToVacantDates(dates)
+
+	span.AddEvent("converted to vacant dates", trace.WithAttributes(attribute.Int("quantity", len(vacant))))
+	log.Info("converted to vacant dates", slog.Int("quantity: ", len(vacant)))
+
+	return vacant, nil
 }

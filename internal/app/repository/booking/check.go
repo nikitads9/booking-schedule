@@ -11,6 +11,7 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-chi/chi/middleware"
+	"go.opentelemetry.io/otel/codes"
 )
 
 //TODO: проверить а что будет еси комнаты забронированы гетерогенно: разными клиентами и приходит запрос на обновление одним из них, накладывающийся на второго (умозрительно вроде норм)
@@ -18,29 +19,31 @@ import (
 SELECT NOT EXISTS ( SELECT 1 FROM bookings WHERE ((suite_id = 1 AND ((start_date > 3 AND start_date < 6) OR (end_date > 3 AND end_date < 6)))) ) as availible, (SELECT EXISTS ( SELECT 1 FROM bookings WHERE ((suite_id = 1 AND owner_id = 2) AND ((start_date > 3 AND start_date < 6) OR (end_date > 3 AND end_date < 6)))) ) as occupied_by_owner
 */
 func (r *repository) CheckAvailibility(ctx context.Context, mod *model.BookingInfo) (*model.Availibility, error) {
-	const op = "bookings.repository.CheckAvailibility"
+	const op = "repository.booking.CheckAvailibility"
 
 	log := r.log.With(
 		slog.String("op", op),
 		slog.String("request_id", middleware.GetReqID(ctx)),
 	)
+	ctx, span := r.tracer.Start(ctx, op)
+	defer span.End()
 
 	subQuery := sq.Select("1").From(t.BookingTable).Where(sq.And{
 		sq.And{
-			sq.And{
-				sq.Eq{t.SuiteID: mod.SuiteID},
-				sq.And{sq.Eq{t.UserID: mod.UserID},
-					sq.Eq{t.ID: mod.ID},
+			sq.Or{
+				sq.And{sq.Eq{t.SuiteID: mod.SuiteID},
+					sq.Or{sq.Eq{t.UserID: mod.UserID}},
 				},
+				sq.Eq{t.ID: mod.ID},
 			},
 			sq.Or{
 				sq.And{
-					sq.Gt{t.StartDate: mod.StartDate},
-					sq.Lt{t.StartDate: mod.EndDate},
+					sq.GtOrEq{t.StartDate: mod.StartDate},
+					sq.LtOrEq{t.StartDate: mod.EndDate},
 				},
 				sq.And{
-					sq.Gt{t.EndDate: mod.StartDate},
-					sq.Lt{t.EndDate: mod.EndDate},
+					sq.GtOrEq{t.EndDate: mod.StartDate},
+					sq.LtOrEq{t.EndDate: mod.EndDate},
 				},
 			},
 		},
@@ -70,9 +73,13 @@ func (r *repository) CheckAvailibility(ctx context.Context, mod *model.BookingIn
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		log.Error("failed to build query", err)
 		return nil, ErrQueryBuild
 	}
+
+	span.AddEvent("query built")
 
 	q := db.Query{
 		Name:     op,
@@ -82,6 +89,8 @@ func (r *repository) CheckAvailibility(ctx context.Context, mod *model.BookingIn
 	var res = new(model.Availibility)
 	err = r.client.DB().GetContext(ctx, res, q, args...)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		if errors.As(err, pgNoConnection) {
 			log.Error("no connection to database host", err)
 			return nil, ErrNoConnection
@@ -89,6 +98,8 @@ func (r *repository) CheckAvailibility(ctx context.Context, mod *model.BookingIn
 		log.Error("query execution error", err)
 		return nil, ErrQuery
 	}
+
+	span.AddEvent("query successfully executed")
 
 	return res, nil
 }

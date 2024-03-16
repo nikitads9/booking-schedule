@@ -7,10 +7,14 @@ import (
 	"log/slog"
 	"sync"
 	"time"
+
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func (s *Service) Run(ctx context.Context) {
-	const op = "scheduler.service.Run"
+	const op = "service.scheduler.Run"
 
 	log := s.log.With(
 		slog.String("op", op),
@@ -30,12 +34,14 @@ func (s *Service) Run(ctx context.Context) {
 }
 
 func (s *Service) handleBookings(ctx context.Context) {
-	const op = "scheduler.service.handleBookings"
+	const op = "service.scheduler.handleBookings"
 	wg := &sync.WaitGroup{}
 
 	log := s.log.With(
 		slog.String("op", op),
 	)
+	ctx, span := s.tracer.Start(ctx, op)
+	defer span.End()
 
 	log.Debug("started handling")
 
@@ -45,26 +51,37 @@ func (s *Service) handleBookings(ctx context.Context) {
 		defer wg.Done()
 		bookings, err := s.getBookings(ctx)
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			log.Error("failed to get bookings")
 			return
 		}
+
 		if len(bookings) == 0 {
 			log.Debug("no bookings to send")
 			return
 		}
 
+		span.AddEvent("bookings to send acquired", trace.WithAttributes(attribute.Int("quantity", len(bookings))))
+
 		for _, val := range bookings {
 			err = s.sendBooking(val)
 			if err != nil {
+				span.RecordError(err)
+				span.SetStatus(codes.Error, err.Error())
 				log.Error("failed to send booking:", err)
 			}
 		}
+		span.AddEvent("bookings sent")
+
 	}(wg)
 
 	go func(*sync.WaitGroup) {
 		defer wg.Done()
 		err := s.cleanUpOldBookings(ctx)
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			log.Error("failed to clean up old bookings", err)
 			return
 		}
@@ -72,15 +89,18 @@ func (s *Service) handleBookings(ctx context.Context) {
 	}(wg)
 
 	wg.Wait()
-	log.Debug("fimished handling bookings")
+	span.AddEvent("bookings handled")
+	log.Debug("finished handling bookings")
 }
 
 func (s *Service) getBookings(ctx context.Context) ([]*model.BookingInfo, error) {
-	const op = "scheduler.service.getBookings"
+	const op = "service.scheduler.getBookings"
 
 	log := s.log.With(
 		slog.String("op", op),
 	)
+	ctx, span := s.tracer.Start(ctx, op)
+	defer span.End()
 
 	end := time.Now()
 	end = time.Date(end.Year(), end.Month(), end.Day(), end.Hour(), end.Minute(), 0, 0, end.Location())
@@ -88,6 +108,8 @@ func (s *Service) getBookings(ctx context.Context) ([]*model.BookingInfo, error)
 
 	bookings, err := s.bookingRepository.GetBookingListByDate(ctx, start, end)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		log.Error("failed to get list by date", err)
 		return nil, err
 	}
@@ -101,9 +123,13 @@ func (s *Service) cleanUpOldBookings(ctx context.Context) error {
 	log := s.log.With(
 		slog.String("op", op),
 	)
+	ctx, span := s.tracer.Start(ctx, op)
+	defer span.End()
 
 	err := s.bookingRepository.DeleteBookingsBeforeDate(ctx, time.Now().Add(-s.bookingTTL))
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		log.Error("failed to clean up old bookings", err)
 		return err
 	}

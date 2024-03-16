@@ -12,7 +12,7 @@ import (
 )
 
 func (s *Service) Run(ctx context.Context) {
-	const op = "sender.service.Run"
+	const op = "service.sender.Run"
 
 	log := s.log.With(
 		slog.String("op", op),
@@ -46,7 +46,7 @@ func (s *Service) Run(ctx context.Context) {
 }
 
 func (s *Service) receiveBookings(msg amqp.Delivery) error {
-	const op = "sender.service.receiveBookings"
+	const op = "service.sender.receiveBookings"
 
 	log := s.log.With(
 		slog.String("op", op),

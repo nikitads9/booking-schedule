@@ -10,11 +10,14 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
+	"go.opentelemetry.io/otel/codes"
 )
 
 func (r *repository) GetBookingListByDate(ctx context.Context, startDate time.Time, endDate time.Time) ([]*model.BookingInfo, error) {
-	op := "bookings.repository.GetBookingListByDate"
+	op := "repository.booking.GetBookingListByDate"
 	log := r.log.With(slog.String("op", op))
+	ctx, span := r.tracer.Start(ctx, op)
+	defer span.End()
 
 	builder := sq.Select(t.ID, t.SuiteID, t.StartDate, t.EndDate, t.NotifyAt, t.CreatedAt, t.UpdatedAt, t.UserID).
 		From(t.BookingTable).
@@ -31,9 +34,13 @@ func (r *repository) GetBookingListByDate(ctx context.Context, startDate time.Ti
 
 	query, args, err := builder.ToSql()
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		log.Error("failed to build a query", err)
 		return nil, ErrQueryBuild
 	}
+
+	span.AddEvent("query built")
 
 	q := db.Query{
 		Name:     op,
@@ -43,6 +50,8 @@ func (r *repository) GetBookingListByDate(ctx context.Context, startDate time.Ti
 	var res []*model.BookingInfo
 	err = r.client.DB().SelectContext(ctx, &res, q, args...)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		if errors.As(err, pgNoConnection) {
 			log.Error("no connection to database host", err)
 			return nil, ErrNoConnection
@@ -50,6 +59,8 @@ func (r *repository) GetBookingListByDate(ctx context.Context, startDate time.Ti
 		log.Error("query execution error", err)
 		return nil, ErrQuery
 	}
+
+	span.AddEvent("query successfully executed")
 
 	return res, nil
 }

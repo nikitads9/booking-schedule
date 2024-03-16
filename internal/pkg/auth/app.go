@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"booking-schedule/internal/app/api"
 	"booking-schedule/internal/logger/sl"
 	mwLogger "booking-schedule/internal/middleware/logger"
 	"booking-schedule/internal/pkg/certificates"
@@ -149,7 +150,8 @@ func (a *App) initServer(ctx context.Context) error {
 	a.router.Use(otelchi.Middleware("auth", otelchi.WithChiRoutes(a.router)))
 	a.router.Use(mwLogger.New(a.serviceProvider.GetLogger()))
 	a.router.Use(middleware.Recoverer) // Если где-то внутри сервера (обработчика запроса) произойдет паника, приложение не должно упасть
-	a.router.Route("/bookings/auth", func(r chi.Router) {
+	a.router.Route("/auth", func(r chi.Router) {
+		r.Get("/ping", api.HandlePingCheck())
 		r.Post("/sign-up", impl.SignUp(a.serviceProvider.GetLogger()))
 		r.Get("/sign-in", impl.SignIn(a.serviceProvider.GetLogger()))
 	})

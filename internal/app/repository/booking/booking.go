@@ -28,15 +28,15 @@ type Repository interface {
 
 var (
 	ErrNotFound       = errors.New("no booking with this id")
-	ErrQuery          = errors.New("failed to execute query")
-	ErrQueryBuild     = errors.New("failed to build query")
 	ErrNoRowsAffected = errors.New("no database entries affected by this operation")
-	ErrParseDuration  = errors.New("failed to parse duration")
-	ErrPgxScan        = errors.New("failed to read database response")
-	ErrNoConnection   = errors.New("could not connect to database")
 	ErrNoDates        = errors.New("no vacant dates for this room within month")
-	ErrUuid           = errors.New("failed to generate uuid")
-	pgNoConnection    = new(*pgconn.ConnectError)
+
+	ErrQuery        = errors.New("failed to execute query")
+	ErrQueryBuild   = errors.New("failed to build query")
+	ErrPgxScan      = errors.New("failed to read database response")
+	ErrNoConnection = errors.New("could not connect to database")
+	ErrUuid         = errors.New("failed to generate uuid")
+	pgNoConnection  = new(*pgconn.ConnectError)
 )
 
 type repository struct {

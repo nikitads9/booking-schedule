@@ -5,6 +5,7 @@ import (
 	"time"
 
 	_ "go.uber.org/automaxprocs"
+	//_ "booking-schedule/cmd/auth/docs"
 
 	"booking-schedule/internal/pkg/auth"
 	"flag"
@@ -20,6 +21,29 @@ func init() {
 	time.Local = time.UTC
 }
 
+//	@title			auth API
+//	@version		1.0
+//	@description	This is a basic auth service for booking API.
+//	@termsOfService	http://swagger.io/terms/
+
+//	@contact.name	Nikita Denisenok
+//	@contact.url	https://vk.com/ndenisenok
+
+//	@license.name	GNU 3.0
+//	@license.url	https://www.gnu.org/licenses/gpl-3.0.ru.html
+
+// @host			127.0.0.1:5000
+// @BasePath		/auth
+
+// @securityDefinitions.basic BasicAuth
+// @in header
+// @name Authorization
+//
+//	 @Schemes 		http https
+//		@Tags			auth
+//
+// @tag.name auth
+// @tag.description sign in and sign up operations
 func main() {
 	flag.Parse()
 

@@ -25,7 +25,7 @@ import (
 //	@Failure		400	{object}	api.AuthResponse
 //	@Failure		401	{object}	api.AuthResponse
 //	@Failure		503	{object}	api.AuthResponse
-//	@Router			/auth/sign-in [get]
+//	@Router			/sign-in [get]
 //
 //	@Security 		BasicAuth
 func (i *Implementation) SignIn(logger *slog.Logger) http.HandlerFunc {
@@ -87,7 +87,7 @@ func (i *Implementation) SignIn(logger *slog.Logger) http.HandlerFunc {
 			return
 		}
 
-		span.AddEvent("token acquired")
+		span.AddEvent("signed token acquired")
 		log.Info("user signed in", slog.Any("login: ", nickname))
 
 		err = render.Render(w, r, api.AuthResponseAPI(token))

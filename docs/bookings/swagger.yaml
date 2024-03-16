@@ -1,15 +1,6 @@
 basePath: /bookings
 definitions:
-  AddBookingResponse:
-    properties:
-      bookingID:
-        example: 550e8400-e29b-41d4-a716-446655440000
-        format: uuid
-        type: string
-      response:
-        $ref: '#/definitions/Response'
-    type: object
-  BookingEntry:
+  AddBookingRequest:
     properties:
       endDate:
         description: Дата и время окончания бронировании
@@ -31,6 +22,15 @@ definitions:
     - endDate
     - startDate
     - suiteID
+    type: object
+  AddBookingResponse:
+    properties:
+      bookingID:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        format: uuid
+        type: string
+      response:
+        $ref: '#/definitions/Response'
     type: object
   BookingInfo:
     properties:
@@ -73,6 +73,35 @@ definitions:
       response:
         $ref: '#/definitions/Response'
     type: object
+  DeleteMyProfileResponse:
+    properties:
+      response:
+        $ref: '#/definitions/Response'
+    type: object
+  EditMyProfileRequest:
+    properties:
+      name:
+        description: Имя пользователя
+        example: Kolya Durov
+        type: string
+      password:
+        description: Пароль
+        example: "123456"
+        type: string
+      telegramID:
+        description: Телеграм ID пользователя
+        example: 1235678
+        type: integer
+      telegramNickname:
+        description: Никнейм пользователя в телеграме
+        example: kolya_durov
+        type: string
+    type: object
+  EditMyProfileResponse:
+    properties:
+      response:
+        $ref: '#/definitions/Response'
+    type: object
   GetBookingResponse:
     properties:
       booking:
@@ -86,6 +115,15 @@ definitions:
         items:
           $ref: '#/definitions/BookingInfo'
         type: array
+      response:
+        $ref: '#/definitions/Response'
+    type: object
+  GetMyProfileResponse:
+    properties:
+      profile:
+        allOf:
+        - $ref: '#/definitions/UserInfo'
+        description: JWT токен для доступа
       response:
         $ref: '#/definitions/Response'
     type: object
@@ -130,14 +168,6 @@ definitions:
         description: Статус ответа приложения
         type: string
     type: object
-  SignInResponse:
-    properties:
-      response:
-        $ref: '#/definitions/Response'
-      token:
-        description: JWT токен для доступа
-        type: string
-    type: object
   Suite:
     properties:
       capacity:
@@ -153,34 +183,54 @@ definitions:
         example: 1
         type: integer
     type: object
+  UpdateBookingRequest:
+    properties:
+      endDate:
+        description: Дата и время окончания бронировании
+        example: "2024-03-29T17:43:00Z"
+        type: string
+      notifyAt:
+        description: Интервал времени для предварительного уведомления о бронировании
+        example: 24h
+        type: string
+      startDate:
+        description: Дата и время начала бронировании
+        example: "2024-03-28T17:43:00Z"
+        type: string
+      suiteID:
+        description: Номер апаратаментов
+        example: 1
+        type: integer
+    required:
+    - endDate
+    - startDate
+    - suiteID
+    type: object
   UpdateBookingResponse:
     properties:
       response:
         $ref: '#/definitions/Response'
     type: object
-  User:
+  UserInfo:
     properties:
+      createdAt:
+        description: Дата и время регистрации
+        type: string
+      id:
+        description: ID пользователя в системе
+        type: integer
       name:
         description: Имя пользователя
-        example: Pavel Durov
-        type: string
-      password:
-        description: Пароль
-        example: "12345"
         type: string
       telegramID:
         description: Телеграм ID пользователя
-        example: 1235678
         type: integer
       telegramNickname:
         description: Никнейм пользователя в телеграме
-        example: pavel_durov
         type: string
-    required:
-    - name
-    - password
-    - telegramID
-    - telegramNickname
+      updatedAt:
+        description: Дата и время обновления профиля
+        type: string
     type: object
 host: 127.0.0.1:3000
 info:
@@ -308,7 +358,7 @@ paths:
         name: booking
         required: true
         schema:
-          $ref: '#/definitions/BookingEntry'
+          $ref: '#/definitions/UpdateBookingRequest'
       produces:
       - application/json
       responses:
@@ -397,7 +447,7 @@ paths:
         name: booking
         required: true
         schema:
-          $ref: '#/definitions/BookingEntry'
+          $ref: '#/definitions/AddBookingRequest'
       produces:
       - application/json
       responses:
@@ -430,71 +480,6 @@ paths:
       summary: Adds booking
       tags:
       - bookings
-  /auth/sign-in:
-    get:
-      description: Get auth token to access user restricted api methods. Requires
-        nickname and password passed via basic auth.
-      operationId: getOauthToken
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/SignInResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/SignInResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/SignInResponse'
-        "503":
-          description: Service Unavailable
-          schema:
-            $ref: '#/definitions/SignInResponse'
-      security:
-      - BasicAuth: []
-      summary: Sign in
-      tags:
-      - auth
-  /auth/sign-up:
-    post:
-      consumes:
-      - application/json
-      description: Creates user with given tg id, nickname, name and password hashed
-        by bcrypto. Every parameter is required. Returns jwt token.
-      operationId: signUpUserJson
-      parameters:
-      - description: User
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/User'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/SignInResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/SignInResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/SignInResponse'
-        "503":
-          description: Service Unavailable
-          schema:
-            $ref: '#/definitions/SignInResponse'
-      summary: Sign up
-      tags:
-      - auth
   /get-bookings:
     get:
       description: Responds with series of booking info objects within given time
@@ -595,22 +580,130 @@ paths:
       summary: Get list of vacant rooms
       tags:
       - bookings
-schemes:
-- http
-- https
+  /user/delete:
+    delete:
+      description: Deletes user and all bookings associated with him
+      operationId: deleteMyInfo
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DeleteMyProfileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DeleteMyProfileResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/DeleteMyProfileResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DeleteMyProfileResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/DeleteMyProfileResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/DeleteMyProfileResponse'
+      security:
+      - Bearer: []
+      summary: Delete my profile
+      tags:
+      - users
+  /user/edit:
+    patch:
+      consumes:
+      - application/json
+      description: Updates user's profile with provided values. If no values provided,
+        an error is returned. If new telegram id is set, the telegram nickname is
+        also to be provided and vice versa. All provided body parameters should not
+        be blank (i.e. empty string).
+      operationId: modifyUserByJSON
+      parameters:
+      - description: EditMyProfileRequest
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/EditMyProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/EditMyProfileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/EditMyProfileResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/EditMyProfileResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/EditMyProfileResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/EditMyProfileResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/EditMyProfileResponse'
+      security:
+      - Bearer: []
+      summary: Modify profile
+      tags:
+      - users
+  /user/me:
+    get:
+      description: Responds with account info for signed in user.
+      operationId: getMyUserAuth
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/GetMyProfileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/GetMyProfileResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/GetMyProfileResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/GetMyProfileResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/GetMyProfileResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/GetMyProfileResponse'
+      security:
+      - Bearer: []
+      summary: Get info for current user
+      tags:
+      - users
 securityDefinitions:
-  BasicAuth:
-    type: basic
   Bearer:
     description: Type "Bearer" followed by a space and JWT token.
     in: header
     name: Authorization
     type: apiKey
 swagger: "2.0"
-tags:
-- description: operations with bookings, suites and intervals
-  name: bookings
-- description: sign in and sign up operations
-  name: auth
-- description: service for viewing profile editing or deleting it
-  name: users

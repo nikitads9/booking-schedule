@@ -9,8 +9,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	validator "github.com/go-playground/validator/v10"
 	"github.com/gofrs/uuid"
@@ -52,8 +52,8 @@ func (i *Implementation) UpdateBooking(logger *slog.Logger) http.HandlerFunc {
 		ctx, span := i.tracer.Start(ctx, op)
 		defer span.End()
 
-		id := auth.UserIDFromContext(ctx)
-		if id == 0 {
+		userID := auth.UserIDFromContext(ctx)
+		if userID == 0 {
 			span.RecordError(api.ErrNoUserID)
 			span.SetStatus(codes.Error, api.ErrNoUserID.Error())
 			log.Error("no user id in context", sl.Err(api.ErrNoUserID))
@@ -65,7 +65,7 @@ func (i *Implementation) UpdateBooking(logger *slog.Logger) http.HandlerFunc {
 			return
 		}
 
-		span.AddEvent("userID extracted from context", trace.WithAttributes(attribute.Int64("id", id)))
+		span.AddEvent("userID extracted from context", trace.WithAttributes(attribute.Int64("id", userID)))
 
 		req := &api.UpdateBookingRequest{}
 		err := render.Bind(r, req)
@@ -139,7 +139,7 @@ func (i *Implementation) UpdateBooking(logger *slog.Logger) http.HandlerFunc {
 		//TODO: getters
 		mod, err := convert.ToBookingInfo(&api.Booking{
 			BookingID: bookingUUID,
-			UserID:    id,
+			UserID:    userID,
 			SuiteID:   req.SuiteID,
 			StartDate: req.StartDate,
 			EndDate:   req.EndDate,

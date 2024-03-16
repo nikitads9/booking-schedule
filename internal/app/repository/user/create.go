@@ -29,7 +29,7 @@ func (r *repository) CreateUser(ctx context.Context, user *model.User) (int64, e
 
 	builder := sq.Insert(t.UserTable).
 		Columns(t.TelegramID, t.TelegramNickname, t.Name, t.Password, t.CreatedAt).
-		Values(user.TelegramID, user.Nickname, user.Name, *user.Password, time.Now())
+		Values(user.TelegramID, user.Nickname, user.Name, user.Password, time.Now())
 
 	query, args, err := builder.PlaceholderFormat(sq.Dollar).Suffix("returning id").ToSql()
 	if err != nil {
