@@ -2,6 +2,7 @@ package sender
 
 import (
 	"booking-schedule/internal/app/model"
+	"booking-schedule/internal/logger/sl"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -22,7 +23,7 @@ func (s *Service) Run(ctx context.Context) {
 
 	msgChan, err := s.rabbitConsumer.Consume()
 	if err != nil {
-		log.Error("could not get channel to receive messages: ", err)
+		log.Error("could not get channel to receive messages: ", sl.Err(err))
 		os.Exit(1)
 	}
 
@@ -33,11 +34,11 @@ func (s *Service) Run(ctx context.Context) {
 		case msg := <-msgChan:
 			err = s.receiveBookings(msg)
 			if err != nil {
-				log.Error("could not receive messages: ", err)
+				log.Error("could not receive messages: ", sl.Err(err))
 			}
 			err = msg.Ack(false)
 			if err != nil {
-				log.Error("could not acknowledge message acquiring: ", err)
+				log.Error("could not acknowledge message acquiring: ", sl.Err(err))
 			}
 		}
 
@@ -57,6 +58,7 @@ func (s *Service) receiveBookings(msg amqp.Delivery) error {
 	var bookings []*model.BookingInfo
 	err := json.Unmarshal(msg.Body, &bookings)
 	if err != nil {
+		log.Error("failed to unmarshal message", sl.Err(err))
 		return err
 	}
 

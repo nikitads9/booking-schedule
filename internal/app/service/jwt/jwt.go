@@ -1,6 +1,7 @@
 package jwt
 
 import (
+	"booking-schedule/internal/logger/sl"
 	"context"
 	"encoding/json"
 	"errors"
@@ -88,7 +89,7 @@ func (s *service) VerifyToken(ctx context.Context, tokenString string) (int64, e
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		log.Error("parsing token failed: ", err)
+		log.Error("parsing token failed: ", sl.Err(err))
 		return 0, err
 	}
 
@@ -98,7 +99,7 @@ func (s *service) VerifyToken(ctx context.Context, tokenString string) (int64, e
 	if !token.Valid || !ok {
 		span.RecordError(ErrInvalidToken)
 		span.SetStatus(codes.Error, ErrInvalidToken.Error())
-		log.Error("invalid token")
+		log.Error("invalid token", sl.Err(ErrInvalidToken))
 		return 0, ErrInvalidToken
 	}
 
@@ -107,7 +108,7 @@ func (s *service) VerifyToken(ctx context.Context, tokenString string) (int64, e
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		log.Error("issue parsing user id", err)
+		log.Error("issue parsing user id", sl.Err(err))
 		return 0, ErrParseID
 
 	}
@@ -115,7 +116,7 @@ func (s *service) VerifyToken(ctx context.Context, tokenString string) (int64, e
 	if userIDInt == 0 {
 		span.RecordError(ErrNoID)
 		span.SetStatus(codes.Error, ErrNoID.Error())
-		log.Error("empty user id")
+		log.Error("empty user id", sl.Err(ErrNoID))
 		return 0, ErrNoID
 	}
 
@@ -125,7 +126,7 @@ func (s *service) VerifyToken(ctx context.Context, tokenString string) (int64, e
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		log.Error("issue parsing token expiration", err)
+		log.Error("issue parsing token expiration", sl.Err(err))
 		return 0, ErrParseExp
 
 	}
@@ -135,7 +136,7 @@ func (s *service) VerifyToken(ctx context.Context, tokenString string) (int64, e
 	if exp < time.Now().Unix() {
 		span.RecordError(jwt.ErrTokenExpired)
 		span.SetStatus(codes.Error, jwt.ErrTokenExpired.Error())
-		log.Error("token expired", jwt.ErrTokenExpired)
+		log.Error("token expired", sl.Err(jwt.ErrTokenExpired))
 		return 0, jwt.ErrTokenExpired
 	}
 

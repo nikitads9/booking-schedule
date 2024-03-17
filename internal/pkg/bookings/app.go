@@ -99,13 +99,15 @@ func (a *App) startServer() error {
 		defer close(errChan)
 		switch a.serviceProvider.GetConfig().GetEnv() {
 		case envProd:
-			err := certificates.InitCertificates()
-			if err != nil {
-				a.serviceProvider.GetLogger().Error("failed to initialize certificates", sl.Err(err))
-				errChan <- err
+			if _, err := os.Stat(a.pathKey); err != nil {
+				err := certificates.InitCertificates(a.pathCert, a.pathKey)
+				if err != nil {
+					a.serviceProvider.GetLogger().Error("failed to initialize certificates", sl.Err(err))
+					errChan <- err
+				}
 			}
 
-			if err = srv.ListenAndServeTLS(a.pathCert, a.pathKey); err != nil {
+			if err := srv.ListenAndServeTLS(a.pathCert, a.pathKey); err != nil {
 				a.serviceProvider.GetLogger().Error("", sl.Err(err))
 				errChan <- err
 			}

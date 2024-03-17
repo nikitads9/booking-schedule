@@ -700,6 +700,9 @@ paths:
       summary: Get info for current user
       tags:
       - users
+schemes:
+- http
+- https
 securityDefinitions:
   Bearer:
     description: Type "Bearer" followed by a space and JWT token.
@@ -707,3 +710,8 @@ securityDefinitions:
     name: Authorization
     type: apiKey
 swagger: "2.0"
+tags:
+- description: operations with bookings, suites and intervals
+  name: bookings
+- description: service for viewing profile editing or deleting it
+  name: users

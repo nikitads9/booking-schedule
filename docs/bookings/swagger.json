@@ -1,4 +1,8 @@
 {
+    "schemes": [
+        "http",
+        "https"
+    ],
     "swagger": "2.0",
     "info": {
         "description": "This is a service for writing and reading booking entries.",
@@ -1015,5 +1019,15 @@
             "name": "Authorization",
             "in": "header"
         }
-    }
+    },
+    "tags": [
+        {
+            "description": "operations with bookings, suites and intervals",
+            "name": "bookings"
+        },
+        {
+            "description": "service for viewing profile editing or deleting it",
+            "name": "users"
+        }
+    ]
 }

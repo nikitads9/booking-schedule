@@ -3,6 +3,7 @@ package booking
 import (
 	"booking-schedule/internal/app/model"
 	t "booking-schedule/internal/app/repository/table"
+	"booking-schedule/internal/logger/sl"
 	"booking-schedule/internal/pkg/db"
 	"context"
 	"errors"
@@ -47,7 +48,7 @@ func (r *repository) GetVacantRooms(ctx context.Context, startDate time.Time, en
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		log.Error("failed to build subquery", err)
+		log.Error("failed to build subquery", sl.Err(err))
 		return nil, ErrQueryBuild
 	}
 
@@ -55,7 +56,7 @@ func (r *repository) GetVacantRooms(ctx context.Context, startDate time.Time, en
 
 	query, args, err := builder.ToSql()
 	if err != nil {
-		log.Error("failed to build a query", err)
+		log.Error("failed to build a query", sl.Err(err))
 		return nil, ErrQueryBuild
 	}
 
@@ -72,14 +73,14 @@ func (r *repository) GetVacantRooms(ctx context.Context, startDate time.Time, en
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		if errors.As(err, pgNoConnection) {
-			log.Error("no connection to database host", err)
+			log.Error("no connection to database host", sl.Err(err))
 			return nil, ErrNoConnection
 		}
 		if pgxscan.NotFound(err) {
-			log.Error("no vacant rooms within this period", err)
+			log.Error("no vacant rooms within this period", sl.Err(err))
 			return nil, ErrNotFound
 		}
-		log.Error("query execution error", err)
+		log.Error("query execution error", sl.Err(err))
 		return nil, ErrQuery
 	}
 

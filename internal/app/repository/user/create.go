@@ -2,6 +2,7 @@ package user
 
 import (
 	"booking-schedule/internal/app/model"
+	"booking-schedule/internal/logger/sl"
 	"booking-schedule/internal/pkg/db"
 	"context"
 	"errors"
@@ -35,7 +36,7 @@ func (r *repository) CreateUser(ctx context.Context, user *model.User) (int64, e
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		log.Error("failed to build a query", err)
+		log.Error("failed to build a query", sl.Err(err))
 		return 0, ErrQueryBuild
 	}
 
@@ -51,14 +52,14 @@ func (r *repository) CreateUser(ctx context.Context, user *model.User) (int64, e
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		if errors.As(err, pgNoConnection) {
-			log.Error("no connection to database host", err)
+			log.Error("no connection to database host", sl.Err(err))
 			return 0, ErrNoConnection
 		}
 		if errors.As(err, &ErrDuplicate) {
-			log.Error("this user already exists", err)
+			log.Error("this user already exists", sl.Err(err))
 			return 0, ErrAlreadyExists
 		}
-		log.Error("query execution error", err)
+		log.Error("query execution error", sl.Err(err))
 		return 0, ErrQuery
 	}
 
@@ -71,7 +72,7 @@ func (r *repository) CreateUser(ctx context.Context, user *model.User) (int64, e
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		log.Error("failed to scan returning id", err)
+		log.Error("failed to scan returning id", sl.Err(err))
 		return 0, ErrPgxScan
 	}
 

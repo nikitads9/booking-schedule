@@ -1021,7 +1021,17 @@ const docTemplate = `{
             "name": "Authorization",
             "in": "header"
         }
-    }
+    },
+    "tags": [
+        {
+            "description": "operations with bookings, suites and intervals",
+            "name": "bookings"
+        },
+        {
+            "description": "service for viewing profile editing or deleting it",
+            "name": "users"
+        }
+    ]
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
@@ -1029,7 +1039,7 @@ var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "127.0.0.1:3000",
 	BasePath:         "/bookings",
-	Schemes:          []string{},
+	Schemes:          []string{"http", "https"},
 	Title:            "booking-schedule API",
 	Description:      "This is a service for writing and reading booking entries.",
 	InfoInstanceName: "swagger",

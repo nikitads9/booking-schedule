@@ -38,7 +38,6 @@ install-go-deps: .install-go-deps
 		ls go.mod || go mod init
 			go install -v golang.org/x/tools/gopls@latest
 			go install -v github.com/swaggo/swag/cmd/swag@latest
-#go install github.com/joho/godotenv/cmd/godotenv@latest TODO: move all configs to env
 			go mod tidy
 
 .PHONY: generate-swag

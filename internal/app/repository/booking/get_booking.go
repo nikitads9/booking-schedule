@@ -3,6 +3,7 @@ package booking
 import (
 	"booking-schedule/internal/app/model"
 	t "booking-schedule/internal/app/repository/table"
+	"booking-schedule/internal/logger/sl"
 	"booking-schedule/internal/pkg/db"
 	"context"
 	"errors"
@@ -37,7 +38,7 @@ func (r *repository) GetBooking(ctx context.Context, bookingID uuid.UUID, userID
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		log.Error("failed to build a query", err)
+		log.Error("failed to build a query", sl.Err(err))
 		return nil, ErrQueryBuild
 	}
 
@@ -54,11 +55,11 @@ func (r *repository) GetBooking(ctx context.Context, bookingID uuid.UUID, userID
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		if errors.As(err, pgNoConnection) {
-			log.Error("no connection to database host", err)
+			log.Error("no connection to database host", sl.Err(err))
 			return nil, ErrNoConnection
 		}
 		if errors.Is(err, pgx.ErrNoRows) {
-			log.Error("booking with this id not found", err)
+			log.Error("booking with this id not found", sl.Err(err))
 			return nil, ErrNotFound
 		}
 		log.Error("query execution error", err)

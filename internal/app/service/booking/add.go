@@ -2,6 +2,7 @@ package booking
 
 import (
 	"booking-schedule/internal/app/model"
+	"booking-schedule/internal/logger/sl"
 	"context"
 	"errors"
 	"log/slog"
@@ -28,7 +29,7 @@ func (s *Service) AddBooking(ctx context.Context, mod *model.BookingInfo) (uuid.
 		if errTx != nil {
 			span.RecordError(errTx)
 			span.SetStatus(codes.Error, errTx.Error())
-			log.Error("could not check availibility", errTx)
+			log.Error("could not check availibility", sl.Err(errTx))
 			return errTx
 		}
 		span.AddEvent("availibility checked")
@@ -36,7 +37,7 @@ func (s *Service) AddBooking(ctx context.Context, mod *model.BookingInfo) (uuid.
 		if !availibility.Availible {
 			span.RecordError(ErrNotAvailible)
 			span.SetStatus(codes.Error, ErrNotAvailible.Error())
-			log.Error("the requested period is not vacant", ErrNotAvailible)
+			log.Error("the requested period is not vacant", sl.Err(ErrNotAvailible))
 			return ErrNotAvailible
 		}
 
@@ -44,7 +45,7 @@ func (s *Service) AddBooking(ctx context.Context, mod *model.BookingInfo) (uuid.
 		if errTx != nil {
 			span.RecordError(errTx)
 			span.SetStatus(codes.Error, errTx.Error())
-			log.Error("the add booking operation failed", errTx)
+			log.Error("the add booking operation failed", sl.Err(errTx))
 			return errTx
 		}
 
@@ -54,7 +55,7 @@ func (s *Service) AddBooking(ctx context.Context, mod *model.BookingInfo) (uuid.
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		log.Error("transaction failed", err)
+		log.Error("transaction failed", sl.Err(err))
 		if errors.As(err, pgNoConnection) {
 			return uuid.Nil, ErrNoConnection
 		}

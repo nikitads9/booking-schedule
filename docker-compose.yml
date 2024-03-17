@@ -6,8 +6,27 @@ networks:
 
 volumes:
   postgres-volume:
+  certificates-volume:
 
 services:
+  nginx-entrypoint:
+    image: nginx
+    hostname: nginx-entrypoint
+    container_name: nginx-entrypoint
+    restart: unless-stopped
+    environment:
+      TZ: "Europe/Moscow"
+    volumes:
+      - certificates-volume:/etc/ssl/certs
+      - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - app_net
+    depends_on:
+      - bookings
+      - auth
   db:
     container_name: booking-storage
     image: postgres:16-alpine3.19
@@ -33,6 +52,8 @@ services:
       context: .
       dockerfile: ./deploy/bookings/Dockerfile
     image: nikitads9/booking-schedule:bookings
+    volumes:
+      - certificates-volume:/etc/ssl/certs
     ports:
       - "${BOOKINGS_PORT}:${BOOKINGS_PORT}"
     depends_on:
@@ -52,6 +73,8 @@ services:
       context: .
       dockerfile: ./deploy/auth/Dockerfile
     image: nikitads9/booking-schedule:auth
+    volumes:
+      - certificates-volume:/etc/ssl/certs
     ports:
       - "${AUTH_PORT}:${AUTH_PORT}"
     depends_on:

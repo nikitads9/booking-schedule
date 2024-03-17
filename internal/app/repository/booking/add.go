@@ -3,6 +3,7 @@ package booking
 import (
 	"booking-schedule/internal/app/model"
 	t "booking-schedule/internal/app/repository/table"
+	"booking-schedule/internal/logger/sl"
 	"booking-schedule/internal/pkg/db"
 	"context"
 	"errors"
@@ -32,7 +33,7 @@ func (r *repository) AddBooking(ctx context.Context, mod *model.BookingInfo) (uu
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		log.Error("failed to generate uuid", err)
+		log.Error("failed to generate uuid", sl.Err(err))
 		return uuid.Nil, ErrUuid
 	}
 
@@ -52,7 +53,7 @@ func (r *repository) AddBooking(ctx context.Context, mod *model.BookingInfo) (uu
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		log.Error("failed to build a query", err)
+		log.Error("failed to build a query", sl.Err(err))
 		return uuid.Nil, ErrQueryBuild
 	}
 
@@ -63,15 +64,18 @@ func (r *repository) AddBooking(ctx context.Context, mod *model.BookingInfo) (uu
 		QueryRaw: query,
 	}
 
-	_, err = r.client.DB().QueryContext(ctx, q, args...)
+	_, err = r.client.DB().ExecContext(ctx, q, args...)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		if errors.As(err, pgNoConnection) {
-			log.Error("no connection to database host", err)
+			log.Error("no connection to database host", sl.Err(err))
 			return uuid.Nil, ErrNoConnection
 		}
-		log.Error("query execution error", err)
+		if errors.Is(err, ErrNoSuchUser) {
+			return uuid.Nil, ErrUnauthorized
+		}
+		log.Error("query execution error", sl.Err(err))
 		return uuid.Nil, ErrQuery
 	}
 

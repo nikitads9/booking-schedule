@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-func InitCertificates() error {
+func InitCertificates(pathCert string, pathKey string) error {
 	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		log.Printf("Failed to generate private key: %v", err)
@@ -35,7 +35,7 @@ func InitCertificates() error {
 		Subject: pkix.Name{
 			Organization: []string{"nikitads9"},
 		},
-		DNSNames:  []string{"localhost"},
+		DNSNames:  []string{"api.booking-schedule.su"},
 		NotBefore: time.Now(),
 		NotAfter:  time.Now().Add(3 * time.Hour),
 
@@ -55,14 +55,14 @@ func InitCertificates() error {
 		log.Println("Failed to encode certificate to PEM")
 		return errors.New("failed to encode certificate to PEM")
 	}
-	if err := os.WriteFile("cert.pem", pemCert, 0644); err != nil {
+	if err := os.WriteFile(pathCert, pemCert, 0644); err != nil {
 
 		return err
 	}
 
 	log.Print("wrote cert.pem\n")
 
-	err = createPrivateKey(privateKey)
+	err = createPrivateKey(privateKey, pathKey)
 	if err != nil {
 		log.Printf("Failed to create private key")
 		return err
@@ -71,7 +71,7 @@ func InitCertificates() error {
 	return nil
 }
 
-func createPrivateKey(privateKey *ecdsa.PrivateKey) error {
+func createPrivateKey(privateKey *ecdsa.PrivateKey, pathKey string) error {
 	privBytes, err := x509.MarshalPKCS8PrivateKey(privateKey)
 	if err != nil {
 		log.Printf("Unable to marshal private key: %v", err)
@@ -82,7 +82,7 @@ func createPrivateKey(privateKey *ecdsa.PrivateKey) error {
 		log.Println("Failed to encode key to PEM")
 		return errors.New("failed to encode key to PEM")
 	}
-	if err := os.WriteFile("key.pem", pemKey, 0600); err != nil {
+	if err := os.WriteFile(pathKey, pemKey, 0600); err != nil {
 		return err
 	}
 	log.Print("wrote key.pem\n")

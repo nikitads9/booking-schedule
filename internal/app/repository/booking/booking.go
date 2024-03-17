@@ -30,13 +30,20 @@ var (
 	ErrNotFound       = errors.New("no booking with this id")
 	ErrNoRowsAffected = errors.New("no database entries affected by this operation")
 	ErrNoDates        = errors.New("no vacant dates for this room within month")
+	ErrUnauthorized   = errors.New("no user associated with this token")
 
 	ErrQuery        = errors.New("failed to execute query")
 	ErrQueryBuild   = errors.New("failed to build query")
 	ErrPgxScan      = errors.New("failed to read database response")
 	ErrNoConnection = errors.New("could not connect to database")
 	ErrUuid         = errors.New("failed to generate uuid")
-	pgNoConnection  = new(*pgconn.ConnectError)
+
+	pgNoConnection = new(*pgconn.ConnectError)
+	ErrNoSuchUser  = &pgconn.PgError{
+		Severity:       "ERROR",
+		Code:           "23503",
+		Message:        "violates foreign key constraint",
+		ConstraintName: "fk_users"}
 )
 
 type repository struct {

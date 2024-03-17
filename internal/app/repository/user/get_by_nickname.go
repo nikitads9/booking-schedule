@@ -2,6 +2,7 @@ package user
 
 import (
 	"booking-schedule/internal/app/model"
+	"booking-schedule/internal/logger/sl"
 	"booking-schedule/internal/pkg/db"
 	"context"
 	"errors"
@@ -36,7 +37,7 @@ func (r *repository) GetUserByNickname(ctx context.Context, nickName string) (*m
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		log.Error("failed to build a query", err)
+		log.Error("failed to build a query", sl.Err(err))
 		return nil, ErrQueryBuild
 	}
 
@@ -53,14 +54,14 @@ func (r *repository) GetUserByNickname(ctx context.Context, nickName string) (*m
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		if errors.As(err, pgNoConnection) {
-			log.Error("no connection to database host", err)
+			log.Error("no connection to database host", sl.Err(err))
 			return nil, ErrNoConnection
 		}
 		if errors.Is(err, pgx.ErrNoRows) {
-			log.Error("booking with this id not found", err)
+			log.Error("booking with this id not found", sl.Err(err))
 			return nil, ErrNotFound
 		}
-		log.Error("query execution error", err)
+		log.Error("query execution error", sl.Err(err))
 		return nil, ErrQuery
 	}
 

@@ -3,6 +3,7 @@ package booking
 import (
 	"booking-schedule/internal/app/api"
 	"booking-schedule/internal/app/convert"
+	"booking-schedule/internal/logger/sl"
 	"context"
 	"log/slog"
 
@@ -26,7 +27,7 @@ func (s *Service) GetVacantDates(ctx context.Context, suiteID int64) ([]*api.Int
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		log.Error("could not get busy dates:", err)
+		log.Error("could not get busy dates", sl.Err(err))
 		return nil, err
 	}
 

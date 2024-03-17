@@ -2,6 +2,7 @@ package booking
 
 import (
 	t "booking-schedule/internal/app/repository/table"
+	"booking-schedule/internal/logger/sl"
 	"booking-schedule/internal/pkg/db"
 	"context"
 	"errors"
@@ -29,7 +30,7 @@ func (r *repository) DeleteBookingsBeforeDate(ctx context.Context, date time.Tim
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		log.Error("failed to build a query", err)
+		log.Error("failed to build a query", sl.Err(err))
 		return ErrQueryBuild
 	}
 
@@ -45,10 +46,10 @@ func (r *repository) DeleteBookingsBeforeDate(ctx context.Context, date time.Tim
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		if errors.As(err, pgNoConnection) {
-			log.Error("no connection to database host", err)
+			log.Error("no connection to database host", sl.Err(err))
 			return ErrNoConnection
 		}
-		log.Error("query execution error", err)
+		log.Error("query execution error", sl.Err(err))
 		return ErrQuery
 	}
 

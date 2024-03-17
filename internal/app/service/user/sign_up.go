@@ -3,6 +3,7 @@ package user
 import (
 	"booking-schedule/internal/app/model"
 	"booking-schedule/internal/app/service/user/security"
+	"booking-schedule/internal/logger/sl"
 	"context"
 	"log/slog"
 
@@ -25,7 +26,7 @@ func (s *Service) SignUp(ctx context.Context, user *model.User) (string, error) 
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		log.Error("failed to hash password", err)
+		log.Error("failed to hash password", sl.Err(err))
 		return "", ErrHashFailed
 	}
 
@@ -36,7 +37,7 @@ func (s *Service) SignUp(ctx context.Context, user *model.User) (string, error) 
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		log.Error("failed to create user", err)
+		log.Error("failed to create user", sl.Err(err))
 		return "", err
 	}
 

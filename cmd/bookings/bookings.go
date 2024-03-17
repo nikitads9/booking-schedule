@@ -37,18 +37,18 @@ func init() {
 // @host			127.0.0.1:3000
 // @BasePath		/bookings
 //
-// @securityDefinitions.apikey Bearer
-// @in header
-// @name Authorization
-// @description Type "Bearer" followed by a space and JWT token.
-//
-//	 @Schemes 		http https
-//		@Tags			bookings users
+//	@Schemes 		http https
+//	@Tags			bookings users
 //
 // @tag.name bookings
 // @tag.description operations with bookings, suites and intervals
 // @tag.name users
 // @tag.description service for viewing profile editing or deleting it
+//
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
 func main() {
 	flag.Parse()
 

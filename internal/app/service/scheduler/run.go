@@ -2,6 +2,7 @@ package scheduler
 
 import (
 	"booking-schedule/internal/app/model"
+	"booking-schedule/internal/logger/sl"
 	"context"
 	"encoding/json"
 	"log/slog"
@@ -53,7 +54,7 @@ func (s *Service) handleBookings(ctx context.Context) {
 		if err != nil {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
-			log.Error("failed to get bookings")
+			log.Error("failed to get bookings", sl.Err(err))
 			return
 		}
 
@@ -69,7 +70,7 @@ func (s *Service) handleBookings(ctx context.Context) {
 			if err != nil {
 				span.RecordError(err)
 				span.SetStatus(codes.Error, err.Error())
-				log.Error("failed to send booking:", err)
+				log.Error("failed to send booking:", sl.Err(err))
 			}
 		}
 		span.AddEvent("bookings sent")
@@ -82,7 +83,7 @@ func (s *Service) handleBookings(ctx context.Context) {
 		if err != nil {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
-			log.Error("failed to clean up old bookings", err)
+			log.Error("failed to clean up old bookings", sl.Err(err))
 			return
 		}
 		log.Debug("old bookings handled")
@@ -110,7 +111,7 @@ func (s *Service) getBookings(ctx context.Context) ([]*model.BookingInfo, error)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		log.Error("failed to get list by date", err)
+		log.Error("failed to get list by date", sl.Err(err))
 		return nil, err
 	}
 
@@ -130,7 +131,7 @@ func (s *Service) cleanUpOldBookings(ctx context.Context) error {
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		log.Error("failed to clean up old bookings", err)
+		log.Error("failed to clean up old bookings", sl.Err(err))
 		return err
 	}
 

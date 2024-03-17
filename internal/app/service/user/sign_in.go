@@ -3,6 +3,7 @@ package user
 import (
 	"booking-schedule/internal/app/repository/user"
 	"booking-schedule/internal/app/service/user/security"
+	"booking-schedule/internal/logger/sl"
 	"context"
 	"errors"
 	"log/slog"
@@ -33,7 +34,7 @@ func (s *Service) SignIn(ctx context.Context, nickname string, pass string) (tok
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		log.Error("failed to get user by nickname: ", err)
+		log.Error("failed to get user by nickname", sl.Err(err))
 		if errors.Is(err, user.ErrNotFound) {
 			span.SetStatus(codes.Error, user.ErrNotFound.Error())
 			return "", ErrBadLogin
@@ -46,7 +47,7 @@ func (s *Service) SignIn(ctx context.Context, nickname string, pass string) (tok
 	if ok := security.CheckPasswordHash(pass, retrievedUser.Password); !ok {
 		span.RecordError(ErrBadPasswd)
 		span.SetStatus(codes.Error, ErrBadPasswd.Error())
-		log.Error("password check failed")
+		log.Error("password check failed", sl.Err(ErrBadPasswd))
 		return "", ErrBadPasswd
 	}
 
