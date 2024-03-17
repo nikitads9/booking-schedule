@@ -21,16 +21,20 @@ import (
 )
 
 type App struct {
-	pathConfig      string
-	pathCert        string
-	pathKey         string
+	configType string
+	pathConfig string
+
+	pathCert string
+	pathKey  string
+
 	serviceProvider *serviceProvider
 	router          *chi.Mux
 }
 
 // NewApp ...
-func NewApp(ctx context.Context, pathConfig string, pathCert string, pathKey string) (*App, error) {
+func NewApp(ctx context.Context, configType string, pathConfig string, pathCert string, pathKey string) (*App, error) {
 	a := &App{
+		configType: configType,
 		pathConfig: pathConfig,
 		pathCert:   pathCert,
 		pathKey:    pathKey,
@@ -58,7 +62,7 @@ func (a *App) initDeps(ctx context.Context) error {
 }
 
 func (a *App) initserviceProvider(_ context.Context) error {
-	a.serviceProvider = newServiceProvider(a.pathConfig)
+	a.serviceProvider = newServiceProvider(a.configType, a.pathConfig)
 
 	return nil
 }
@@ -88,11 +92,11 @@ func (a *App) startServer() error {
 
 	done := make(chan os.Signal, 1)
 	errChan := make(chan error)
-	defer close(errChan)
 
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
+		defer close(errChan)
 		switch a.serviceProvider.GetConfig().GetEnv() {
 		case envProd:
 			err := certificates.InitCertificates()

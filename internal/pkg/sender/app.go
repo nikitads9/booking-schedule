@@ -6,13 +6,16 @@ import (
 )
 
 type App struct {
+	configType string
+	pathConfig string
+
 	serviceProvider *serviceProvider
-	pathConfig      string
 }
 
 // NewApp ...
-func NewApp(ctx context.Context, pathConfig string) (*App, error) {
+func NewApp(ctx context.Context, configType string, pathConfig string) (*App, error) {
 	a := &App{
+		configType: configType,
 		pathConfig: pathConfig,
 	}
 	err := a.initDeps(ctx)
@@ -37,7 +40,7 @@ func (a *App) initDeps(ctx context.Context) error {
 }
 
 func (a *App) initServiceProvider(_ context.Context) error {
-	a.serviceProvider = newServiceProvider(a.pathConfig)
+	a.serviceProvider = newServiceProvider(a.configType, a.pathConfig)
 
 	return nil
 }

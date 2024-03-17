@@ -17,6 +17,7 @@ const (
 )
 
 type serviceProvider struct {
+	configType string
 	configPath string
 	config     *config.SenderConfig
 
@@ -25,20 +26,31 @@ type serviceProvider struct {
 	senderService  *sender.Service
 }
 
-func newServiceProvider(configPath string) *serviceProvider {
+func newServiceProvider(configType string, configPath string) *serviceProvider {
 	return &serviceProvider{
+		configType: configType,
 		configPath: configPath,
 	}
 }
 
 func (s *serviceProvider) GetConfig() *config.SenderConfig {
 	if s.config == nil {
-		cfg, err := config.ReadSenderConfig(s.configPath)
-		if err != nil {
-			log.Fatalf("could not get sender config: %s", err)
+		if s.configType == "env" {
+			cfg, err := config.ReadSenderConfigEnv()
+			if err != nil {
+				log.Fatalf("could not get sender config from env: %s", err)
+			}
+
+			s.config = cfg
+		} else {
+			cfg, err := config.ReadSenderConfigFile(s.configPath)
+			if err != nil {
+				log.Fatalf("could not get sender config from file: %s", err)
+			}
+
+			s.config = cfg
 		}
 
-		s.config = cfg
 	}
 
 	return s.config

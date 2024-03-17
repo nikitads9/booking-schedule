@@ -34,7 +34,7 @@ services:
       dockerfile: ./deploy/bookings/Dockerfile
     image: nikitads9/booking-schedule:bookings
     ports:
-      - "${EVENTS_PORT}:${EVENTS_PORT}"
+      - "${BOOKINGS_PORT}:${BOOKINGS_PORT}"
     depends_on:
       - db
       - jaeger

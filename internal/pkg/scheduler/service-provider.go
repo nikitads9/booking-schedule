@@ -23,19 +23,25 @@ const (
 )
 
 type serviceProvider struct {
-	db         db.Client
+	db db.Client
+
+	configType string
 	configPath string
 	config     *config.SchedulerConfig
 
-	log               *slog.Logger
-	tracer            trace.Tracer
-	rabbitProducer    rabbit.Producer
+	log    *slog.Logger
+	tracer trace.Tracer
+
+	rabbitProducer rabbit.Producer
+
 	bookingRepository bookingRepository.Repository
-	schedulerService  *schedulerService.Service
+
+	schedulerService *schedulerService.Service
 }
 
-func newServiceProvider(configPath string) *serviceProvider {
+func newServiceProvider(configType string, configPath string) *serviceProvider {
 	return &serviceProvider{
+		configType: configType,
 		configPath: configPath,
 	}
 }
@@ -60,12 +66,19 @@ func (s *serviceProvider) GetDB(ctx context.Context) db.Client {
 
 func (s *serviceProvider) GetConfig() *config.SchedulerConfig {
 	if s.config == nil {
-		cfg, err := config.ReadSchedulerConfig(s.configPath)
-		if err != nil {
-			log.Fatalf("could not get scheduler config: %s", err)
+		if s.configType == "env" {
+			cfg, err := config.ReadSchedulerConfigEnv()
+			if err != nil {
+				log.Fatalf("could not get scheduler config from env: %s", err)
+			}
+			s.config = cfg
+		} else {
+			cfg, err := config.ReadSchedulerConfigFile(s.configPath)
+			if err != nil {
+				log.Fatalf("could not get scheduler config from file: %s", err)
+			}
+			s.config = cfg
 		}
-
-		s.config = cfg
 	}
 
 	return s.config

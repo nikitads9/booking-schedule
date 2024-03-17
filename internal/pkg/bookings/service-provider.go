@@ -30,10 +30,12 @@ const (
 )
 
 type serviceProvider struct {
-	db         db.Client
-	txManager  db.TxManager
 	configPath string
-	config     *config.AppConfig
+	configType string
+	config     *config.BookingConfig
+
+	db        db.Client
+	txManager db.TxManager
 
 	server *http.Server
 	log    *slog.Logger
@@ -44,14 +46,16 @@ type serviceProvider struct {
 
 	userRepository userRepository.Repository
 	userService    *userService.Service
-	jwtService     jwt.Service
+
+	jwtService jwt.Service
 
 	bookingImpl *booking.Implementation
 	userImpl    *user.Implementation
 }
 
-func newServiceProvider(configPath string) *serviceProvider {
+func newServiceProvider(configType string, configPath string) *serviceProvider {
 	return &serviceProvider{
+		configType: configType,
 		configPath: configPath,
 	}
 }
@@ -72,14 +76,21 @@ func (s *serviceProvider) GetDB(ctx context.Context) db.Client {
 	return s.db
 }
 
-func (s *serviceProvider) GetConfig() *config.AppConfig {
+func (s *serviceProvider) GetConfig() *config.BookingConfig {
 	if s.config == nil {
-		cfg, err := config.ReadAppConfig(s.configPath)
-		if err != nil {
-			log.Fatalf("could not get bookings-api config: %s", err)
+		if s.configType == "env" {
+			cfg, err := config.ReadBookingConfigEnv()
+			if err != nil {
+				log.Fatalf("could not get bookings-api config from env: %s", err)
+			}
+			s.config = cfg
+		} else {
+			cfg, err := config.ReadBookingConfigFile(s.configPath)
+			if err != nil {
+				log.Fatalf("could not get bookings-api config from file: %s", err)
+			}
+			s.config = cfg
 		}
-
-		s.config = cfg
 	}
 
 	return s.config

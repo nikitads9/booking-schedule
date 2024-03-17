@@ -2,42 +2,46 @@ package config
 
 import (
 	"fmt"
-	"os"
-	"strings"
 
 	"github.com/exaring/otelpgx"
+	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"gopkg.in/yaml.v3"
 )
 
 type Scheduler struct {
-	CheckPeriodSec int64 `yaml:"check_period_sec"`
-	BookingTTL     int64 `yaml:"booking_ttl_days"`
+	CheckPeriodSec int64 `yaml:"check_period_sec" env:"SCHEDULER_PERIOD" env-default:"60"`
+	BookingTTL     int64 `yaml:"booking_ttl_days" env:"BOOKING_TTL" env-default:"365"`
 }
 
 type RabbitProducer struct {
-	DSN       string `yaml:"dsn"`
-	QueueName string `yaml:"queue_name"`
+	DSN       string `yaml:"dsn" env:"AMQP_DSN" env-default:"amqp://guest:guest@queue:5672/bookings"`
+	QueueName string `yaml:"queue_name" env:"AMQP_QUEUE" env-default:"bookings"`
 }
 
 type SchedulerConfig struct {
-	Scheduler      *Scheduler      `yaml:"scheduler"`
-	Database       *Database       `yaml:"database"`
-	RabbitProducer *RabbitProducer `yaml:"rabbit_producer"`
-	Env            string          `yaml:"env"`
-	Tracer         *Tracer         `yaml:"tracer"`
+	Env            string         `yaml:"env" env:"env" env-default:"dev"`
+	Scheduler      Scheduler      `yaml:"scheduler"`
+	Database       Database       `yaml:"database"`
+	RabbitProducer RabbitProducer `yaml:"rabbit_producer"`
+	Tracer         Tracer         `yaml:"tracer"`
 }
 
-func ReadSchedulerConfig(path string) (*SchedulerConfig, error) {
+func ReadSchedulerConfigFile(path string) (*SchedulerConfig, error) {
 	config := &SchedulerConfig{}
 
-	file, err := os.ReadFile(path)
+	err := cleanenv.ReadConfig(path, config)
 	if err != nil {
 		return nil, err
 	}
 
-	err = yaml.Unmarshal(file, &config)
+	return config, nil
+}
+
+func ReadSchedulerConfigEnv() (*SchedulerConfig, error) {
+	config := &SchedulerConfig{}
+
+	err := cleanenv.ReadEnv(config)
 	if err != nil {
 		return nil, err
 	}
@@ -47,17 +51,17 @@ func ReadSchedulerConfig(path string) (*SchedulerConfig, error) {
 
 // GetSchedulerConfig ...
 func (s *SchedulerConfig) GetSchedulerConfig() *Scheduler {
-	return s.Scheduler
+	return &s.Scheduler
 }
 
 // GetRabbitProducerConfig ...
 func (s *SchedulerConfig) GetRabbitProducerConfig() *RabbitProducer {
-	return s.RabbitProducer
+	return &s.RabbitProducer
 }
 
 // GetTracerConfig
 func (e *SchedulerConfig) GetTracerConfig() *Tracer {
-	return e.Tracer
+	return &e.Tracer
 }
 
 // GetEnv ...
@@ -66,8 +70,7 @@ func (s *SchedulerConfig) GetEnv() string {
 }
 
 func (s *SchedulerConfig) GetDBConfig() (*pgxpool.Config, error) {
-	dbDsn := fmt.Sprintf("user=%s dbname=%s password={password} host=%s port=%s sslmode=%s", s.Database.User, s.Database.Name, s.Database.Host, s.Database.Port, s.Database.Ssl)
-	dbDsn = strings.ReplaceAll(dbDsn, dbPassEscSeq, password)
+	dbDsn := fmt.Sprintf("user=%s dbname=%s password=%s host=%s port=%s sslmode=%s", s.Database.User, s.Database.Name, s.Database.Password, s.Database.Host, s.Database.Port, s.Database.Ssl)
 
 	poolConfig, err := pgxpool.ParseConfig(dbDsn)
 	if err != nil {

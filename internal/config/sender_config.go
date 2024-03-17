@@ -1,30 +1,34 @@
 package config
 
 import (
-	"os"
-
-	"gopkg.in/yaml.v3"
+	"github.com/ilyakaznacheev/cleanenv"
 )
 
 type RabbitConsumer struct {
-	DSN       string `yaml:"dsn"`
-	QueueName string `yaml:"queue_name"`
+	DSN       string `yaml:"dsn" env:"AMQP_DSN" env-default:"amqp://guest:guest@queue:5672/bookings"`
+	QueueName string `yaml:"queue_name" env:"AMQP_QUEUE" env-default:"bookings"`
 }
 
 type SenderConfig struct {
-	RabbitConsumer *RabbitConsumer `yaml:"rabbit_consumer"`
-	Env            string          `yaml:"env"`
+	Env            string         `yaml:"env" env:"env" env-default:"dev"`
+	RabbitConsumer RabbitConsumer `yaml:"rabbit_consumer"`
 }
 
-func ReadSenderConfig(path string) (*SenderConfig, error) {
+func ReadSenderConfigFile(path string) (*SenderConfig, error) {
 	config := &SenderConfig{}
 
-	file, err := os.ReadFile(path)
+	err := cleanenv.ReadConfig(path, config)
 	if err != nil {
 		return nil, err
 	}
 
-	err = yaml.Unmarshal(file, &config)
+	return config, nil
+}
+
+func ReadSenderConfigEnv() (*SenderConfig, error) {
+	config := &SenderConfig{}
+
+	err := cleanenv.ReadEnv(config)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +38,7 @@ func ReadSenderConfig(path string) (*SenderConfig, error) {
 
 // GetRabbitConsumerConfig ...
 func (s *SenderConfig) GetRabbitConsumerConfig() *RabbitConsumer {
-	return s.RabbitConsumer
+	return &s.RabbitConsumer
 }
 
 // GetEnv ...

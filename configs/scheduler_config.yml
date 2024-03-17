@@ -1,21 +1,22 @@
+env: "dev"
+
 scheduler: 
     check_period_sec: 60
     booking_ttl_days: 365
     
 database:
+  database: "bookings_db"
   host: "db"
   port: "5433"
   user: "postgres"
-  database: "bookings_db"
+  password: "bookings_pass"
   ssl: "disable"
   max_opened_connections: 10
-
-rabbit_producer:
-  dsn: "amqp://guest:guest@queue:5672/bookings"
-  queue_name: "bookings"
-
-env: "dev"
 
 tracer:
   endpoint_url: "http://jaeger:4318/v1/traces"
   sampling_rate: 1.0
+
+rabbit_producer:
+  dsn: "amqp://guest:guest@queue:5672/bookings"
+  queue_name: "bookings"

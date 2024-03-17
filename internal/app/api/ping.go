@@ -8,6 +8,6 @@ import (
 
 func HandlePingCheck() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		render.Render(w, r, PingResponseAPI())
+		_ = render.Render(w, r, PingResponseAPI())
 	}
 }

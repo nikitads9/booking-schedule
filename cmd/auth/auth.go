@@ -12,9 +12,10 @@ import (
 	"log"
 )
 
-var pathConfig, pathCert, pathKey string
+var configType, pathConfig, pathCert, pathKey string
 
 func init() {
+	flag.StringVar(&configType, "configtype", "file", "type of configuration: environment variables (env) or env/yaml file (file)")
 	flag.StringVar(&pathConfig, "config", ".configs/auth_config.yml", "path to config file")
 	flag.StringVar(&pathCert, "certfile", "cert.pem", "certificate PEM file")
 	flag.StringVar(&pathKey, "keyfile", "key.pem", "key PEM file")
@@ -49,7 +50,7 @@ func main() {
 
 	ctx := context.Background()
 
-	app, err := auth.NewApp(ctx, pathConfig, pathCert, pathKey)
+	app, err := auth.NewApp(ctx, configType, pathConfig, pathCert, pathKey)
 	if err != nil {
 		log.Fatalf("failed to create auth-api app object:%s\n", err.Error())
 	}

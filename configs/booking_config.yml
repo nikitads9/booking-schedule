@@ -1,21 +1,23 @@
+env: "prod"
+
 server:
-  port: ":3000"
+  host: "0.0.0.0"
+  port: "3000"
   timeout: 6s
   idle_timeout: 30s
 
 database:
+  database: "bookings_db"
   host: "db"
   port: "5433"
   user: "postgres"
-  database: "bookings_db"
+  password: "bookings_pass"
   ssl: "disable"
   max_opened_connections: 10
 
 jwt:
   secret: "verysecretivejwt"
   expiration: 2160h
-  
-env: "dev"
 
 tracer:
   endpoint_url: "http://jaeger:4318/v1/traces"

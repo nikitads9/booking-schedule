@@ -27,10 +27,12 @@ const (
 )
 
 type serviceProvider struct {
-	db         db.Client
-	txManager  db.TxManager
+	db        db.Client
+	txManager db.TxManager
+
+	configType string
 	configPath string
-	config     *config.AppConfig
+	config     *config.AuthConfig
 
 	server *http.Server
 	log    *slog.Logger
@@ -43,8 +45,9 @@ type serviceProvider struct {
 	authImpl *auth.Implementation
 }
 
-func newServiceProvider(configPath string) *serviceProvider {
+func newServiceProvider(configType string, configPath string) *serviceProvider {
 	return &serviceProvider{
+		configType: configType,
 		configPath: configPath,
 	}
 }
@@ -65,14 +68,21 @@ func (s *serviceProvider) GetDB(ctx context.Context) db.Client {
 	return s.db
 }
 
-func (s *serviceProvider) GetConfig() *config.AppConfig {
+func (s *serviceProvider) GetConfig() *config.AuthConfig {
 	if s.config == nil {
-		cfg, err := config.ReadAppConfig(s.configPath)
-		if err != nil {
-			log.Fatalf("could not get bookings-api config: %s", err)
+		if s.configType == "env" {
+			cfg, err := config.ReadAuthConfigEnv()
+			if err != nil {
+				log.Fatalf("could not get auth-api config from env: %s", err)
+			}
+			s.config = cfg
+		} else {
+			cfg, err := config.ReadAuthConfigFile(s.configPath)
+			if err != nil {
+				log.Fatalf("could not get auth-api config from file: %s", err)
+			}
+			s.config = cfg
 		}
-
-		s.config = cfg
 	}
 
 	return s.config

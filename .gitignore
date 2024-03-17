@@ -19,6 +19,7 @@
 
 # IDE environment
 .vscode/
+deploy/nginx/
 bin/
 *.env
 
