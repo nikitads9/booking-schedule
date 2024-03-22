@@ -8,7 +8,6 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/middleware"
-	"github.com/go-chi/render"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -22,12 +21,11 @@ import (
 //	@Tags			users
 //	@Produce		json
 //
-//	@Success		200	{object}	api.DeleteMyProfileResponse
-//	@Failure		400	{object}	api.DeleteMyProfileResponse
-//	@Failure		401	{object}	api.DeleteMyProfileResponse
-//	@Failure		404	{object}	api.DeleteMyProfileResponse
-//	@Failure		422	{object}	api.DeleteMyProfileResponse
-//	@Failure		503	{object}	api.DeleteMyProfileResponse
+//	@Success		200
+//	@Failure		400	{object}	api.errResponse
+//	@Failure		401	{object}	api.errResponse
+//	@Failure		404	{object}	api.errResponse
+//	@Failure		503	{object}	api.errResponse
 //	@Router			/user/delete [delete]
 //
 // @Security Bearer
@@ -49,11 +47,7 @@ func (i *Implementation) DeleteMyProfile(logger *slog.Logger) http.HandlerFunc {
 			span.RecordError(api.ErrNoUserID)
 			span.SetStatus(codes.Error, api.ErrNoUserID.Error())
 			log.Error("no user id in context", sl.Err(api.ErrNoUserID))
-			err := render.Render(w, r, api.ErrUnauthorized(api.ErrNoAuth))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			api.WriteWithError(w, http.StatusUnauthorized, api.ErrNoAuth.Error())
 			return
 		}
 
@@ -64,23 +58,14 @@ func (i *Implementation) DeleteMyProfile(logger *slog.Logger) http.HandlerFunc {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
 			log.Error("internal error", sl.Err(err))
-			err = render.Render(w, r, api.ErrInternalError(err))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			api.WriteWithError(w, GetErrorCode(err), err.Error())
 			return
 		}
 
 		span.AddEvent("user deleted", trace.WithAttributes(attribute.Int64("id", userID)))
 		log.Info("deleted booking", slog.Int64("id: ", userID))
 
-		err = render.Render(w, r, api.DeleteMyProfileResponseAPI())
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, err.Error())
-			log.Error("failed to render response", sl.Err(err))
-			return
-		}
+		api.WriteWithStatus(w, http.StatusOK, nil)
+
 	}
 }

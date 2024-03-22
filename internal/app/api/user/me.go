@@ -9,7 +9,6 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/middleware"
-	"github.com/go-chi/render"
 	"go.opentelemetry.io/otel/codes"
 )
 
@@ -22,11 +21,10 @@ import (
 //	@Produce		json
 //
 //	@Success		200	{object}	api.GetMyProfileResponse
-//	@Failure		400	{object}	api.GetMyProfileResponse
-//	@Failure		401	{object}	api.GetMyProfileResponse
-//	@Failure		404	{object}	api.GetMyProfileResponse
-//	@Failure		422	{object}	api.GetMyProfileResponse
-//	@Failure		503	{object}	api.GetMyProfileResponse
+//	@Failure		400	{object}	api.errResponse
+//	@Failure		401	{object}	api.errResponse
+//	@Failure		404	{object}	api.errResponse
+//	@Failure		503	{object}	api.errResponse
 //	@Router			/user/me [get]
 //
 // @Security Bearer
@@ -48,11 +46,7 @@ func (i *Implementation) GetMyProfile(logger *slog.Logger) http.HandlerFunc {
 			span.RecordError(api.ErrNoUserID)
 			span.SetStatus(codes.Error, api.ErrNoUserID.Error())
 			log.Error("no user id in context", sl.Err(api.ErrNoUserID))
-			err := render.Render(w, r, api.ErrUnauthorized(api.ErrNoAuth))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			api.WriteWithError(w, http.StatusUnauthorized, api.ErrNoAuth.Error())
 			return
 		}
 
@@ -61,28 +55,15 @@ func (i *Implementation) GetMyProfile(logger *slog.Logger) http.HandlerFunc {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
 			log.Error("internal error", sl.Err(err))
-			err = render.Render(w, r, api.ErrInternalError(err))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			api.WriteWithError(w, GetErrorCode(err), err.Error())
 			return
 		}
 
 		span.AddEvent("user acquired")
 		log.Info("user acquired", slog.Any("user: ", user))
 
-		err = render.Render(w, r, api.GetMyProfileResponseAPI(convert.ToApiUserInfo(user)))
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, err.Error())
-			log.Error("internal error", sl.Err(err))
-			err = render.Render(w, r, api.ErrRender(err))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
-			return
-		}
+		api.WriteWithStatus(w, http.StatusOK, api.GetMyProfileResponse{
+			Profile: convert.ToApiUserInfo(user),
+		})
 	}
 }

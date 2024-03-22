@@ -1,0 +1,820 @@
+openapi: 3.0.1
+info:
+  title: booking-schedule API
+  description: This is a service for writing and reading booking entries.
+  termsOfService: http://swagger.io/terms/
+  contact:
+    name: Nikita Denisenok
+    url: https://vk.com/ndenisenok
+  license:
+    name: GNU 3.0
+    url: https://www.gnu.org/licenses/gpl-3.0.ru.html
+  version: "1.0"
+servers:
+- url: http://localhost:3000/bookings
+- url: https://localhost:3000/bookings
+- url: http://localhost:5000/auth
+- url: https://localhost:5000/auth
+tags:
+- name: bookings
+  description: "operations with bookings, suites and intervals"
+- name: users
+  description: service for viewing profile editing or deleting it
+- name: auth
+  description: sign in and sign up operations
+paths:
+  /sign-in:
+    get:
+      tags:
+      - auth
+      summary: Sign in
+      description: Get auth token to access user restricted api methods. Requires
+        nickname and password passed via basic auth.
+      operationId: getOauthToken
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - BasicAuth: []
+  /sign-up:
+    post:
+      tags:
+      - auth
+      summary: Sign up
+      description: "Creates user with given tg id, nickname, name and password hashed\
+        \ by bcrypto. Every parameter is required. Returns jwt token."
+      operationId: signUpUserJson
+      requestBody:
+        description: User
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUpRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-codegen-request-body-name: user
+  /add:
+    post:
+      tags:
+      - bookings
+      summary: Adds booking
+      description: "Adds an  associated with user with given parameters. NotificationPeriod\
+        \ is optional and must look like {number}s,{number}m or {number}h. Implemented\
+        \ with the use of transaction: first rooms availibility is checked. In case\
+        \ one's new booking request intersects with and old one(even if belongs to\
+        \ him), the request is considered erratic. startDate is to be before endDate\
+        \ and both should not be expired."
+      operationId: addByBookingJSON
+      requestBody:
+        description: BookingEntry
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddBookingRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddBookingResponse'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - Bearer: []
+      x-codegen-request-body-name: booking
+  /get-bookings:
+    get:
+      tags:
+      - bookings
+      summary: Get several bookings info
+      description: Responds with series of booking info objects within given time
+        period. The query parameters are start date and end date (start is to be before
+        end and both should not be expired).
+      operationId: getMultipleBookingsByTag
+      parameters:
+      - name: start
+        in: query
+        description: start
+        required: true
+        schema:
+          type: string
+          format: time.Time
+          default: 2024-03-28T17:43:00
+      - name: end
+        in: query
+        description: end
+        required: true
+        schema:
+          type: string
+          format: time.Time
+          default: 2024-03-29T17:43:00
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetBookingsResponse'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - Bearer: []
+  /get-vacant-rooms:
+    get:
+      tags:
+      - bookings
+      summary: Get list of vacant rooms
+      description: Receives two dates as query parameters. start is to be before end
+        and both should not be expired. Responds with list of vacant rooms and their
+        parameters for given interval.
+      operationId: getRoomsByDates
+      parameters:
+      - name: start
+        in: query
+        description: start
+        required: true
+        schema:
+          type: string
+          format: time.Time
+          default: 2024-03-28T17:43:00
+      - name: end
+        in: query
+        description: end
+        required: true
+        schema:
+          type: string
+          format: time.Time
+          default: 2024-03-29T17:43:00
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetVacantRoomsResponse'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /user/delete:
+    delete:
+      tags:
+      - users
+      summary: Delete my profile
+      description: Deletes user and all bookings associated with him
+      operationId: deleteMyInfo
+      responses:
+        "200":
+          description: OK
+          content: {}
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - Bearer: []
+  /user/edit:
+    patch:
+      tags:
+      - users
+      summary: Modify profile
+      description: "Updates user's profile with provided values. If no values provided,\
+        \ an error is returned. If new telegram id is set, the telegram nickname is\
+        \ also to be provided and vice versa. All provided body parameters should\
+        \ not be blank (i.e. empty string)."
+      operationId: modifyUserByJSON
+      requestBody:
+        description: EditMyProfileRequest
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditMyProfileRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content: {}
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - Bearer: []
+      x-codegen-request-body-name: user
+  /user/me:
+    get:
+      tags:
+      - users
+      summary: Get info for current user
+      description: Responds with account info for signed in user.
+      operationId: getMyUserAuth
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetMyProfileResponse'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - Bearer: []
+  /{booking_id}/delete:
+    delete:
+      tags:
+      - bookings
+      summary: Deletes an booking
+      description: Deletes an booking with given UUID.
+      operationId: removeByBookingID
+      parameters:
+      - name: booking_id
+        in: path
+        description: booking_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+          default: 550e8400-e29b-41d4-a716-446655440000
+      responses:
+        "200":
+          description: OK
+          content: {}
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - Bearer: []
+  /{booking_id}/get:
+    get:
+      tags:
+      - bookings
+      summary: Get booking info
+      description: Responds with booking info for booking with given BookingID.
+      operationId: getBookingbyTag
+      parameters:
+      - name: booking_id
+        in: path
+        description: booking_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+          default: 550e8400-e29b-41d4-a716-446655440000
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetBookingResponse'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - Bearer: []
+  /{booking_id}/update:
+    patch:
+      tags:
+      - bookings
+      summary: Updates booking info
+      description: "Updates an existing booking with given BookingID, suiteID, startDate,\
+        \ endDate values (notificationPeriod being optional). Implemented with the\
+        \ use of transaction: first room availibility is checked. In case one attempts\
+        \ to alter his previous booking (i.e. widen or tighten its' limits) the booking\
+        \ is updated.  If it overlaps with smb else's booking or with clients' another\
+        \ booking the request is considered unsuccessful. startDate parameter  is\
+        \ to be before endDate and both should not be expired."
+      operationId: modifyBookingByJSON
+      parameters:
+      - name: booking_id
+        in: path
+        description: booking_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+          default: 550e8400-e29b-41d4-a716-446655440000
+      requestBody:
+        description: BookingEntry
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBookingRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content: {}
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - Bearer: []
+      x-codegen-request-body-name: booking
+  /{suite_id}/get-vacant-dates:
+    get:
+      tags:
+      - bookings
+      summary: Get vacant intervals
+      description: Responds with list of vacant intervals within month for selected
+        suite.
+      operationId: getDatesBySuiteID
+      parameters:
+      - name: suite_id
+        in: path
+        description: suite_id
+        required: true
+        schema:
+          type: integer
+          format: int64
+          default: 1
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetVacantDateResponse'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT токен для доступа
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          example: some error message
+        status:
+          type: integer
+          example: 400
+    SignUpRequest:
+      required:
+      - name
+      - password
+      - telegramID
+      - telegramNickname
+      type: object
+      properties:
+        name:
+          type: string
+          description: Имя пользователя
+          example: Pavel Durov
+        password:
+          type: string
+          description: Пароль
+          example: "12345"
+        telegramID:
+          type: integer
+          description: Телеграм ID пользователя
+          example: 1235678
+        telegramNickname:
+          type: string
+          description: Никнейм пользователя в телеграме
+          example: pavel_durov
+    AddBookingRequest:
+      required:
+      - endDate
+      - startDate
+      - suiteID
+      type: object
+      properties:
+        endDate:
+          type: string
+          description: Дата и время окончания бронировании
+          example: 2024-03-29T17:43:00Z
+        notifyAt:
+          type: string
+          description: Интервал времени для предварительного уведомления о бронировании
+          example: 24h
+        startDate:
+          type: string
+          description: Дата и время начала бронировании
+          example: 2024-03-28T17:43:00Z
+        suiteID:
+          type: integer
+          description: Номер апаратаментов
+          example: 1
+    AddBookingResponse:
+      type: object
+      properties:
+        bookingID:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+    BookingInfo:
+      type: object
+      properties:
+        BookingID:
+          type: string
+          description: Уникальный идентификатор бронирования
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        createdAt:
+          type: string
+          description: Дата и время создания
+          example: 2024-03-27T17:43:00Z
+        endDate:
+          type: string
+          description: Дата и время окончания бронировании
+          example: 2024-03-29T17:43:00Z
+        notifyAt:
+          type: string
+          description: Интервал времени для уведомления о бронировании
+          example: 24h00m00s
+        startDate:
+          type: string
+          description: Дата и время начала бронировании
+          example: 2024-03-28T17:43:00Z
+        suiteID:
+          type: integer
+          description: Номер апартаментов
+          example: 1
+        updatedAt:
+          type: string
+          description: Дата и время обновления
+          example: 2024-03-27T18:43:00Z
+        userID:
+          type: integer
+          description: Идентификатор владельца бронирования
+          example: 1
+    EditMyProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Имя пользователя
+          example: Kolya Durov
+        password:
+          type: string
+          description: Пароль
+          example: "123456"
+        telegramID:
+          type: integer
+          description: Телеграм ID пользователя
+          example: 1235678
+        telegramNickname:
+          type: string
+          description: Никнейм пользователя в телеграме
+          example: kolya_durov
+    GetBookingResponse:
+      type: object
+      properties:
+        booking:
+          $ref: '#/components/schemas/BookingInfo'
+    GetBookingsResponse:
+      type: object
+      properties:
+        bookings:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookingInfo'
+    GetMyProfileResponse:
+      type: object
+      properties:
+        profile:
+          type: object
+          description: Профиль пользователя
+          allOf:
+          - $ref: '#/components/schemas/UserInfo'
+    GetVacantDateResponse:
+      type: object
+      properties:
+        intervals:
+          type: array
+          items:
+            $ref: '#/components/schemas/Interval'
+    GetVacantRoomsResponse:
+      type: object
+      properties:
+        rooms:
+          type: array
+          items:
+            $ref: '#/components/schemas/Suite'
+    Interval:
+      type: object
+      properties:
+        end:
+          type: string
+          description: Номер свободен по
+          example: 2024-04-10T15:04:05Z
+        start:
+          type: string
+          description: Номер свободен с
+          example: 2024-03-10T15:04:05Z
+    Suite:
+      type: object
+      properties:
+        capacity:
+          type: integer
+          description: Вместимость в персонах
+          example: 4
+        name:
+          type: string
+          description: Название апартаментов
+          example: Winston Churchill
+        suiteID:
+          type: integer
+          description: Номер апартаментов
+          example: 1
+    UpdateBookingRequest:
+      required:
+      - endDate
+      - startDate
+      - suiteID
+      type: object
+      properties:
+        endDate:
+          type: string
+          description: Дата и время окончания бронировании
+          example: 2024-03-29T17:43:00Z
+        notifyAt:
+          type: string
+          description: Интервал времени для предварительного уведомления о бронировании
+          example: 24h
+        startDate:
+          type: string
+          description: Дата и время начала бронировании
+          example: 2024-03-28T17:43:00Z
+        suiteID:
+          type: integer
+          description: Номер апаратаментов
+          example: 1
+    UserInfo:
+      type: object
+      properties:
+        createdAt:
+          type: string
+          description: Дата и время регистрации
+        id:
+          type: integer
+          description: ID пользователя в системе
+        name:
+          type: string
+          description: Имя пользователя
+        telegramID:
+          type: integer
+          description: Телеграм ID пользователя
+        telegramNickname:
+          type: string
+          description: Никнейм пользователя в телеграме
+        updatedAt:
+          type: string
+          description: Дата и время обновления профиля
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+    Bearer:
+      type: apiKey
+      description: Type "Bearer" followed by a space and JWT token.
+      name: Authorization
+      in: header
+x-original-swagger-version: "2.0"

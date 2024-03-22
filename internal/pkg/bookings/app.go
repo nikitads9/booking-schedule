@@ -8,6 +8,8 @@ import (
 	"booking-schedule/internal/pkg/certificates"
 	"context"
 
+	"github.com/go-chi/cors"
+
 	"errors"
 	"log/slog"
 	"os"
@@ -157,6 +159,14 @@ func (a *App) initServer(ctx context.Context) error {
 	//a.router.Use(middleware.Logger)    // Логирование всех запросов
 	a.router.Use(otelchi.Middleware("bookings-api", otelchi.WithChiRoutes(a.router)))
 	a.router.Use(mwLogger.New(a.serviceProvider.GetLogger()))
+	a.router.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedMethods:   []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"}, //"X-CSRF-Token" for tokens stored in cookies
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300,
+	}))
 	a.router.Use(middleware.Recoverer) // Если где-то внутри сервера (обработчика запроса) произойдет паника, приложение не должно упасть
 
 	a.router.Route("/bookings", func(r chi.Router) {

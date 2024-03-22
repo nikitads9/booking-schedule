@@ -63,31 +63,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/AddBookingResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/AddBookingResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/AddBookingResponse"
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity",
-                        "schema": {
-                            "$ref": "#/definitions/AddBookingResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/AddBookingResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     }
                 }
@@ -139,31 +133,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/GetBookingsResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/GetBookingsResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/GetBookingsResponse"
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity",
-                        "schema": {
-                            "$ref": "#/definitions/GetBookingsResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/GetBookingsResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     }
                 }
@@ -210,25 +198,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/GetVacantRoomsResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/GetVacantRoomsResponse"
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity",
-                        "schema": {
-                            "$ref": "#/definitions/GetVacantRoomsResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/GetVacantRoomsResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     }
                 }
@@ -252,39 +234,30 @@ const docTemplate = `{
                 "operationId": "deleteMyInfo",
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DeleteMyProfileResponse"
-                        }
+                        "description": "OK"
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/DeleteMyProfileResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/DeleteMyProfileResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/DeleteMyProfileResponse"
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity",
-                        "schema": {
-                            "$ref": "#/definitions/DeleteMyProfileResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/DeleteMyProfileResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     }
                 }
@@ -322,39 +295,30 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/EditMyProfileResponse"
-                        }
+                        "description": "OK"
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/EditMyProfileResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/EditMyProfileResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/EditMyProfileResponse"
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity",
-                        "schema": {
-                            "$ref": "#/definitions/EditMyProfileResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/EditMyProfileResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     }
                 }
@@ -386,31 +350,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/GetMyProfileResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/GetMyProfileResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/GetMyProfileResponse"
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity",
-                        "schema": {
-                            "$ref": "#/definitions/GetMyProfileResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/GetMyProfileResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     }
                 }
@@ -445,39 +403,30 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DeleteBookingResponse"
-                        }
+                        "description": "OK"
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/DeleteBookingResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/DeleteBookingResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/DeleteBookingResponse"
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity",
-                        "schema": {
-                            "$ref": "#/definitions/DeleteBookingResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/DeleteBookingResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     }
                 }
@@ -520,31 +469,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/GetBookingResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/GetBookingResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/GetBookingResponse"
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity",
-                        "schema": {
-                            "$ref": "#/definitions/GetBookingResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/GetBookingResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     }
                 }
@@ -591,39 +534,30 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/UpdateBookingResponse"
-                        }
+                        "description": "OK"
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/UpdateBookingResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/UpdateBookingResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/UpdateBookingResponse"
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity",
-                        "schema": {
-                            "$ref": "#/definitions/UpdateBookingResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/UpdateBookingResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     }
                 }
@@ -661,25 +595,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/GetVacantDateResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/GetVacantDateResponse"
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity",
-                        "schema": {
-                            "$ref": "#/definitions/GetVacantDateResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/GetVacantDateResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     }
                 }
@@ -724,9 +652,6 @@ const docTemplate = `{
                     "type": "string",
                     "format": "uuid",
                     "example": "550e8400-e29b-41d4-a716-446655440000"
-                },
-                "response": {
-                    "$ref": "#/definitions/Response"
                 }
             }
         },
@@ -776,22 +701,6 @@ const docTemplate = `{
                 }
             }
         },
-        "DeleteBookingResponse": {
-            "type": "object",
-            "properties": {
-                "response": {
-                    "$ref": "#/definitions/Response"
-                }
-            }
-        },
-        "DeleteMyProfileResponse": {
-            "type": "object",
-            "properties": {
-                "response": {
-                    "$ref": "#/definitions/Response"
-                }
-            }
-        },
         "EditMyProfileRequest": {
             "type": "object",
             "properties": {
@@ -817,11 +726,16 @@ const docTemplate = `{
                 }
             }
         },
-        "EditMyProfileResponse": {
+        "Error": {
             "type": "object",
             "properties": {
-                "response": {
-                    "$ref": "#/definitions/Response"
+                "message": {
+                    "type": "string",
+                    "example": "some error message"
+                },
+                "status": {
+                    "type": "integer",
+                    "example": 400
                 }
             }
         },
@@ -830,9 +744,6 @@ const docTemplate = `{
             "properties": {
                 "booking": {
                     "$ref": "#/definitions/BookingInfo"
-                },
-                "response": {
-                    "$ref": "#/definitions/Response"
                 }
             }
         },
@@ -844,9 +755,6 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/BookingInfo"
                     }
-                },
-                "response": {
-                    "$ref": "#/definitions/Response"
                 }
             }
         },
@@ -854,15 +762,12 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "profile": {
-                    "description": "JWT токен для доступа",
+                    "description": "Профиль пользователя",
                     "allOf": [
                         {
                             "$ref": "#/definitions/UserInfo"
                         }
                     ]
-                },
-                "response": {
-                    "$ref": "#/definitions/Response"
                 }
             }
         },
@@ -874,18 +779,12 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/Interval"
                     }
-                },
-                "response": {
-                    "$ref": "#/definitions/Response"
                 }
             }
         },
         "GetVacantRoomsResponse": {
             "type": "object",
             "properties": {
-                "response": {
-                    "$ref": "#/definitions/Response"
-                },
                 "rooms": {
                     "type": "array",
                     "items": {
@@ -906,23 +805,6 @@ const docTemplate = `{
                     "description": "Номер свободен с",
                     "type": "string",
                     "example": "2024-03-10T15:04:05Z"
-                }
-            }
-        },
-        "Response": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "description": "Код ошибки приложения",
-                    "type": "integer"
-                },
-                "error": {
-                    "description": "Сообщение об ошибке в приложении",
-                    "type": "string"
-                },
-                "status": {
-                    "description": "Статус ответа приложения",
-                    "type": "string"
                 }
             }
         },
@@ -973,14 +855,6 @@ const docTemplate = `{
                     "description": "Номер апаратаментов",
                     "type": "integer",
                     "example": 1
-                }
-            }
-        },
-        "UpdateBookingResponse": {
-            "type": "object",
-            "properties": {
-                "response": {
-                    "$ref": "#/definitions/Response"
                 }
             }
         },

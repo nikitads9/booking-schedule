@@ -29,7 +29,6 @@ type Repository interface {
 var (
 	ErrNotFound       = errors.New("no booking with this id")
 	ErrNoRowsAffected = errors.New("no database entries affected by this operation")
-	ErrNoDates        = errors.New("no vacant dates for this room within month")
 	ErrUnauthorized   = errors.New("no user associated with this token")
 
 	ErrQuery        = errors.New("failed to execute query")

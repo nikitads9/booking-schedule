@@ -26,9 +26,8 @@ import (
 //	@Produce		json
 //	@Param          user	body	api.SignUpRequest	true	"User"
 //	@Success		200	{object}	api.AuthResponse
-//	@Failure		400	{object}	api.AuthResponse
-//	@Failure		404	{object}	api.AuthResponse
-//	@Failure		503	{object}	api.AuthResponse
+//	@Failure		400	{object}	api.errResponse
+//	@Failure		503	{object}	api.errResponse
 //	@Router			/sign-up [post]
 func (i *Implementation) SignUp(logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -52,37 +51,24 @@ func (i *Implementation) SignUp(logger *slog.Logger) http.HandlerFunc {
 				span.RecordError(validateErr)
 				span.SetStatus(codes.Error, validateErr.Error())
 				log.Error("some of the required values were not received or were null", sl.Err(validateErr))
-				err = render.Render(w, r, api.ErrValidationError(validateErr))
-				if err != nil {
-					log.Error("failed to render response", sl.Err(err))
-					return
-				}
+				api.WriteValidationError(w, validateErr)
 				return
 			}
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
 			log.Error("failed to decode request body", sl.Err(err))
-			err = render.Render(w, r, api.ErrInvalidRequest(err))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			api.WriteWithError(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		span.AddEvent("request body decoded")
 
 		user, err := convert.ToUserInfo(req)
-
 		if err != nil {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
 			log.Error("invalid request", sl.Err(err))
-			err = render.Render(w, r, api.ErrInvalidRequest(err))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			api.WriteWithError(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -92,12 +78,8 @@ func (i *Implementation) SignUp(logger *slog.Logger) http.HandlerFunc {
 		if err != nil {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
-			log.Error("internal error", sl.Err(err))
-			err = render.Render(w, r, api.ErrInternalError(err))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			log.Error("sign up failed", sl.Err(err))
+			api.WriteWithError(w, GetErrorCode(err), err.Error())
 			return
 		}
 
@@ -105,13 +87,9 @@ func (i *Implementation) SignUp(logger *slog.Logger) http.HandlerFunc {
 		log.Info("user created", slog.Any("login: ", req.Nickname))
 
 		render.Status(r, http.StatusCreated)
-		err = render.Render(w, r, api.AuthResponseAPI(token))
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, err.Error())
-			log.Error("failed to render response", sl.Err(err))
-			return
-		}
+		api.WriteWithStatus(w, http.StatusOK, api.AuthResponse{
+			Token: token,
+		})
 	}
 
 }

@@ -29,8 +29,6 @@ definitions:
         example: 550e8400-e29b-41d4-a716-446655440000
         format: uuid
         type: string
-      response:
-        $ref: '#/definitions/Response'
     type: object
   BookingInfo:
     properties:
@@ -68,16 +66,6 @@ definitions:
         example: 1
         type: integer
     type: object
-  DeleteBookingResponse:
-    properties:
-      response:
-        $ref: '#/definitions/Response'
-    type: object
-  DeleteMyProfileResponse:
-    properties:
-      response:
-        $ref: '#/definitions/Response'
-    type: object
   EditMyProfileRequest:
     properties:
       name:
@@ -97,17 +85,19 @@ definitions:
         example: kolya_durov
         type: string
     type: object
-  EditMyProfileResponse:
+  Error:
     properties:
-      response:
-        $ref: '#/definitions/Response'
+      message:
+        example: some error message
+        type: string
+      status:
+        example: 400
+        type: integer
     type: object
   GetBookingResponse:
     properties:
       booking:
         $ref: '#/definitions/BookingInfo'
-      response:
-        $ref: '#/definitions/Response'
     type: object
   GetBookingsResponse:
     properties:
@@ -115,17 +105,13 @@ definitions:
         items:
           $ref: '#/definitions/BookingInfo'
         type: array
-      response:
-        $ref: '#/definitions/Response'
     type: object
   GetMyProfileResponse:
     properties:
       profile:
         allOf:
         - $ref: '#/definitions/UserInfo'
-        description: JWT токен для доступа
-      response:
-        $ref: '#/definitions/Response'
+        description: Профиль пользователя
     type: object
   GetVacantDateResponse:
     properties:
@@ -133,13 +119,9 @@ definitions:
         items:
           $ref: '#/definitions/Interval'
         type: array
-      response:
-        $ref: '#/definitions/Response'
     type: object
   GetVacantRoomsResponse:
     properties:
-      response:
-        $ref: '#/definitions/Response'
       rooms:
         items:
           $ref: '#/definitions/Suite'
@@ -154,18 +136,6 @@ definitions:
       start:
         description: Номер свободен с
         example: "2024-03-10T15:04:05Z"
-        type: string
-    type: object
-  Response:
-    properties:
-      code:
-        description: Код ошибки приложения
-        type: integer
-      error:
-        description: Сообщение об ошибке в приложении
-        type: string
-      status:
-        description: Статус ответа приложения
         type: string
     type: object
   Suite:
@@ -205,11 +175,6 @@ definitions:
     - endDate
     - startDate
     - suiteID
-    type: object
-  UpdateBookingResponse:
-    properties:
-      response:
-        $ref: '#/definitions/Response'
     type: object
   UserInfo:
     properties:
@@ -262,28 +227,22 @@ paths:
       responses:
         "200":
           description: OK
-          schema:
-            $ref: '#/definitions/DeleteBookingResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/DeleteBookingResponse'
+            $ref: '#/definitions/Error'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/DeleteBookingResponse'
+            $ref: '#/definitions/Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/DeleteBookingResponse'
-        "422":
-          description: Unprocessable Entity
-          schema:
-            $ref: '#/definitions/DeleteBookingResponse'
+            $ref: '#/definitions/Error'
         "503":
           description: Service Unavailable
           schema:
-            $ref: '#/definitions/DeleteBookingResponse'
+            $ref: '#/definitions/Error'
       security:
       - Bearer: []
       summary: Deletes an booking
@@ -311,23 +270,19 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/GetBookingResponse'
+            $ref: '#/definitions/Error'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/GetBookingResponse'
+            $ref: '#/definitions/Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/GetBookingResponse'
-        "422":
-          description: Unprocessable Entity
-          schema:
-            $ref: '#/definitions/GetBookingResponse'
+            $ref: '#/definitions/Error'
         "503":
           description: Service Unavailable
           schema:
-            $ref: '#/definitions/GetBookingResponse'
+            $ref: '#/definitions/Error'
       security:
       - Bearer: []
       summary: Get booking info
@@ -364,28 +319,22 @@ paths:
       responses:
         "200":
           description: OK
-          schema:
-            $ref: '#/definitions/UpdateBookingResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/UpdateBookingResponse'
+            $ref: '#/definitions/Error'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/UpdateBookingResponse'
+            $ref: '#/definitions/Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/UpdateBookingResponse'
-        "422":
-          description: Unprocessable Entity
-          schema:
-            $ref: '#/definitions/UpdateBookingResponse'
+            $ref: '#/definitions/Error'
         "503":
           description: Service Unavailable
           schema:
-            $ref: '#/definitions/UpdateBookingResponse'
+            $ref: '#/definitions/Error'
       security:
       - Bearer: []
       summary: Updates booking info
@@ -414,19 +363,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/GetVacantDateResponse'
+            $ref: '#/definitions/Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/GetVacantDateResponse'
-        "422":
-          description: Unprocessable Entity
-          schema:
-            $ref: '#/definitions/GetVacantDateResponse'
+            $ref: '#/definitions/Error'
         "503":
           description: Service Unavailable
           schema:
-            $ref: '#/definitions/GetVacantDateResponse'
+            $ref: '#/definitions/Error'
       summary: Get vacant intervals
       tags:
       - bookings
@@ -458,23 +403,19 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/AddBookingResponse'
+            $ref: '#/definitions/Error'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/AddBookingResponse'
+            $ref: '#/definitions/Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/AddBookingResponse'
-        "422":
-          description: Unprocessable Entity
-          schema:
-            $ref: '#/definitions/AddBookingResponse'
+            $ref: '#/definitions/Error'
         "503":
           description: Service Unavailable
           schema:
-            $ref: '#/definitions/AddBookingResponse'
+            $ref: '#/definitions/Error'
       security:
       - Bearer: []
       summary: Adds booking
@@ -511,23 +452,19 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/GetBookingsResponse'
+            $ref: '#/definitions/Error'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/GetBookingsResponse'
+            $ref: '#/definitions/Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/GetBookingsResponse'
-        "422":
-          description: Unprocessable Entity
-          schema:
-            $ref: '#/definitions/GetBookingsResponse'
+            $ref: '#/definitions/Error'
         "503":
           description: Service Unavailable
           schema:
-            $ref: '#/definitions/GetBookingsResponse'
+            $ref: '#/definitions/Error'
       security:
       - Bearer: []
       summary: Get several bookings info
@@ -564,19 +501,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/GetVacantRoomsResponse'
+            $ref: '#/definitions/Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/GetVacantRoomsResponse'
-        "422":
-          description: Unprocessable Entity
-          schema:
-            $ref: '#/definitions/GetVacantRoomsResponse'
+            $ref: '#/definitions/Error'
         "503":
           description: Service Unavailable
           schema:
-            $ref: '#/definitions/GetVacantRoomsResponse'
+            $ref: '#/definitions/Error'
       summary: Get list of vacant rooms
       tags:
       - bookings
@@ -589,28 +522,22 @@ paths:
       responses:
         "200":
           description: OK
-          schema:
-            $ref: '#/definitions/DeleteMyProfileResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/DeleteMyProfileResponse'
+            $ref: '#/definitions/Error'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/DeleteMyProfileResponse'
+            $ref: '#/definitions/Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/DeleteMyProfileResponse'
-        "422":
-          description: Unprocessable Entity
-          schema:
-            $ref: '#/definitions/DeleteMyProfileResponse'
+            $ref: '#/definitions/Error'
         "503":
           description: Service Unavailable
           schema:
-            $ref: '#/definitions/DeleteMyProfileResponse'
+            $ref: '#/definitions/Error'
       security:
       - Bearer: []
       summary: Delete my profile
@@ -637,28 +564,22 @@ paths:
       responses:
         "200":
           description: OK
-          schema:
-            $ref: '#/definitions/EditMyProfileResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/EditMyProfileResponse'
+            $ref: '#/definitions/Error'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/EditMyProfileResponse'
+            $ref: '#/definitions/Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/EditMyProfileResponse'
-        "422":
-          description: Unprocessable Entity
-          schema:
-            $ref: '#/definitions/EditMyProfileResponse'
+            $ref: '#/definitions/Error'
         "503":
           description: Service Unavailable
           schema:
-            $ref: '#/definitions/EditMyProfileResponse'
+            $ref: '#/definitions/Error'
       security:
       - Bearer: []
       summary: Modify profile
@@ -678,23 +599,19 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/GetMyProfileResponse'
+            $ref: '#/definitions/Error'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/GetMyProfileResponse'
+            $ref: '#/definitions/Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/GetMyProfileResponse'
-        "422":
-          description: Unprocessable Entity
-          schema:
-            $ref: '#/definitions/GetMyProfileResponse'
+            $ref: '#/definitions/Error'
         "503":
           description: Service Unavailable
           schema:
-            $ref: '#/definitions/GetMyProfileResponse'
+            $ref: '#/definitions/Error'
       security:
       - Bearer: []
       summary: Get info for current user

@@ -25,7 +25,7 @@ services:
     networks:
       - app_net
     depends_on:
-      - bookings
+      - booking
       - auth
   db:
     container_name: booking-storage
@@ -46,12 +46,12 @@ services:
     networks:
       - app_net
 
-  bookings:
-    container_name: app
+  booking:
+    container_name: booking
     build:
       context: .
       dockerfile: ./deploy/bookings/Dockerfile
-    image: nikitads9/booking-schedule:bookings
+    image: nikitads9/booking-schedule:booking
     volumes:
       - certificates-volume:/etc/ssl/certs
     ports:
@@ -108,7 +108,7 @@ services:
       context: .
       dockerfile: ./deploy/scheduler/Dockerfile
     image: nikitads9/booking-schedule:scheduler
-    restart: on-failure
+    restart: unless-stopped
     environment:
       - "DB_NAME=${DB_NAME}"
       - "DB_USERNAME=${DB_USER}"
@@ -131,7 +131,7 @@ services:
       context: .
       dockerfile: ./deploy/sender/Dockerfile
     image: nikitads9/booking-schedule:sender
-    restart: on-failure
+    restart: unless-stopped
     depends_on:
       - queue
     networks:
@@ -163,7 +163,7 @@ services:
 
   jaeger:
     container_name: jaeger
-    image: jaegertracing/all-in-one:1.51
+    image: jaegertracing/all-in-one:latest
     environment:
       - COLLECTOR_ZIPKIN_HOST_PORT=:9411
       - COLLECTOR_OTLP_ENABLED=true

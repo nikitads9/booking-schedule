@@ -9,7 +9,6 @@ import (
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/render"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -24,10 +23,9 @@ import (
 //	@Produce		json
 //	@Param			suite_id path	int	true	"suite_id"	Format(int64) default(1)
 //	@Success		200	{object}	api.GetVacantDatesResponse
-//	@Failure		400	{object}	api.GetVacantDatesResponse
-//	@Failure		404	{object}	api.GetVacantDatesResponse
-//	@Failure		422	{object}	api.GetVacantDatesResponse
-//	@Failure		503	{object}	api.GetVacantDatesResponse
+//	@Failure		400	{object}	api.errResponse
+//	@Failure		404	{object}	api.errResponse
+//	@Failure		503	{object}	api.errResponse
 //	@Router			/{suite_id}/get-vacant-dates [get]
 func (i *Implementation) GetVacantDates(logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -44,14 +42,10 @@ func (i *Implementation) GetVacantDates(logger *slog.Logger) http.HandlerFunc {
 
 		suiteID := chi.URLParam(r, "suite_id")
 		if suiteID == "" {
-			span.RecordError(api.ErrNoSuiteID)
-			span.SetStatus(codes.Error, api.ErrNoSuiteID.Error())
-			log.Error("invalid request", sl.Err(api.ErrNoSuiteID))
-			err := render.Render(w, r, api.ErrInvalidRequest(api.ErrNoSuiteID))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			span.RecordError(errNoSuiteID)
+			span.SetStatus(codes.Error, errNoSuiteID.Error())
+			log.Error("invalid request", sl.Err(errNoSuiteID))
+			api.WriteWithError(w, http.StatusBadRequest, errNoSuiteID.Error())
 			return
 		}
 
@@ -62,23 +56,15 @@ func (i *Implementation) GetVacantDates(logger *slog.Logger) http.HandlerFunc {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
 			log.Error("invalid request", sl.Err(err))
-			err = render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			api.WriteWithError(w, http.StatusBadRequest, api.ErrParse.Error())
 			return
 		}
 
 		if id == 0 {
-			span.RecordError(api.ErrNoSuiteID)
-			span.SetStatus(codes.Error, api.ErrNoSuiteID.Error())
-			log.Error("invalid request", sl.Err(api.ErrNoSuiteID))
-			err = render.Render(w, r, api.ErrInvalidRequest(api.ErrNoSuiteID))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			span.RecordError(errNoSuiteID)
+			span.SetStatus(codes.Error, errNoSuiteID.Error())
+			log.Error("invalid request", sl.Err(errNoSuiteID))
+			api.WriteWithError(w, http.StatusBadRequest, errNoSuiteID.Error())
 			return
 		}
 
@@ -89,23 +75,15 @@ func (i *Implementation) GetVacantDates(logger *slog.Logger) http.HandlerFunc {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
 			log.Error("internal error", sl.Err(err))
-			err = render.Render(w, r, api.ErrInternalError(err))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			api.WriteWithError(w, GetErrorCode(err), err.Error())
 			return
 		}
 
 		span.AddEvent("vacant dates acquired", trace.WithAttributes(attribute.Int("quantity", len(dates))))
 		log.Info("vacant dates acquired", slog.Int("quantity: ", len(dates)))
 
-		err = render.Render(w, r, api.GetVacantDatesAPI(dates))
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, err.Error())
-			log.Error("failed to render response", sl.Err(err))
-			return
-		}
+		api.WriteWithStatus(w, http.StatusOK, api.GetVacantDatesResponse{
+			Intervals: dates,
+		})
 	}
 }

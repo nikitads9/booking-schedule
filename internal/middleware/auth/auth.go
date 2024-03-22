@@ -3,7 +3,6 @@ package auth
 import (
 	"booking-schedule/internal/app/api"
 	"booking-schedule/internal/app/service/jwt"
-	"booking-schedule/internal/logger/sl"
 	"context"
 	"errors"
 	"log/slog"
@@ -14,7 +13,7 @@ import (
 	"github.com/go-chi/render"
 )
 
-type userID int
+type userID int64
 
 const (
 	keyUserID userID = 0
@@ -45,11 +44,7 @@ func Auth(logger *slog.Logger, jwtService jwt.Service) func(next http.Handler) h
 			if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer") {
 				log.Error("missing token ", errMissingToken)
 				render.Status(r, http.StatusUnauthorized)
-				err := render.Render(w, r, api.ErrUnauthorized(errMissingToken))
-				if err != nil {
-					log.Error("failed to render response", sl.Err(err))
-					return
-				}
+				api.WriteWithError(w, http.StatusUnauthorized, errMissingToken.Error())
 				return
 			}
 
@@ -58,11 +53,7 @@ func Auth(logger *slog.Logger, jwtService jwt.Service) func(next http.Handler) h
 			if err != nil {
 				log.Error("issue verifying jwt token", err)
 				render.Status(r, http.StatusUnauthorized)
-				err = render.Render(w, r, api.ErrUnauthorized(errInvalidToken))
-				if err != nil {
-					log.Error("failed to render response", sl.Err(err))
-					return
-				}
+				api.WriteWithError(w, http.StatusUnauthorized, errInvalidToken.Error())
 				return
 			}
 

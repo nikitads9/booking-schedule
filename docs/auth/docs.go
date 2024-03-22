@@ -49,19 +49,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/AuthResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/AuthResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/AuthResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     }
                 }
@@ -102,19 +102,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/AuthResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/AuthResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/AuthResponse"
+                            "$ref": "#/definitions/Error"
                         }
                     }
                 }
@@ -125,29 +119,22 @@ const docTemplate = `{
         "AuthResponse": {
             "type": "object",
             "properties": {
-                "response": {
-                    "$ref": "#/definitions/Response"
-                },
                 "token": {
                     "description": "JWT токен для доступа",
                     "type": "string"
                 }
             }
         },
-        "Response": {
+        "Error": {
             "type": "object",
             "properties": {
-                "code": {
-                    "description": "Код ошибки приложения",
-                    "type": "integer"
-                },
-                "error": {
-                    "description": "Сообщение об ошибке в приложении",
-                    "type": "string"
+                "message": {
+                    "type": "string",
+                    "example": "some error message"
                 },
                 "status": {
-                    "description": "Статус ответа приложения",
-                    "type": "string"
+                    "type": "integer",
+                    "example": 400
                 }
             }
         },

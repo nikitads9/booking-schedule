@@ -28,11 +28,10 @@ import (
 //	@Param			start query		string	true	"start" Format(time.Time) default(2024-03-28T17:43:00)
 //	@Param			end query		string	true	"end" Format(time.Time) default(2024-03-29T17:43:00)
 //	@Success		200	{object}	api.GetBookingsResponse
-//	@Failure		400	{object}	api.GetBookingsResponse
-//	@Failure		401	{object}	api.GetBookingsResponse
-//	@Failure		404	{object}	api.GetBookingsResponse
-//	@Failure		422	{object}	api.GetBookingsResponse
-//	@Failure		503	{object}	api.GetBookingsResponse
+//	@Failure		400	{object}	api.errResponse
+//	@Failure		401	{object}	api.errResponse
+//	@Failure		404	{object}	api.errResponse
+//	@Failure		503	{object}	api.errResponse
 //	@Router			/get-bookings [get]
 //
 // @Security Bearer
@@ -54,11 +53,7 @@ func (i *Implementation) GetBookings(logger *slog.Logger) http.HandlerFunc {
 			span.RecordError(api.ErrNoUserID)
 			span.SetStatus(codes.Error, api.ErrNoUserID.Error())
 			log.Error("no user id in context", sl.Err(api.ErrNoUserID))
-			err := render.Render(w, r, api.ErrUnauthorized(api.ErrNoAuth))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			api.WriteWithError(w, http.StatusUnauthorized, api.ErrNoAuth.Error())
 			return
 		}
 
@@ -66,14 +61,10 @@ func (i *Implementation) GetBookings(logger *slog.Logger) http.HandlerFunc {
 
 		start := r.URL.Query().Get("start")
 		if start == "" {
-			span.RecordError(api.ErrNoInterval)
-			span.SetStatus(codes.Error, api.ErrNoInterval.Error())
-			log.Error("invalid request", sl.Err(api.ErrNoInterval))
-			err := render.Render(w, r, api.ErrInvalidRequest(api.ErrNoInterval))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			span.RecordError(errNoInterval)
+			span.SetStatus(codes.Error, errNoInterval.Error())
+			log.Error("invalid request", sl.Err(errNoInterval))
+			api.WriteWithError(w, http.StatusBadRequest, errNoInterval.Error())
 			return
 		}
 
@@ -81,14 +72,10 @@ func (i *Implementation) GetBookings(logger *slog.Logger) http.HandlerFunc {
 
 		end := r.URL.Query().Get("end")
 		if end == "" {
-			span.RecordError(api.ErrNoInterval)
-			span.SetStatus(codes.Error, api.ErrNoInterval.Error())
-			log.Error("invalid request", sl.Err(api.ErrNoInterval))
-			err := render.Render(w, r, api.ErrInvalidRequest(api.ErrNoInterval))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			span.RecordError(errNoInterval)
+			span.SetStatus(codes.Error, errNoInterval.Error())
+			log.Error("invalid request", sl.Err(errNoInterval))
+			api.WriteWithError(w, http.StatusBadRequest, errNoInterval.Error())
 			return
 		}
 
@@ -99,11 +86,7 @@ func (i *Implementation) GetBookings(logger *slog.Logger) http.HandlerFunc {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
 			log.Error("invalid request", sl.Err(err))
-			err = render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			api.WriteWithError(w, http.StatusBadRequest, api.ErrParse.Error())
 			return
 		}
 		endDate, err := time.Parse("2006-01-02T15:04:05", end)
@@ -111,11 +94,7 @@ func (i *Implementation) GetBookings(logger *slog.Logger) http.HandlerFunc {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
 			log.Error("invalid request", sl.Err(err))
-			err = render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			api.WriteWithError(w, http.StatusBadRequest, api.ErrParse.Error())
 			return
 		}
 
@@ -126,11 +105,7 @@ func (i *Implementation) GetBookings(logger *slog.Logger) http.HandlerFunc {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
 			log.Error("invalid request", sl.Err(err))
-			err = render.Render(w, r, api.ErrInvalidRequest(err))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			api.WriteWithError(w, http.StatusBadRequest, err.Error())
 			return
 		}
 		span.AddEvent("dates verified")
@@ -141,11 +116,7 @@ func (i *Implementation) GetBookings(logger *slog.Logger) http.HandlerFunc {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
 			log.Error("internal error", sl.Err(err))
-			err = render.Render(w, r, api.ErrInternalError(err))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			api.WriteWithError(w, GetErrorCode(err), err.Error())
 			return
 		}
 
@@ -153,13 +124,10 @@ func (i *Implementation) GetBookings(logger *slog.Logger) http.HandlerFunc {
 		log.Info("bookings acquired", slog.Int("quantity: ", len(bookings)))
 
 		render.Status(r, http.StatusCreated)
-		err = render.Render(w, r, api.GetBookingsResponseAPI(convert.ToApiBookingsInfo(bookings)))
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, err.Error())
-			log.Error("failed to render response", sl.Err(err))
-			return
-		}
+		api.WriteWithStatus(w, http.StatusOK, api.GetBookingsResponse{
+			BookingsInfo: convert.ToApiBookingsInfo(bookings),
+		})
+
 	}
 
 }

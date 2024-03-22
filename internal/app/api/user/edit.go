@@ -27,12 +27,11 @@ import (
 //	@Produce		json
 //
 //	@Param          user body		api.EditMyProfileRequest	true	"EditMyProfileRequest"
-//	@Success		200	{object}	api.EditMyProfileResponse
-//	@Failure		400	{object}	api.EditMyProfileResponse
-//	@Failure		401	{object}	api.EditMyProfileResponse
-//	@Failure		404	{object}	api.EditMyProfileResponse
-//	@Failure		422	{object}	api.EditMyProfileResponse
-//	@Failure		503	{object}	api.EditMyProfileResponse
+//	@Success		200
+//	@Failure		400	{object}	api.errResponse
+//	@Failure		401	{object}	api.errResponse
+//	@Failure		404	{object}	api.errResponse
+//	@Failure		503	{object}	api.errResponse
 //	@Router			/user/edit [patch]
 //
 // @Security Bearer
@@ -54,11 +53,7 @@ func (i *Implementation) EditMyProfile(logger *slog.Logger) http.HandlerFunc {
 			span.RecordError(api.ErrNoUserID)
 			span.SetStatus(codes.Error, api.ErrNoUserID.Error())
 			log.Error("no user id in context", sl.Err(api.ErrNoUserID))
-			err := render.Render(w, r, api.ErrUnauthorized(api.ErrNoAuth))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			api.WriteWithError(w, http.StatusUnauthorized, api.ErrNoAuth.Error())
 			return
 		}
 
@@ -72,21 +67,13 @@ func (i *Implementation) EditMyProfile(logger *slog.Logger) http.HandlerFunc {
 				span.RecordError(validateErr)
 				span.SetStatus(codes.Error, err.Error())
 				log.Error("some of the required values were not received", sl.Err(validateErr))
-				err = render.Render(w, r, api.ErrValidationError(validateErr))
-				if err != nil {
-					log.Error("failed to render response", sl.Err(err))
-					return
-				}
+				api.WriteValidationError(w, validateErr)
 				return
 			}
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
 			log.Error("failed to decode request body", sl.Err(err))
-			err = render.Render(w, r, api.ErrInvalidRequest(err))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			api.WriteWithError(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -101,24 +88,14 @@ func (i *Implementation) EditMyProfile(logger *slog.Logger) http.HandlerFunc {
 		if err != nil {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
-			log.Error("internal error", sl.Err(err))
-			err = render.Render(w, r, api.ErrInternalError(err))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			log.Error("failed to edit user", sl.Err(err))
+			api.WriteWithError(w, GetErrorCode(err), err.Error())
 			return
 		}
 
 		span.AddEvent("user info updated")
 		log.Info("user info updated", slog.Any("id: ", userID))
 
-		err = render.Render(w, r, api.EditMyProfileResponseAPI())
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, err.Error())
-			log.Error("failed to render response", sl.Err(err))
-			return
-		}
+		api.WriteWithStatus(w, http.StatusOK, nil)
 	}
 }

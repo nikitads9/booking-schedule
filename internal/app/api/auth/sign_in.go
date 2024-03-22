@@ -2,14 +2,11 @@ package auth
 
 import (
 	"booking-schedule/internal/app/api"
-	"booking-schedule/internal/app/service/user"
 	"booking-schedule/internal/logger/sl"
-	"errors"
 	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/middleware"
-	"github.com/go-chi/render"
 	"go.opentelemetry.io/otel/codes"
 )
 
@@ -22,9 +19,9 @@ import (
 //	@Produce		json
 //
 //	@Success		200	{object}	api.AuthResponse
-//	@Failure		400	{object}	api.AuthResponse
-//	@Failure		401	{object}	api.AuthResponse
-//	@Failure		503	{object}	api.AuthResponse
+//	@Failure		400	{object}	api.errResponse
+//	@Failure		401	{object}	api.errResponse
+//	@Failure		503	{object}	api.errResponse
 //	@Router			/sign-in [get]
 //
 //	@Security 		BasicAuth
@@ -46,11 +43,7 @@ func (i *Implementation) SignIn(logger *slog.Logger) http.HandlerFunc {
 			span.RecordError(api.ErrBadRequest)
 			span.SetStatus(codes.Error, api.ErrBadRequest.Error())
 			log.Error("bad request")
-			err := render.Render(w, r, api.ErrInvalidRequest(api.ErrNoAuth))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			api.WriteWithError(w, http.StatusBadRequest, api.ErrNoAuth.Error())
 			return
 		}
 
@@ -60,43 +53,17 @@ func (i *Implementation) SignIn(logger *slog.Logger) http.HandlerFunc {
 		if err != nil {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
-			if errors.Is(err, user.ErrBadLogin) {
-				log.Error("incorrect login", sl.Err(err))
-				err = render.Render(w, r, api.ErrUnauthorized(err))
-				if err != nil {
-					log.Error("failed to render response", sl.Err(err))
-					return
-				}
-				return
-			}
-			if errors.Is(err, user.ErrBadPasswd) {
-				log.Error("incorrect passwd", sl.Err(err))
-				err = render.Render(w, r, api.ErrUnauthorized(err))
-				if err != nil {
-					log.Error("failed to render response", sl.Err(err))
-					return
-				}
-				return
-			}
-			log.Error("failed to login user: ", err)
-			err = render.Render(w, r, api.ErrInternalError(err))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			log.Error("failed to sign in user", sl.Err(err))
+			api.WriteWithError(w, GetErrorCode(err), err.Error())
 			return
 		}
 
 		span.AddEvent("signed token acquired")
-		log.Info("user signed in", slog.Any("login: ", nickname))
+		log.Info("user signed in", slog.Any("login", nickname))
 
-		err = render.Render(w, r, api.AuthResponseAPI(token))
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, err.Error())
-			log.Error("failed to render response", sl.Err(err))
-			return
-		}
+		api.WriteWithStatus(w, http.StatusOK, api.AuthResponse{
+			Token: token,
+		})
 	}
 
 }

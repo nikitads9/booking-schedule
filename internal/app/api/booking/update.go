@@ -30,12 +30,11 @@ import (
 //
 //	@Param			booking_id path	string	true	"booking_id"	Format(uuid) default(550e8400-e29b-41d4-a716-446655440000)
 //	@Param          booking body		api.UpdateBookingRequest	true	"BookingEntry"
-//	@Success		200	{object}	api.UpdateBookingResponse
-//	@Failure		400	{object}	api.UpdateBookingResponse
-//	@Failure		401	{object}	api.UpdateBookingResponse
-//	@Failure		404	{object}	api.UpdateBookingResponse
-//	@Failure		422	{object}	api.UpdateBookingResponse
-//	@Failure		503	{object}	api.UpdateBookingResponse
+//	@Success		200
+//	@Failure		400	{object}	api.errResponse
+//	@Failure		401	{object}	api.errResponse
+//	@Failure		404	{object}	api.errResponse
+//	@Failure		503	{object}	api.errResponse
 //	@Router			/{booking_id}/update [patch]
 //
 // @Security Bearer
@@ -57,11 +56,7 @@ func (i *Implementation) UpdateBooking(logger *slog.Logger) http.HandlerFunc {
 			span.RecordError(api.ErrNoUserID)
 			span.SetStatus(codes.Error, api.ErrNoUserID.Error())
 			log.Error("no user id in context", sl.Err(api.ErrNoUserID))
-			err := render.Render(w, r, api.ErrUnauthorized(api.ErrNoAuth))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			api.WriteWithError(w, http.StatusUnauthorized, api.ErrNoAuth.Error())
 			return
 		}
 
@@ -75,21 +70,13 @@ func (i *Implementation) UpdateBooking(logger *slog.Logger) http.HandlerFunc {
 				span.RecordError(validateErr)
 				span.SetStatus(codes.Error, err.Error())
 				log.Error("some of the required values were not received", sl.Err(validateErr))
-				err = render.Render(w, r, api.ErrValidationError(validateErr))
-				if err != nil {
-					log.Error("failed to render response", sl.Err(err))
-					return
-				}
+				api.WriteValidationError(w, validateErr)
 				return
 			}
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
 			log.Error("failed to decode request body", sl.Err(err))
-			err = render.Render(w, r, api.ErrInvalidRequest(err))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			api.WriteWithError(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -98,14 +85,10 @@ func (i *Implementation) UpdateBooking(logger *slog.Logger) http.HandlerFunc {
 
 		bookingID := chi.URLParam(r, "booking_id")
 		if bookingID == "" {
-			span.RecordError(api.ErrNoBookingID)
-			span.SetStatus(codes.Error, api.ErrNoBookingID.Error())
-			log.Error("invalid request", sl.Err(api.ErrNoBookingID))
-			err = render.Render(w, r, api.ErrInvalidRequest(api.ErrNoBookingID))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			span.RecordError(errNoBookingID)
+			span.SetStatus(codes.Error, errNoBookingID.Error())
+			log.Error("invalid request", sl.Err(errNoBookingID))
+			api.WriteWithError(w, http.StatusBadRequest, errNoBookingID.Error())
 			return
 		}
 
@@ -116,22 +99,15 @@ func (i *Implementation) UpdateBooking(logger *slog.Logger) http.HandlerFunc {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
 			log.Error("invalid request", sl.Err(err))
-			err = render.Render(w, r, api.ErrInvalidRequest(api.ErrParse))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			api.WriteWithError(w, http.StatusBadRequest, api.ErrParse.Error())
+			return
 		}
 
 		if bookingUUID == uuid.Nil {
-			span.RecordError(api.ErrNoBookingID)
-			span.SetStatus(codes.Error, api.ErrNoBookingID.Error())
-			log.Error("invalid request", sl.Err(api.ErrNoBookingID))
-			err = render.Render(w, r, api.ErrInvalidRequest(api.ErrNoBookingID))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			span.RecordError(errNoBookingID)
+			span.SetStatus(codes.Error, errNoBookingID.Error())
+			log.Error("invalid request", sl.Err(errNoBookingID))
+			api.WriteWithError(w, http.StatusBadRequest, errNoBookingID.Error())
 			return
 		}
 
@@ -149,11 +125,8 @@ func (i *Implementation) UpdateBooking(logger *slog.Logger) http.HandlerFunc {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
 			log.Error("invalid request", sl.Err(err))
-			err = render.Render(w, r, api.ErrInvalidRequest(err))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			api.WriteWithError(w, http.StatusBadRequest, err.Error())
+			return
 		}
 
 		span.AddEvent("converted to booking model")
@@ -163,23 +136,13 @@ func (i *Implementation) UpdateBooking(logger *slog.Logger) http.HandlerFunc {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
 			log.Error("internal error", sl.Err(err))
-			err = render.Render(w, r, api.ErrInternalError(err))
-			if err != nil {
-				log.Error("failed to render response", sl.Err(err))
-				return
-			}
+			api.WriteWithError(w, GetErrorCode(err), err.Error())
 			return
 		}
 
 		span.AddEvent("booking updated")
 		log.Info("booking updated", slog.Any("id: ", mod.ID))
 
-		err = render.Render(w, r, api.UpdateBookingResponseAPI())
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, err.Error())
-			log.Error("failed to render response", sl.Err(err))
-			return
-		}
+		api.WriteWithStatus(w, http.StatusOK, nil)
 	}
 }

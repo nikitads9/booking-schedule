@@ -2,23 +2,18 @@ basePath: /auth
 definitions:
   AuthResponse:
     properties:
-      response:
-        $ref: '#/definitions/Response'
       token:
         description: JWT токен для доступа
         type: string
     type: object
-  Response:
+  Error:
     properties:
-      code:
-        description: Код ошибки приложения
-        type: integer
-      error:
-        description: Сообщение об ошибке в приложении
+      message:
+        example: some error message
         type: string
       status:
-        description: Статус ответа приложения
-        type: string
+        example: 400
+        type: integer
     type: object
   SignUpRequest:
     properties:
@@ -72,15 +67,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/AuthResponse'
+            $ref: '#/definitions/Error'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/AuthResponse'
+            $ref: '#/definitions/Error'
         "503":
           description: Service Unavailable
           schema:
-            $ref: '#/definitions/AuthResponse'
+            $ref: '#/definitions/Error'
       security:
       - BasicAuth: []
       summary: Sign in
@@ -110,15 +105,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/AuthResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/AuthResponse'
+            $ref: '#/definitions/Error'
         "503":
           description: Service Unavailable
           schema:
-            $ref: '#/definitions/AuthResponse'
+            $ref: '#/definitions/Error'
       summary: Sign up
       tags:
       - auth
