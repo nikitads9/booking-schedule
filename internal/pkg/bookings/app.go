@@ -6,6 +6,7 @@ import (
 	"booking-schedule/internal/middleware/auth"
 	mwLogger "booking-schedule/internal/middleware/logger"
 	"booking-schedule/internal/pkg/certificates"
+	"booking-schedule/internal/pkg/observability"
 	"context"
 
 	"github.com/go-chi/cors"
@@ -16,6 +17,8 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
@@ -85,6 +88,7 @@ func (a *App) Run() error {
 }
 
 func (a *App) startServer() error {
+	go observability.CollectMachineResourceMetrics(a.serviceProvider.GetMeter(context.Background()))
 	srv := a.serviceProvider.getServer(a.router)
 	if srv == nil {
 		a.serviceProvider.GetLogger().Error("server was not initialized")
@@ -146,6 +150,7 @@ func (a *App) startServer() error {
 func (a *App) initServer(ctx context.Context) error {
 	bookingImpl := a.serviceProvider.GetBookingImpl(ctx)
 	userImpl := a.serviceProvider.GetUserImpl(ctx)
+	_ = a.serviceProvider.GetMeter(ctx)
 
 	address, err := a.serviceProvider.GetConfig().GetAddress()
 	if err != nil {
@@ -168,7 +173,7 @@ func (a *App) initServer(ctx context.Context) error {
 		MaxAge:           300,
 	}))
 	a.router.Use(middleware.Recoverer) // Если где-то внутри сервера (обработчика запроса) произойдет паника, приложение не должно упасть
-
+	a.router.Handle("/metrics", promhttp.Handler())
 	a.router.Route("/bookings", func(r chi.Router) {
 		r.Get("/ping", api.HandlePingCheck())
 		r.Route("/user", func(r chi.Router) {

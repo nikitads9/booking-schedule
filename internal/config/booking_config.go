@@ -33,7 +33,7 @@ type JWT struct {
 }
 
 type Tracer struct {
-	EndpointURL  string  `yaml:"endpoint_url" env:"TRACER_URL" env-default:"http://jaeger:4318/v1/traces"`
+	EndpointURL  string  `yaml:"endpoint_url" env:"TRACER_URL" env-default:"http://otelcol:4318"`
 	SamplingRate float64 `yaml:"sampling_rate" env:"TRACER_SAMPLING_RATE" env-default:"1.0"`
 }
 

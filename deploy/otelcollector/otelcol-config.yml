@@ -1,0 +1,36 @@
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+exporters:
+  prometheus:
+    endpoint: 0.0.0.0:8889 # Jaeger supports OTLP directly. The default port for OTLP/gRPC is 4317
+  otlp/jaeger: 
+    endpoint: http://jaeger:4317
+    tls:
+      insecure: true
+
+processors:
+  batch:
+
+connectors:
+  spanmetrics:
+    histogram:
+      explicit:
+        buckets: [2ms, 8ms, 50ms, 100ms, 200ms, 500ms, 1s, 5s, 10s]
+    dimensions_cache_size: 100000
+    aggregation_temporality: AGGREGATION_TEMPORALITY_CUMULATIVE
+    dimensions:
+      - name: http.method
+      
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp/jaeger,spanmetrics]
+    metrics:
+      receivers: [otlp,spanmetrics]
+      processors: []
+      exporters: [prometheus]

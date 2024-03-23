@@ -14,7 +14,7 @@ database:
   max_opened_connections: 10
 
 tracer:
-  endpoint_url: "http://jaeger:4318/v1/traces"
+  endpoint_url: "http://otelcol:4318"
   sampling_rate: 1.0
 
 rabbit_producer:

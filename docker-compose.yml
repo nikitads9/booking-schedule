@@ -7,6 +7,7 @@ networks:
 volumes:
   postgres-volume:
   certificates-volume:
+  prometheus-volume:
 
 services:
   nginx-entrypoint:
@@ -164,20 +165,73 @@ services:
   jaeger:
     container_name: jaeger
     image: jaegertracing/all-in-one:latest
+    command:
+      - "--memory.max-traces=5000"
+      - "--query.base-path=/jaeger/ui"
+      - "--prometheus.server-url=${PROMETHEUS_ADDR}"
+      - "--prometheus.query.support-spanmetrics-connector=true"
+      - "--prometheus.query.normalize-calls=true"
+      - "--prometheus.query.normalize-duration=true"
     environment:
       - COLLECTOR_ZIPKIN_HOST_PORT=:9411
       - COLLECTOR_OTLP_ENABLED=true
+      - METRICS_STORAGE_TYPE=prometheus
+      - PROMETHEUS_SERVER_URL=http://prometheus:9090
+    expose:
+      - '4317'
+      - '14269'
     ports:
-      - "5775:5775/udp" # agent accept zipkin.thrift over compact thrift protocol (deprecated, used by legacy clients only)
-      - "6831:6831/udp" # agent accept jaeger.thrift over compact thrift protocol
-      - "6832:6832/udp" # agent accept jaeger.thrift over binary thrift protocol
-      - "5778:5778" # agent serve configs
-      - "16686:16686" # query serve frontend (Jaeger UI)
-      - "14268:14268" # collector accept jaeger.thrift directly from clients
-      - "14250:14250" # collector accept model.proto
-      - "9411:9411" # collector Zipkin compatible endpoint (optional)
-      - "4317:4317" # OTLP collector grpc
-      - "4318:4318" # OTLP collector http
+      #- "5775:5775/udp" # agent accept zipkin.thrift over compact thrift protocol (deprecated, used by legacy clients only)
+      #- "6831:6831/udp" # agent accept jaeger.thrift over compact thrift protocol
+      #- "6832:6832/udp" # agent accept jaeger.thrift over binary thrift protocol
+      #- "5778:5778" # agent serve configs
+      #- "16686:16686" # query serve frontend (Jaeger UI)
+      #- "14268:14268" # collector accept jaeger.thrift directly from clients
+      #- "14250:14250" # collector accept model.proto
+      #- "9411:9411" # collector Zipkin compatible endpoint (optional)
+      - '14269:14269'
+      - '4317:4317' # OTLP collector grpc
+      - '4318:4318' # OTLP collector http
+      - '16686:16686'
+      - '16685:16685'
+    networks:
+      - app_net
+
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus' #Where Prometheus writes its database. Defaults to data/.
+      - '--storage.tsdb.retention.time=1d' #When to remove old data. Defaults to 15d. Overrides storage.tsdb.retention if this flag is set to anything other than default.
+      - '--storage.tsdb.retention.size=1GB'
+      - --enable-feature=otlp-write-receiver
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-volume:/prometheus
+    ports:
+      - '9090:9090'
+    networks:
+      - app_net
+
+  # OpenTelemetry Collector
+  otelcol:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otelcol
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+    restart: unless-stopped
+    command: [ "--config=/etc/otelcol-config.yml" ]
+    volumes:
+      - ./deploy/otelcollector/otelcol-config.yml:/etc/otelcol-config.yml
+    expose:
+      - '4318'
+    ports:
+      - '14318:4318'
+    depends_on:
+      - jaeger
     networks:
       - app_net
 

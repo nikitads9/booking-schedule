@@ -15,7 +15,7 @@ import (
 	"booking-schedule/internal/config"
 	"booking-schedule/internal/pkg/db"
 	"booking-schedule/internal/pkg/db/transaction"
-	tracer "booking-schedule/internal/pkg/trace"
+	"booking-schedule/internal/pkg/observability"
 
 	"go.opentelemetry.io/otel/trace"
 )
@@ -172,7 +172,7 @@ func (s *serviceProvider) TxManager(ctx context.Context) db.TxManager {
 
 func (s *serviceProvider) GetTracer(ctx context.Context) trace.Tracer {
 	if s.tracer == nil {
-		tracer, err := tracer.NewTracer(ctx, s.GetConfig().GetTracerConfig().EndpointURL, "auth", s.GetConfig().GetTracerConfig().SamplingRate)
+		tracer, err := observability.NewTracer(ctx, s.GetConfig().GetTracerConfig().EndpointURL, "auth", s.GetConfig().GetTracerConfig().SamplingRate)
 		if err != nil {
 			s.GetLogger().Error("failed to create tracer: ", err)
 			return nil

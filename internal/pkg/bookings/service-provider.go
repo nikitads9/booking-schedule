@@ -18,7 +18,9 @@ import (
 	"booking-schedule/internal/config"
 	"booking-schedule/internal/pkg/db"
 	"booking-schedule/internal/pkg/db/transaction"
-	tracer "booking-schedule/internal/pkg/trace"
+	"booking-schedule/internal/pkg/observability"
+
+	"go.opentelemetry.io/otel/metric"
 
 	"go.opentelemetry.io/otel/trace"
 )
@@ -40,6 +42,7 @@ type serviceProvider struct {
 	server *http.Server
 	log    *slog.Logger
 	tracer trace.Tracer
+	meter  metric.Meter
 
 	bookingRepository bookingRepository.Repository
 	bookingService    *bookingService.Service
@@ -207,7 +210,7 @@ func (s *serviceProvider) TxManager(ctx context.Context) db.TxManager {
 
 func (s *serviceProvider) GetTracer(ctx context.Context) trace.Tracer {
 	if s.tracer == nil {
-		tracer, err := tracer.NewTracer(ctx, s.GetConfig().GetTracerConfig().EndpointURL, "bookings", s.GetConfig().GetTracerConfig().SamplingRate)
+		tracer, err := observability.NewTracer(ctx, s.GetConfig().GetTracerConfig().EndpointURL, "bookings", s.GetConfig().GetTracerConfig().SamplingRate)
 		if err != nil {
 			s.GetLogger().Error("failed to create tracer: ", err)
 			return nil
@@ -218,4 +221,19 @@ func (s *serviceProvider) GetTracer(ctx context.Context) trace.Tracer {
 	}
 
 	return s.tracer
+}
+
+func (s *serviceProvider) GetMeter(ctx context.Context) metric.Meter {
+	if s.meter == nil {
+		meter, err := observability.NewMeter(ctx, "bookings")
+		if err != nil {
+			s.GetLogger().Error("failed to create tracer: ", err)
+			return nil
+		}
+
+		s.meter = meter
+
+	}
+
+	return s.meter
 }
