@@ -2,7 +2,6 @@ package observability
 
 import (
 	"context"
-	"fmt"
 
 	jaegerPropagator "go.opentelemetry.io/contrib/propagators/jaeger"
 	"go.opentelemetry.io/otel"
@@ -13,10 +12,10 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-func NewTracer(ctx context.Context, jaegerEndpoint string, svcName string, samplingRate float64) (trace.Tracer, error) {
-	traceExporter, err := otlptracehttp.New(ctx, otlptracehttp.WithEndpointURL(jaegerEndpoint))
+func NewTracer(ctx context.Context, otlpEndpoint string, svcName string, samplingRate float64) (trace.Tracer, error) {
+	traceExporter, err := otlptracehttp.New(ctx, otlptracehttp.WithEndpointURL(otlpEndpoint))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create trace exporter: %w", err)
+		return nil, err
 	}
 
 	tp := sdktrace.NewTracerProvider(

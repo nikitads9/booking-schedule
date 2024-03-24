@@ -1,8 +1,9 @@
 package observability
 
 import (
+	"booking-schedule/internal/logger/sl"
 	"context"
-	"fmt"
+	"log/slog"
 	"runtime"
 	"time"
 
@@ -24,12 +25,12 @@ func NewMeter(ctx context.Context, svcName string) (metric.Meter, error) {
 		),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("could not merge resources: %w", err)
+		return nil, err
 	}
 
 	exporter, err := prometheus.New()
 	if err != nil {
-		return nil, fmt.Errorf("could not get collector exporter: %w", err)
+		return nil, err
 	}
 
 	provider := metricsdk.NewMeterProvider(
@@ -42,16 +43,20 @@ func NewMeter(ctx context.Context, svcName string) (metric.Meter, error) {
 	return provider.Meter(svcName), nil
 }
 
-func CollectMachineResourceMetrics(meter metric.Meter) {
-	period := 5 * time.Second
+func CollectMachineResourceMetrics(meter metric.Meter, logger *slog.Logger) {
+	const op = "observability.CollectMachineResourceMetrics"
+
+	log := logger.With(
+		slog.String("op", op))
+
+	period := 10 * time.Second
 	ticker := time.NewTicker(period)
 
 	var Mb uint64 = 1_048_576 // number of bytes in a MB
-
 	for {
 		<-ticker.C
 		// This will be executed every "period" of time passes
-		meter.Float64ObservableGauge(
+		_, err := meter.Float64ObservableGauge(
 			"process.allocated_memory",
 			metric.WithFloat64Callback(
 				func(ctx context.Context, fo metric.Float64Observer) error {
@@ -64,5 +69,9 @@ func CollectMachineResourceMetrics(meter metric.Meter) {
 				},
 			),
 		)
+		if err != nil {
+			log.Error("could not collect allocated memory gauge", sl.Err(err))
+		}
 	}
+
 }

@@ -5,6 +5,7 @@ import (
 	"booking-schedule/internal/logger/sl"
 	mwLogger "booking-schedule/internal/middleware/logger"
 	"booking-schedule/internal/pkg/certificates"
+	"booking-schedule/internal/pkg/observability"
 	"context"
 	"errors"
 	"log/slog"
@@ -13,7 +14,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/riandyrn/otelchi"
+	"go.opentelemetry.io/otel/metric"
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
@@ -27,6 +30,7 @@ type App struct {
 	pathKey         string
 	serviceProvider *serviceProvider
 	router          *chi.Mux
+	meter           metric.Meter
 }
 
 // NewApp ...
@@ -45,7 +49,8 @@ func NewApp(ctx context.Context, configType string, pathConfig string, pathCert 
 func (a *App) initDeps(ctx context.Context) error {
 
 	inits := []func(context.Context) error{
-		a.initserviceProvider,
+		a.initMeter,
+		a.initServiceProvider,
 		a.initServer,
 	}
 
@@ -59,8 +64,19 @@ func (a *App) initDeps(ctx context.Context) error {
 	return nil
 }
 
-func (a *App) initserviceProvider(_ context.Context) error {
-	a.serviceProvider = newServiceProvider(a.configType, a.pathConfig)
+func (a *App) initMeter(ctx context.Context) error {
+	meter, err := observability.NewMeter(ctx, "auth")
+	if err != nil {
+		return err
+	}
+
+	a.meter = meter
+
+	return nil
+}
+
+func (a *App) initServiceProvider(_ context.Context) error {
+	a.serviceProvider = newServiceProvider(a.configType, a.pathConfig, a.meter)
 
 	return nil
 }
@@ -81,6 +97,9 @@ func (a *App) Run() error {
 }
 
 func (a *App) startServer() error {
+	if a.meter != nil {
+		go observability.CollectMachineResourceMetrics(a.meter, a.serviceProvider.GetLogger())
+	}
 	srv := a.serviceProvider.getServer(a.router)
 	if srv == nil {
 		a.serviceProvider.GetLogger().Error("server was not initialized")
@@ -163,6 +182,7 @@ func (a *App) initServer(ctx context.Context) error {
 		MaxAge:           300,
 	}))
 	a.router.Use(middleware.Recoverer) // Если где-то внутри сервера (обработчика запроса) произойдет паника, приложение не должно упасть
+	a.router.Handle("/metrics", promhttp.Handler())
 	a.router.Route("/auth", func(r chi.Router) {
 		r.Get("/ping", api.HandlePingCheck())
 		r.Post("/sign-up", impl.SignUp(a.serviceProvider.GetLogger()))

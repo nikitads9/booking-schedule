@@ -10,6 +10,7 @@ import (
 	"context"
 
 	"github.com/go-chi/cors"
+	"go.opentelemetry.io/otel/metric"
 
 	"errors"
 	"log/slog"
@@ -34,6 +35,7 @@ type App struct {
 
 	serviceProvider *serviceProvider
 	router          *chi.Mux
+	meter           metric.Meter
 }
 
 // NewApp ...
@@ -52,7 +54,8 @@ func NewApp(ctx context.Context, configType string, pathConfig string, pathCert 
 func (a *App) initDeps(ctx context.Context) error {
 
 	inits := []func(context.Context) error{
-		a.initserviceProvider,
+		a.initMeter,
+		a.initServiceProvider,
 		a.initServer,
 	}
 
@@ -66,8 +69,8 @@ func (a *App) initDeps(ctx context.Context) error {
 	return nil
 }
 
-func (a *App) initserviceProvider(_ context.Context) error {
-	a.serviceProvider = newServiceProvider(a.configType, a.pathConfig)
+func (a *App) initServiceProvider(_ context.Context) error {
+	a.serviceProvider = newServiceProvider(a.configType, a.pathConfig, a.meter)
 
 	return nil
 }
@@ -87,8 +90,22 @@ func (a *App) Run() error {
 	return nil
 }
 
+func (a *App) initMeter(ctx context.Context) error {
+	meter, err := observability.NewMeter(ctx, "booking")
+	if err != nil {
+		return err
+	}
+
+	a.meter = meter
+
+	return nil
+}
+
 func (a *App) startServer() error {
-	go observability.CollectMachineResourceMetrics(a.serviceProvider.GetMeter(context.Background()))
+	if a.meter != nil {
+		go observability.CollectMachineResourceMetrics(a.meter, a.serviceProvider.GetLogger())
+	}
+
 	srv := a.serviceProvider.getServer(a.router)
 	if srv == nil {
 		a.serviceProvider.GetLogger().Error("server was not initialized")
@@ -150,7 +167,6 @@ func (a *App) startServer() error {
 func (a *App) initServer(ctx context.Context) error {
 	bookingImpl := a.serviceProvider.GetBookingImpl(ctx)
 	userImpl := a.serviceProvider.GetUserImpl(ctx)
-	_ = a.serviceProvider.GetMeter(ctx)
 
 	address, err := a.serviceProvider.GetConfig().GetAddress()
 	if err != nil {

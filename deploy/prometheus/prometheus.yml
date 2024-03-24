@@ -1,6 +1,6 @@
 global:
-  scrape_interval: 15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
-  evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
+  scrape_interval: 1m # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 1m # Evaluate rules every 15 seconds. The default is every 1 minute.
   # scrape_timeout is set to the global default (10s).
 
 # Alertmanager configuration
@@ -23,13 +23,12 @@ scrape_configs:
 
     # metrics_path defaults to '/metrics'
     # scheme defaults to 'http'.
-
     static_configs:
       - targets: ['0.0.0.0:9090']
 
-  - job_name: 'opentelemetry'
-    static_configs:
-      - targets: ['booking:3000']
   - job_name: aggregated-trace-metrics
     static_configs:
       - targets: ['otelcol:8889'] # using the name of the OpenTelemetryCollector container defined in the docker compose file
+  - job_name: aggregated-metrics
+    static_configs:
+      - targets: ['otelcol:8890']

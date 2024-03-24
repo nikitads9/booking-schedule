@@ -8,8 +8,10 @@ volumes:
   postgres-volume:
   certificates-volume:
   prometheus-volume:
+  jaeger-volume:
 
 services:
+  # NGINX load balancer and proxy
   nginx-entrypoint:
     image: nginx
     hostname: nginx-entrypoint
@@ -28,6 +30,8 @@ services:
     depends_on:
       - booking
       - auth
+  
+  # Postgresql database
   db:
     container_name: booking-storage
     image: postgres:16-alpine3.19
@@ -47,6 +51,7 @@ services:
     networks:
       - app_net
 
+  # Booking service
   booking:
     container_name: booking
     build:
@@ -68,6 +73,7 @@ services:
           memory: 200m
           cpus: "0.50"
 
+  # Service for signing in and up for users
   auth:
     container_name: auth
     build:
@@ -89,6 +95,7 @@ services:
           memory: 200m
           cpus: "0.70"
 
+  # Goose migrations manager
   migrator:
     container_name: migrator
     build: $MIGRATION_DIR
@@ -103,6 +110,7 @@ services:
     networks:
       - app_net
 
+  # Periodic task agent
   scheduler:
     container_name: scheduler
     build:
@@ -126,6 +134,7 @@ services:
           memory: 200m
           cpus: "0.30"
 
+  # Template for sender service
   sender:
     container_name: sender
     build:
@@ -143,7 +152,7 @@ services:
           memory: 200m
           cpus: "0.30"
 
-
+  # RabbitMQ AMQP queue
   queue:
     container_name: queue
     image: rabbitmq:3.13.0-management-alpine
@@ -162,6 +171,7 @@ services:
     networks:
       - app_net
 
+  # Jaeger tracing and monitoring
   jaeger:
     container_name: jaeger
     image: jaegertracing/all-in-one:latest
@@ -173,13 +183,10 @@ services:
       - "--prometheus.query.normalize-calls=true"
       - "--prometheus.query.normalize-duration=true"
     environment:
-      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
       - COLLECTOR_OTLP_ENABLED=true
       - METRICS_STORAGE_TYPE=prometheus
-      - PROMETHEUS_SERVER_URL=http://prometheus:9090
-    expose:
-      - '4317'
-      - '14269'
+      - PROMETHEUS_SERVER_URL=${PROMETHEUS_ADDR}
+      #- SPAN_STORAGE_TYPE=elasticsearch
     ports:
       #- "5775:5775/udp" # agent accept zipkin.thrift over compact thrift protocol (deprecated, used by legacy clients only)
       #- "6831:6831/udp" # agent accept jaeger.thrift over compact thrift protocol
@@ -194,9 +201,13 @@ services:
       - '4318:4318' # OTLP collector http
       - '16686:16686'
       - '16685:16685'
+    expose:
+      - '4317'
+      - '14269'
     networks:
       - app_net
 
+  # Prometheus monitoring and TSDB
   prometheus:
     container_name: prometheus
     image: prom/prometheus
@@ -207,7 +218,7 @@ services:
       - '--storage.tsdb.retention.size=1GB'
       - --enable-feature=otlp-write-receiver
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-volume:/prometheus
     ports:
       - '9090:9090'

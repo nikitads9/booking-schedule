@@ -13,10 +13,12 @@ import (
 	"booking-schedule/internal/app/service/jwt"
 	userService "booking-schedule/internal/app/service/user"
 	"booking-schedule/internal/config"
+	"booking-schedule/internal/logger/sl"
 	"booking-schedule/internal/pkg/db"
 	"booking-schedule/internal/pkg/db/transaction"
 	"booking-schedule/internal/pkg/observability"
 
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -37,6 +39,7 @@ type serviceProvider struct {
 	server *http.Server
 	log    *slog.Logger
 	tracer trace.Tracer
+	meter  metric.Meter
 
 	userRepository userRepository.Repository
 	userService    *userService.Service
@@ -45,10 +48,11 @@ type serviceProvider struct {
 	authImpl *auth.Implementation
 }
 
-func newServiceProvider(configType string, configPath string) *serviceProvider {
+func newServiceProvider(configType string, configPath string, meter metric.Meter) *serviceProvider {
 	return &serviceProvider{
 		configType: configType,
 		configPath: configPath,
+		meter:      meter,
 	}
 }
 
@@ -56,11 +60,11 @@ func (s *serviceProvider) GetDB(ctx context.Context) db.Client {
 	if s.db == nil {
 		cfg, err := s.GetConfig().GetDBConfig()
 		if err != nil {
-			s.log.Error("could not get db config: %s", err)
+			s.log.Error("could not get db config: %s", sl.Err(err))
 		}
 		dbc, err := db.NewClient(ctx, cfg)
 		if err != nil {
-			s.log.Error("coud not connect to db: %s", err)
+			s.log.Error("coud not connect to db: %s", sl.Err(err))
 		}
 		s.db = dbc
 	}
@@ -174,7 +178,7 @@ func (s *serviceProvider) GetTracer(ctx context.Context) trace.Tracer {
 	if s.tracer == nil {
 		tracer, err := observability.NewTracer(ctx, s.GetConfig().GetTracerConfig().EndpointURL, "auth", s.GetConfig().GetTracerConfig().SamplingRate)
 		if err != nil {
-			s.GetLogger().Error("failed to create tracer: ", err)
+			s.GetLogger().Error("failed to create tracer: ", sl.Err(err))
 			return nil
 		}
 
