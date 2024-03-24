@@ -216,7 +216,7 @@ services:
       - '--storage.tsdb.path=/prometheus' #Where Prometheus writes its database. Defaults to data/.
       - '--storage.tsdb.retention.time=1d' #When to remove old data. Defaults to 15d. Overrides storage.tsdb.retention if this flag is set to anything other than default.
       - '--storage.tsdb.retention.size=1GB'
-      - --enable-feature=otlp-write-receiver
+      - '--enable-feature=otlp-write-receiver'
     volumes:
       - ./deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-volume:/prometheus
@@ -227,8 +227,8 @@ services:
 
   # OpenTelemetry Collector
   otelcol:
-    image: otel/opentelemetry-collector-contrib:latest
     container_name: otelcol
+    image: otel/opentelemetry-collector-contrib:latest
     deploy:
       resources:
         limits:

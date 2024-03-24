@@ -7,6 +7,8 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/shirou/gopsutil/cpu"
+
 	"go.opentelemetry.io/otel/exporters/prometheus"
 
 	"go.opentelemetry.io/otel"
@@ -68,6 +70,28 @@ func CollectMachineResourceMetrics(meter metric.Meter, logger *slog.Logger) {
 					return nil
 				},
 			),
+		)
+		if err != nil {
+			log.Error("could not collect allocated memory gauge", sl.Err(err))
+		}
+
+		_, err = meter.Float64ObservableGauge(
+			"process.cpu_usage",
+			metric.WithFloat64Callback(
+				func(ctx context.Context, fo metric.Float64Observer) error {
+					cpuUsage, err := cpu.Percent(0, false)
+					if err != nil {
+						return err
+					}
+
+					if cpuUsage != nil {
+						fo.Observe(cpuUsage[0])
+					}
+
+					return nil
+				},
+			),
+			metric.WithUnit("%"),
 		)
 		if err != nil {
 			log.Error("could not collect allocated memory gauge", sl.Err(err))

@@ -72,7 +72,7 @@ func (r *repository) AddBooking(ctx context.Context, mod *model.BookingInfo) (uu
 			log.Error("no connection to database host", sl.Err(err))
 			return uuid.Nil, ErrNoConnection
 		}
-		if errors.Is(err, ErrNoSuchUser) {
+		if errors.As(err, &ErrNoSuchUser) {
 			return uuid.Nil, ErrUnauthorized
 		}
 		log.Error("query execution error", sl.Err(err))

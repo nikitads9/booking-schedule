@@ -4,6 +4,7 @@ import (
 	"booking-schedule/internal/app/api"
 	"booking-schedule/internal/logger/sl"
 	mwLogger "booking-schedule/internal/middleware/logger"
+	"booking-schedule/internal/middleware/metrics"
 	"booking-schedule/internal/pkg/certificates"
 	"booking-schedule/internal/pkg/observability"
 	"context"
@@ -169,9 +170,9 @@ func (a *App) initServer(ctx context.Context) error {
 	a.serviceProvider.GetLogger().Debug("logger debug mode enabled")
 
 	a.router = chi.NewRouter()
-	a.router.Use(middleware.RequestID) // Добавляет request_id в каждый запрос, для трейсинга
-	//a.router.Use(middleware.Logger)    // Логирование всех запросов
+	a.router.Use(middleware.RequestID)
 	a.router.Use(otelchi.Middleware("auth", otelchi.WithChiRoutes(a.router)))
+	a.router.Use(metrics.NewMetricMiddleware(a.serviceProvider.GetMeter(ctx)))
 	a.router.Use(mwLogger.New(a.serviceProvider.GetLogger()))
 	a.router.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
@@ -181,7 +182,7 @@ func (a *App) initServer(ctx context.Context) error {
 		AllowCredentials: false,
 		MaxAge:           300,
 	}))
-	a.router.Use(middleware.Recoverer) // Если где-то внутри сервера (обработчика запроса) произойдет паника, приложение не должно упасть
+	a.router.Use(middleware.Recoverer)
 	a.router.Handle("/metrics", promhttp.Handler())
 	a.router.Route("/auth", func(r chi.Router) {
 		r.Get("/ping", api.HandlePingCheck())

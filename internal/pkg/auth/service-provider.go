@@ -188,3 +188,18 @@ func (s *serviceProvider) GetTracer(ctx context.Context) trace.Tracer {
 
 	return s.tracer
 }
+
+func (s *serviceProvider) GetMeter(ctx context.Context) metric.Meter {
+	if s.meter == nil {
+		meter, err := observability.NewMeter(ctx, "auth")
+		if err != nil {
+			s.GetLogger().Error("failed to create meter: ", sl.Err(err))
+			return nil
+		}
+
+		s.meter = meter
+
+	}
+
+	return s.meter
+}
