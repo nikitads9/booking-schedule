@@ -28,7 +28,7 @@ jobs:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
           badge-branch: main
           label: code lines
-          message: ${{ fromJson(steps.scc.outputs.scc)[0].Code }}
+          message: ${{ fromJson(steps.scc.outputs.scc).Code }}
           message-color: blue
 
   build-and-test:
