@@ -17,7 +17,7 @@ jobs:
         id: scc
         uses: iryanbell/scc-docker-action@v1.0.2
         with:
-          args: ${{ github.workspace }} --exclude-dir docs --exclude-file LICENSE --exclude-ext md --format json .
+          args: ${{ github.workspace }} --exclude-dir docs,LICENSE --exclude-ext md --gen --no-gen --format json .
       - name: Make lines of code badge
         uses: emibcn/badge-action@v2.0.2
         with:
