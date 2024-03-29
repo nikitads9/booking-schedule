@@ -17,7 +17,7 @@ jobs:
         id: scc
         uses: iryanbell/scc-docker-action@v1.0.2
         with:
-          args: ${{ github.workspace }} --exclude-dir docs,LICENSE,README.md --gen --no-gen --format json .
+          args: ${{ env.workspace }} --exclude-dir docs,LICENSE,README.md --gen --no-gen --format json .
       - name: Echo scc output
         run: echo -n "${{ steps.scc.outputs.scc }}"
       - name: Make lines of code badge
