@@ -18,6 +18,11 @@ jobs:
         uses: iryanbell/scc-docker-action@v1.0.2
         with:
           args: ${{ github.workspace }} --exclude-dir docs,LICENSE,README.md --gen --no-gen --format json .
+      - name: Echo scc output
+        run: |
+          echo
+          echo -n "${{ steps.scc.outputs.scc }}"
+          echo -n "${{ fromJson(steps.scc.outputs.scc)[0].Code }}"
       - name: Make lines of code badge
         uses: emibcn/badge-action@v2.0.2
         with:
