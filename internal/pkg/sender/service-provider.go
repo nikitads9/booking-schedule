@@ -3,6 +3,7 @@ package sender
 import (
 	sender "booking-schedule/internal/app/service/sender"
 	"booking-schedule/internal/config"
+	"booking-schedule/internal/logger/sl"
 	"booking-schedule/internal/pkg/rabbit"
 	"context"
 	"log"
@@ -89,7 +90,7 @@ func (s *serviceProvider) GetRabbitConsumer() rabbit.Consumer {
 	if s.rabbitConsumer == nil {
 		rc, err := rabbit.NewConsumer(s.GetConfig().GetRabbitConsumerConfig())
 		if err != nil {
-			s.log.Error("could not connect to rabbit consumer: %s", err)
+			s.log.Error("could not connect to rabbit consumer", sl.Err(err))
 			os.Exit(1)
 		}
 		s.rabbitConsumer = rc

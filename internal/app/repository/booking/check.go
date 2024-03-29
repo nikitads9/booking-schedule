@@ -12,18 +12,23 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-chi/chi/middleware"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // TODO: проверить а что будет еси комнаты забронированы гетерогенно: разными клиентами и приходит запрос на обновление одним из них, накладывающийся на второго (умозрительно вроде норм)
 func (r *repository) CheckAvailibility(ctx context.Context, mod *model.BookingInfo) (*model.Availibility, error) {
 	const op = "repository.booking.CheckAvailibility"
 
+	requestID := middleware.GetReqID(ctx)
+
 	log := r.log.With(
 		slog.String("op", op),
-		slog.String("request_id", middleware.GetReqID(ctx)),
+		slog.String("request_id", requestID),
 	)
-	ctx, span := r.tracer.Start(ctx, op)
+
+	ctx, span := r.tracer.Start(ctx, op, trace.WithAttributes(attribute.String("request_id", requestID)))
 	defer span.End()
 
 	subQuery := sq.Select("1").From(t.BookingTable).Where(sq.And{

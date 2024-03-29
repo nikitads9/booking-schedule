@@ -11,7 +11,9 @@ import (
 	t "booking-schedule/internal/app/repository/table"
 
 	"github.com/go-chi/chi/middleware"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
@@ -20,12 +22,14 @@ import (
 func (r *repository) GetUserByNickname(ctx context.Context, nickName string) (*model.User, error) {
 	const op = "users.repository.GetUser"
 
+	requestID := middleware.GetReqID(ctx)
+
 	log := r.log.With(
 		slog.String("op", op),
-		slog.String("request_id", middleware.GetReqID(ctx)),
+		slog.String("request_id", requestID),
 	)
 
-	ctx, span := r.tracer.Start(ctx, op)
+	ctx, span := r.tracer.Start(ctx, op, trace.WithAttributes(attribute.String("request_id", requestID)))
 	defer span.End()
 
 	builder := sq.Select("*").
@@ -58,7 +62,7 @@ func (r *repository) GetUserByNickname(ctx context.Context, nickName string) (*m
 			return nil, ErrNoConnection
 		}
 		if errors.Is(err, pgx.ErrNoRows) {
-			log.Error("booking with this id not found", sl.Err(err))
+			log.Error("user with this id not found", sl.Err(err))
 			return nil, ErrNotFound
 		}
 		log.Error("query execution error", sl.Err(err))

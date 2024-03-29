@@ -9,17 +9,22 @@ import (
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/gofrs/uuid"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func (s *Service) AddBooking(ctx context.Context, mod *model.BookingInfo) (uuid.UUID, error) {
 	const op = "service.bookings.AddBooking"
 
+	requestID := middleware.GetReqID(ctx)
+
 	log := s.log.With(
 		slog.String("op", op),
-		slog.String("request_id", middleware.GetReqID(ctx)),
+		slog.String("request_id", requestID),
 	)
-	ctx, span := s.tracer.Start(ctx, op)
+
+	ctx, span := s.tracer.Start(ctx, op, trace.WithAttributes(attribute.String("request_id", requestID)))
 	defer span.End()
 
 	var id uuid.UUID

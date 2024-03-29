@@ -7,7 +7,9 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/middleware"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // SignIn godoc
@@ -30,12 +32,13 @@ func (i *Implementation) SignIn(logger *slog.Logger) http.HandlerFunc {
 		const op = "api.auth.SignIn"
 
 		ctx := r.Context()
+		requestID := middleware.GetReqID(ctx)
+
 		log := logger.With(
 			slog.String("op", op),
-			slog.String("request_id", middleware.GetReqID(ctx)),
+			slog.String("request_id", requestID),
 		)
-
-		ctx, span := i.tracer.Start(ctx, op)
+		ctx, span := i.tracer.Start(ctx, op, trace.WithAttributes(attribute.String("request_id", requestID)))
 		defer span.End()
 
 		nickname, pass, ok := r.BasicAuth()

@@ -16,7 +16,9 @@ import (
 
 func (r *repository) GetBookingListByDate(ctx context.Context, startDate time.Time, endDate time.Time) ([]*model.BookingInfo, error) {
 	op := "repository.booking.GetBookingListByDate"
+
 	log := r.log.With(slog.String("op", op))
+
 	ctx, span := r.tracer.Start(ctx, op)
 	defer span.End()
 

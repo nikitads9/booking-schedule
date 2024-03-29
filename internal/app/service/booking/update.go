@@ -8,18 +8,23 @@ import (
 	"log/slog"
 
 	"github.com/go-chi/chi/middleware"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // TODO: сделать единую модель дляupdate и add
 func (s *Service) UpdateBooking(ctx context.Context, mod *model.BookingInfo) error {
 	const op = "service.booking.UpdateBooking"
 
+	requestID := middleware.GetReqID(ctx)
+
 	log := s.log.With(
 		slog.String("op", op),
-		slog.String("request_id", middleware.GetReqID(ctx)),
+		slog.String("request_id", requestID),
 	)
-	ctx, span := s.tracer.Start(ctx, op)
+
+	ctx, span := s.tracer.Start(ctx, op, trace.WithAttributes(attribute.String("request_id", requestID)))
 	defer span.End()
 
 	err := s.txManager.ReadCommitted(ctx, func(ctx context.Context) error {

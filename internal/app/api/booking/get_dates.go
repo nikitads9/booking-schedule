@@ -32,12 +32,13 @@ func (i *Implementation) GetVacantDates(logger *slog.Logger) http.HandlerFunc {
 		const op = "api.booking.GetVacantDates"
 
 		ctx := r.Context()
+		requestID := middleware.GetReqID(ctx)
 
 		log := logger.With(
 			slog.String("op", op),
-			slog.String("request_id", middleware.GetReqID(ctx)),
+			slog.String("request_id", requestID),
 		)
-		ctx, span := i.tracer.Start(ctx, op)
+		ctx, span := i.tracer.Start(ctx, op, trace.WithAttributes(attribute.String("request_id", requestID)))
 		defer span.End()
 
 		suiteID := chi.URLParam(r, "suite_id")

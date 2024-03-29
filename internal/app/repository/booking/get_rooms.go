@@ -13,17 +13,22 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/georgysavva/scany/pgxscan"
 	"github.com/go-chi/chi/middleware"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func (r *repository) GetVacantRooms(ctx context.Context, startDate time.Time, endDate time.Time) ([]*model.Suite, error) {
 	const op = "repository.booking.GetVacantRooms"
 
+	requestID := middleware.GetReqID(ctx)
+
 	log := r.log.With(
 		slog.String("op", op),
-		slog.String("request_id", middleware.GetReqID(ctx)),
+		slog.String("request_id", requestID),
 	)
-	ctx, span := r.tracer.Start(ctx, op)
+
+	ctx, span := r.tracer.Start(ctx, op, trace.WithAttributes(attribute.String("request_id", requestID)))
 	defer span.End()
 
 	builder := sq.Select(t.SuiteTable+".id AS "+t.SuiteID, t.Name, t.Capacity).

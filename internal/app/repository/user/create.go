@@ -12,7 +12,9 @@ import (
 	t "booking-schedule/internal/app/repository/table"
 
 	"github.com/go-chi/chi/middleware"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 
 	sq "github.com/Masterminds/squirrel"
 )
@@ -20,12 +22,14 @@ import (
 func (r *repository) CreateUser(ctx context.Context, user *model.User) (int64, error) {
 	const op = "users.repository.CreateUser"
 
+	requestID := middleware.GetReqID(ctx)
+
 	log := r.log.With(
 		slog.String("op", op),
-		slog.String("request_id", middleware.GetReqID(ctx)),
+		slog.String("request_id", requestID),
 	)
 
-	ctx, span := r.tracer.Start(ctx, op)
+	ctx, span := r.tracer.Start(ctx, op, trace.WithAttributes(attribute.String("request_id", requestID)))
 	defer span.End()
 
 	builder := sq.Insert(t.UserTable).

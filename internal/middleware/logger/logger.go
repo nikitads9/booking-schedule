@@ -11,16 +11,16 @@ import (
 
 func New(logger *slog.Logger) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		logger = logger.With(
+		log := logger.With(
 			slog.String("component", "middleware/logger"),
 		)
 
-		logger.Info("logger middleware enabled")
+		log.Info("logger middleware enabled")
 
 		// код самого обработчика
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			// собираем исходную информацию о запросе
-			entry := logger.With(
+			entry := log.With(
 				slog.String("method", r.Method),
 				slog.String("path", r.URL.Path),
 				slog.String("remote_addr", r.RemoteAddr),

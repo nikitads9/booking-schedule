@@ -1,10 +1,10 @@
 package metrics
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
@@ -25,8 +25,7 @@ func NewMetricMiddleware(meter metric.Meter) func(next http.Handler) http.Handle
 			"http.server.latency",
 			metric.WithUnit("ms"),
 			metric.WithDescription("Measures the duration of inbound HTTP requests."),
-			//TODO: try exponential histogram or without explicit bucket boundaries
-			metric.WithExplicitBucketBoundaries(0, 1, 2, 3, 4, 5, 8, 10, 14, 20, 25, 30, 35, 40, 50, 75, 100, 125, 150, 175, 200, 300, 400, 500, 1000, 1200, 1300, 1500, 2000, 2200, 3000, 4000, 5000, 6000, 7000, 8000, 10000),
+			//metric.WithExplicitBucketBoundaries(0, 1, 2, 3, 4, 5, 8, 10, 14, 20, 25, 30, 35, 40, 50, 75, 100, 125, 150, 175, 200, 300, 400, 500, 1000, 1200, 1300, 1500, 2000, 2200, 3000, 4000, 5000, 6000, 7000, 8000, 10000),
 		)
 		handleErr(err)
 
@@ -45,8 +44,6 @@ func NewMetricMiddleware(meter metric.Meter) func(next http.Handler) http.Handle
 			next:                     next,
 			requestDurationHistogram: durationHistogram,
 			requestCounter:           requestCounter,
-			//errorRate:                errorRate,
-			meter: meter,
 		}
 	}
 }
@@ -59,24 +56,23 @@ type httpMetricMiddleware struct {
 	requestDurationHistogram metric.Float64Histogram
 	requestCounter           metric.Int64Counter
 	//errorRate                metric.Float64ObservableGauge
-	meter metric.Meter
 }
 
 func (m *httpMetricMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	m.requestCounter.Add(r.Context(), 1)
 	rw := NewStatusCodeCapturerWriter(w)
 
 	initialTime := time.Now()
 	m.next.ServeHTTP(rw, r)
 	duration := time.Since(initialTime)
 
-	pathTemplate := r.URL.Path
-	fmt.Println(pathTemplate)
+	pathTemplate := chi.RouteContext(r.Context()).RoutePattern()
 	metricAttributes := attribute.NewSet(
 		semconv.HTTPRouteKey.String(pathTemplate),
 		semconv.HTTPRequestMethodKey.String(r.Method),
 		semconv.HTTPStatusCodeKey.Int(rw.statusCode),
 	)
+
+	m.requestCounter.Add(r.Context(), 1, metric.WithAttributeSet(metricAttributes))
 
 	/* 	if _, err := m.meter.RegisterCallback(
 	   		func(ctx context.Context, o metric.Observer) error {

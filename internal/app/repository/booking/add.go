@@ -11,7 +11,9 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/middleware"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/gofrs/uuid"
@@ -20,11 +22,14 @@ import (
 func (r *repository) AddBooking(ctx context.Context, mod *model.BookingInfo) (uuid.UUID, error) {
 	const op = "repository.booking.AddBooking"
 
+	requestID := middleware.GetReqID(ctx)
+
 	log := r.log.With(
 		slog.String("op", op),
-		slog.String("request_id", middleware.GetReqID(ctx)),
+		slog.String("request_id", requestID),
 	)
-	ctx, span := r.tracer.Start(ctx, op)
+
+	ctx, span := r.tracer.Start(ctx, op, trace.WithAttributes(attribute.String("request_id", requestID)))
 	defer span.End()
 
 	var builder sq.InsertBuilder

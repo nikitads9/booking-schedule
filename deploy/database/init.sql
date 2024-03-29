@@ -44,3 +44,6 @@ create index ix_end ON bookings using brin (end_date);
 
 create index ix_suite ON bookings using btree (suite_id);
 create index ix_owner ON bookings using btree (user_id);
+
+create user otelcol with password 'otelcolpassword';
+grant SELECT on pg_stat_database to otelcol;

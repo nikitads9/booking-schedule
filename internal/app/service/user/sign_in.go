@@ -22,12 +22,14 @@ import (
 func (s *Service) SignIn(ctx context.Context, nickname string, pass string) (token string, err error) {
 	const op = "user.service.SignIn"
 
+	requestID := middleware.GetReqID(ctx)
+
 	log := s.log.With(
 		slog.String("op", op),
-		slog.String("request_id", middleware.GetReqID(ctx)),
+		slog.String("request_id", requestID),
 	)
 
-	ctx, span := s.tracer.Start(ctx, op)
+	ctx, span := s.tracer.Start(ctx, op, trace.WithAttributes(attribute.String("request_id", requestID)))
 	defer span.End()
 
 	retrievedUser, err := s.userRepository.GetUserByNickname(ctx, nickname)

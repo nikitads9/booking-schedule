@@ -47,11 +47,14 @@ var (
 func (s *service) GenerateToken(ctx context.Context, userID int64) (string, error) {
 	const op = "service.jwt.GenerateToken"
 
+	requestID := middleware.GetReqID(ctx)
+
 	log := s.log.With(
 		slog.String("op", op),
-		slog.String("request_id", middleware.GetReqID(ctx)),
+		slog.String("request_id", requestID),
 	)
-	_, span := s.tracer.Start(ctx, op)
+
+	_, span := s.tracer.Start(ctx, op, trace.WithAttributes(attribute.String("request_id", requestID)))
 	defer span.End()
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -69,11 +72,14 @@ func (s *service) GenerateToken(ctx context.Context, userID int64) (string, erro
 func (s *service) VerifyToken(ctx context.Context, tokenString string) (int64, error) {
 	const op = "service.jwt.VerifyToken"
 
+	requestID := middleware.GetReqID(ctx)
+
 	log := s.log.With(
 		slog.String("op", op),
-		slog.String("request_id", middleware.GetReqID(ctx)),
+		slog.String("request_id", requestID),
 	)
-	_, span := s.tracer.Start(ctx, op)
+
+	_, span := s.tracer.Start(ctx, op, trace.WithAttributes(attribute.String("request_id", requestID)))
 	defer span.End()
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {

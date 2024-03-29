@@ -38,12 +38,13 @@ func (i *Implementation) GetBooking(logger *slog.Logger) http.HandlerFunc {
 		const op = "api.booking.GetBooking"
 
 		ctx := r.Context()
+		requestID := middleware.GetReqID(ctx)
 
 		log := logger.With(
 			slog.String("op", op),
-			slog.String("request_id", middleware.GetReqID(ctx)),
+			slog.String("request_id", requestID),
 		)
-		ctx, span := i.tracer.Start(ctx, op)
+		ctx, span := i.tracer.Start(ctx, op, trace.WithAttributes(attribute.String("request_id", requestID)))
 		defer span.End()
 
 		userID := auth.UserIDFromContext(ctx)

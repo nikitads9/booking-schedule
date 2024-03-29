@@ -11,17 +11,22 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-chi/chi/middleware"
 	"github.com/gofrs/uuid"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func (r *repository) DeleteBooking(ctx context.Context, bookingID uuid.UUID, userID int64) error {
 	const op = "repository.booking.DeleteBooking"
 
+	requestID := middleware.GetReqID(ctx)
+
 	log := r.log.With(
 		slog.String("op", op),
-		slog.String("request_id", middleware.GetReqID(ctx)),
+		slog.String("request_id", requestID),
 	)
-	ctx, span := r.tracer.Start(ctx, op)
+
+	ctx, span := r.tracer.Start(ctx, op, trace.WithAttributes(attribute.String("request_id", requestID)))
 	defer span.End()
 
 	builder := sq.Delete(t.BookingTable).

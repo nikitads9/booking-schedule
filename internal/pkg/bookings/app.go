@@ -11,6 +11,7 @@ import (
 	"context"
 
 	"github.com/go-chi/cors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/otel/metric"
 
 	"errors"
@@ -19,8 +20,6 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
@@ -177,44 +176,56 @@ func (a *App) initServer(ctx context.Context) error {
 	a.serviceProvider.GetLogger().Debug("logger debug mode enabled")
 
 	a.router = chi.NewRouter()
-	a.router.Use(middleware.RequestID)
-	a.router.Use(otelchi.Middleware("bookings-api", otelchi.WithChiRoutes(a.router)))
-	a.router.Use(metrics.NewMetricMiddleware(a.serviceProvider.GetMeter(ctx)))
-	a.router.Use(mwLogger.New(a.serviceProvider.GetLogger()))
-	a.router.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"https://*", "http://*"},
-		AllowedMethods:   []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"}, //"X-CSRF-Token" for tokens stored in cookies
-		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: false,
-		MaxAge:           300,
-	}))
-	a.router.Use(middleware.Recoverer)
-	a.router.Handle("/metrics", promhttp.Handler())
-	a.router.Route("/bookings", func(r chi.Router) {
-		r.Get("/ping", api.HandlePingCheck())
-		r.Route("/user", func(r chi.Router) {
+
+	a.router.Group(func(r chi.Router) {
+		r.Use(cors.Handler(cors.Options{
+			AllowedOrigins:   []string{a.serviceProvider.GetConfig().GetTracerConfig().EndpointURL},
+			AllowedMethods:   []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS"}, //TODO allow only real otlp methods
+			AllowedHeaders:   []string{"*"},
+			AllowCredentials: false,
+		}))
+		r.Handle("/metrics", promhttp.Handler())
+	})
+
+	a.router.Group(func(r chi.Router) {
+		r.Use(middleware.RequestID)
+		r.Use(otelchi.Middleware("bookings-api", otelchi.WithChiRoutes(a.router)))
+		r.Use(metrics.NewMetricMiddleware(a.serviceProvider.GetMeter(ctx)))
+		r.Use(mwLogger.New(a.serviceProvider.GetLogger()))
+		r.Use(cors.Handler(cors.Options{
+			AllowedOrigins:   []string{"https://*", "http://*"},
+			AllowedMethods:   []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS"},
+			AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"}, //"X-CSRF-Token" for tokens stored in cookies
+			ExposedHeaders:   []string{"Link"},
+			AllowCredentials: false,
+			MaxAge:           300,
+		}))
+		r.Use(middleware.Recoverer)
+		r.Route("/bookings", func(r chi.Router) {
+			r.Get("/ping", api.HandlePingCheck())
+			r.Route("/user", func(r chi.Router) {
+				r.Group(func(r chi.Router) {
+					r.Use(auth.Auth(a.serviceProvider.GetLogger(), a.serviceProvider.GetJWTService(ctx)))
+					r.Get("/me", userImpl.GetMyProfile(a.serviceProvider.GetLogger()))
+					r.Delete("/delete", userImpl.DeleteMyProfile(a.serviceProvider.GetLogger()))
+					r.Patch("/edit", userImpl.EditMyProfile(a.serviceProvider.GetLogger()))
+				})
+
+			})
+			r.Get("/get-vacant-rooms", bookingImpl.GetVacantRooms(a.serviceProvider.GetLogger()))
+			r.Get("/{suite_id}/get-vacant-dates", bookingImpl.GetVacantDates(a.serviceProvider.GetLogger()))
 			r.Group(func(r chi.Router) {
 				r.Use(auth.Auth(a.serviceProvider.GetLogger(), a.serviceProvider.GetJWTService(ctx)))
-				r.Get("/me", userImpl.GetMyProfile(a.serviceProvider.GetLogger()))
-				r.Delete("/delete", userImpl.DeleteMyProfile(a.serviceProvider.GetLogger()))
-				r.Patch("/edit", userImpl.EditMyProfile(a.serviceProvider.GetLogger()))
+				r.Post("/add", bookingImpl.AddBooking(a.serviceProvider.GetLogger()))
+				r.Get("/get-bookings", bookingImpl.GetBookings(a.serviceProvider.GetLogger()))
+				r.Route("/{booking_id}", func(r chi.Router) {
+					r.Get("/get", bookingImpl.GetBooking(a.serviceProvider.GetLogger()))
+					r.Patch("/update", bookingImpl.UpdateBooking(a.serviceProvider.GetLogger()))
+					r.Delete("/delete", bookingImpl.DeleteBooking(a.serviceProvider.GetLogger()))
+				})
 			})
 
 		})
-		r.Get("/get-vacant-rooms", bookingImpl.GetVacantRooms(a.serviceProvider.GetLogger()))
-		r.Get("/{suite_id}/get-vacant-dates", bookingImpl.GetVacantDates(a.serviceProvider.GetLogger()))
-		r.Group(func(r chi.Router) {
-			r.Use(auth.Auth(a.serviceProvider.GetLogger(), a.serviceProvider.GetJWTService(ctx)))
-			r.Post("/add", bookingImpl.AddBooking(a.serviceProvider.GetLogger()))
-			r.Get("/get-bookings", bookingImpl.GetBookings(a.serviceProvider.GetLogger()))
-			r.Route("/{booking_id}", func(r chi.Router) {
-				r.Get("/get", bookingImpl.GetBooking(a.serviceProvider.GetLogger()))
-				r.Patch("/update", bookingImpl.UpdateBooking(a.serviceProvider.GetLogger()))
-				r.Delete("/delete", bookingImpl.DeleteBooking(a.serviceProvider.GetLogger()))
-			})
-		})
-
 	})
 
 	return nil

@@ -94,7 +94,7 @@ func CollectMachineResourceMetrics(meter metric.Meter, logger *slog.Logger) {
 			metric.WithUnit("%"),
 		)
 		if err != nil {
-			log.Error("could not collect allocated memory gauge", sl.Err(err))
+			log.Error("could not collect cpu usage", sl.Err(err))
 		}
 	}
 

@@ -4,6 +4,7 @@ import (
 	bookingRepository "booking-schedule/internal/app/repository/booking"
 	schedulerService "booking-schedule/internal/app/service/scheduler"
 	"booking-schedule/internal/config"
+	"booking-schedule/internal/logger/sl"
 	"booking-schedule/internal/pkg/db"
 	"booking-schedule/internal/pkg/observability"
 	"booking-schedule/internal/pkg/rabbit"
@@ -50,12 +51,12 @@ func (s *serviceProvider) GetDB(ctx context.Context) db.Client {
 	if s.db == nil {
 		cfg, err := s.GetConfig().GetDBConfig()
 		if err != nil {
-			s.GetLogger().Error("could not get db config: %s", err)
+			s.GetLogger().Error("could not get db config", sl.Err(err))
 			os.Exit(1)
 		}
 		dbc, err := db.NewClient(ctx, cfg)
 		if err != nil {
-			s.GetLogger().Error("could not connect to db: %s", err)
+			s.GetLogger().Error("could not connect to db", sl.Err(err))
 			os.Exit(1)
 		}
 		s.db = dbc
@@ -130,7 +131,7 @@ func (s *serviceProvider) GetRabbitProducer() rabbit.Producer {
 	if s.rabbitProducer == nil {
 		rp, err := rabbit.NewProducer(s.GetConfig().GetRabbitProducerConfig())
 		if err != nil {
-			s.log.Error("could not connect to rabbit producer: %s", err)
+			s.log.Error("could not connect to rabbit producer", sl.Err(err))
 			os.Exit(1)
 		}
 		s.rabbitProducer = rp
@@ -143,7 +144,7 @@ func (s *serviceProvider) GetTracer(ctx context.Context) trace.Tracer {
 	if s.tracer == nil {
 		tracer, err := observability.NewTracer(ctx, s.GetConfig().GetTracerConfig().EndpointURL, "scheduler", s.GetConfig().GetTracerConfig().SamplingRate)
 		if err != nil {
-			s.GetLogger().Error("failed to create tracer: ", err)
+			s.GetLogger().Error("failed to create tracer", sl.Err(err))
 			return nil
 		}
 

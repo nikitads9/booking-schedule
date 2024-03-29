@@ -12,17 +12,22 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-chi/chi/middleware"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func (r *repository) GetBusyDates(ctx context.Context, suiteID int64) ([]*model.Interval, error) {
 	const op = "repository.booking.GetBusyDates"
 
+	requestID := middleware.GetReqID(ctx)
+
 	log := r.log.With(
 		slog.String("op", op),
-		slog.String("request_id", middleware.GetReqID(ctx)),
+		slog.String("request_id", requestID),
 	)
-	ctx, span := r.tracer.Start(ctx, op)
+
+	ctx, span := r.tracer.Start(ctx, op, trace.WithAttributes(attribute.String("request_id", requestID)))
 	defer span.End()
 
 	now := "'" + time.Now().Format("01-02-2006") + "'"

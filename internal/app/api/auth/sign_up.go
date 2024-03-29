@@ -10,7 +10,9 @@ import (
 	"net/http"
 
 	validator "github.com/go-playground/validator/v10"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
@@ -34,13 +36,13 @@ func (i *Implementation) SignUp(logger *slog.Logger) http.HandlerFunc {
 		const op = "api.auth.SignUp"
 
 		ctx := r.Context()
+		requestID := middleware.GetReqID(ctx)
 
 		log := logger.With(
 			slog.String("op", op),
-			slog.String("request_id", middleware.GetReqID(ctx)),
+			slog.String("request_id", requestID),
 		)
-
-		ctx, span := i.tracer.Start(ctx, op)
+		ctx, span := i.tracer.Start(ctx, op, trace.WithAttributes(attribute.String("request_id", requestID)))
 		defer span.End()
 
 		req := &api.SignUpRequest{}
