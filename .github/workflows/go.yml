@@ -26,9 +26,9 @@ jobs:
         with:
           file-name: lines.svg
           github-token: "${{ secrets.GITHUB_TOKEN }}"
-          badge-branch: main
+          badge-branch: badges
           label: code lines
-          message: ${{ fromJson(steps.scc.outputs.scc).Code }}
+          message: ${{ fromJson(steps.scc.outputs.scc)[0].Code }}
           message-color: blue
 
   build-and-test:
