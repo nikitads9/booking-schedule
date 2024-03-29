@@ -18,13 +18,15 @@ jobs:
         uses: iryanbell/scc-docker-action@v1.0.2
         with:
           args: ${{ env.workspace }} --exclude-dir docs,LICENSE,README.md --gen --no-gen --format json .
-      - name: Make lines of code badge
-        uses: emibcn/badge-action@v2.0.3
+      - name: Write Badge
+        uses: action-badges/core@0.3.0
         with:
-          label: Lines of Code
-          status: ${{ fromJson(steps.scc.outputs.scc)[0].Code }}
-          color: 'blue'
-          path: '.github/badges/lines.svg'
+          file-name: lines.svg
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          badge-branch: main
+          label: code lines
+          message: ${{ fromJson(steps.scc.outputs.scc)[0].Code }}
+          message-color: blue
 
   build-and-test:
     runs-on: ubuntu-latest
