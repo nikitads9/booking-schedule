@@ -12,6 +12,7 @@ jobs:
     name: A job to count the lines of code.
     permissions:
       id-token: write 
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
