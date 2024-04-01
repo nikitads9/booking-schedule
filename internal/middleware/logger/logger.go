@@ -21,7 +21,7 @@ func New(logger *slog.Logger) func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			// собираем исходную информацию о запросе
 			entry := log.With(
-				slog.String("method", r.Method),
+				slog.String("http_method", r.Method),
 				slog.String("path", r.URL.Path),
 				slog.String("remote_addr", r.RemoteAddr),
 				slog.String("user_agent", r.UserAgent()),

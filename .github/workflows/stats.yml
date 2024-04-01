@@ -7,20 +7,33 @@ on:
       branches: [ main ]
       
 jobs:
-    scc_job:
+
+
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      
+    cloc:
       runs-on: ubuntu-latest
       name: A job to count the lines of code.
       permissions:
         id-token: write 
         contents: write
       steps:
-        - name: Checkout
+        - name: Count lines
           uses: actions/checkout@v4
         - name: Get the lines of code.
-          id: scc
-          uses: iryanbell/scc-docker-action@v1.0.2
+          id: cloc
+          uses: djdefi/cloc-action@6
           with:
-            args: ${{ env.workspace }} --exclude-dir docs,LICENSE,README.md --gen --no-gen --format json .
+            options: ${{ env.workspace }} --exclude-dir=docs,LICENSE --exclude-ext=md --json --no-autogen
+
+        - name: Get array length
+          id: getlength
+          env:
+            labels: ${{ toJson(steps.cloc.outputs)}}
+          run: |
+            echo “$labels”
+            LL=$(echo $labels | jq '. | length' )
+            echo "::set-output name=Label_length::$LL"
         - name: Write Badge
           uses: action-badges/core@0.3.0
           with:
@@ -28,5 +41,5 @@ jobs:
             github-token: "${{ secrets.GITHUB_TOKEN }}"
             badge-branch: badges
             label: code lines
-            message: ${{ fromJson(steps.scc.outputs.scc)[0].Code }}
+            message: ${{ fromJson(steps.cloc.outputs)[steps.getlength.Label_length].code }}
             message-color: blue
