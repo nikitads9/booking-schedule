@@ -29,7 +29,7 @@ jobs:
         - name: Get array length
           id: getlength
           env:
-            labels: ${{ fromJson(steps.cloc.outputs)}}
+            labels: ${{ toJson(steps.cloc.outputs)}}
           run: |
             echo “$labels”
             LL=$(echo $labels | jq '. | length' )
@@ -41,5 +41,5 @@ jobs:
             github-token: "${{ secrets.GITHUB_TOKEN }}"
             badge-branch: badges
             label: code lines
-            message: ${{ fromJson(steps.cloc.outputs)[steps.getlength.Label_length].code }}
+            message: ${{ toJson(steps.cloc.outputs)[steps.getlength.Label_length].code }}
             message-color: blue
