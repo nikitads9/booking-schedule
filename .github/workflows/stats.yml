@@ -24,7 +24,7 @@ jobs:
           id: cloc
           uses: djdefi/cloc-action@6
           with:
-            options: ${{ env.workspace }} --exclude-dir=docs,LICENSE --exclude-ext=md --json --no-autogen
+            options: ${{ env.workspace }} --exclude-dir=docs,LICENSE --exclude-ext=md --json --no-autogen .
 
         - name: Get array length
           id: getlength
