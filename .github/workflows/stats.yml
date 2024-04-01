@@ -29,7 +29,7 @@ jobs:
         - name: Get array length
           id: getlength
           env:
-            labels: ${{ toJson(steps.cloc.outputs)}}
+            labels: ${{ fromJson(steps.cloc.outputs)}}
           run: |
             echo “$labels”
             LL=$(echo $labels | jq '. | length' )
